@@ -91,7 +91,9 @@
        TaggedValue
        (edn-tag [~'this] (quote ~tag))
        (edn-value [~'this]
-         ~@(if (and (= 1 (count body)) (symbol? (first body)))
+         ~@(if (and (= 1 (count body))
+                    (or (symbol? (first body))
+                        (keyword? (first body))))
              (list (list (first body) 'this))
              body)))
      (defprint-method ~t)))

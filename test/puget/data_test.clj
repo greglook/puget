@@ -34,18 +34,24 @@
 
 (deftest built-in-tagged-values
   (testing "TaggedValue"
-    (are [data t v] (and (= t (edn-tag data)) (= v (edn-value data)))
-         (byte-array 10)
-         'bin "AAAAAAAAAAAAAA=="
-
+    (are [data t v s] (and (= t (edn-tag data))
+                           (= v (edn-value data))
+                           (= s (edn-str data) (pr-str data)))
          (java.util.Date. 1383271402749)
          'inst "2013-11-01T02:03:22.749-00:00"
+         "#inst \"2013-11-01T02:03:22.749-00:00\""
 
          (java.util.UUID/fromString "96d91316-53b9-4800-81c1-97ae9f4b86b0")
          'uuid "96d91316-53b9-4800-81c1-97ae9f4b86b0"
+         "#uuid \"96d91316-53b9-4800-81c1-97ae9f4b86b0\""
+
+         (byte-array 10)
+         'bin "AAAAAAAAAAAAAA=="
+         "#bin \"AAAAAAAAAAAAAA==\""
 
          (java.net.URI. "http://en.wikipedia.org/wiki/Uniform_resource_identifier")
-         'uri "http://en.wikipedia.org/wiki/Uniform_resource_identifier")))
+         'uri "http://en.wikipedia.org/wiki/Uniform_resource_identifier"
+         "#uri \"http://en.wikipedia.org/wiki/Uniform_resource_identifier\"")))
 
 
 (deftest bin-reading
