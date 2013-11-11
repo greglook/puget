@@ -59,6 +59,17 @@ Puget extends this protocol to support the `#inst` and `#uuid` built-ins from
 the EDN standard. In addition, it supports `#bin` for base64-encoded binary
 data, and `#uri` for specifying Uniform Resource Identifiers.
 
+## Installation
+
+Puget is [published on Clojars](https://clojars.org/mvxcvi/puget).
+
+To use this version with Leiningen, add the following dependency to your project
+definition:
+
+```clojure
+[mvxcvi/puget "0.1.0"]
+```
+
 ## License
 
 This is free and unencumbered software released into the public domain.
