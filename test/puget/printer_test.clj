@@ -49,6 +49,14 @@
              "#puget.printer_test.TestRecord{:bar \\y, :foo \\x}\n")))))
 
 
+(deftest canonical-tagged-value
+  (let [tval (reify data/TaggedValue
+               (edn-tag [this] 'foo)
+               (edn-value [this] :bar/baz))
+        doc (canonize tval)]
+    (is (tagged-value-doc? doc))))
+
+
 (deftest default-canonize
   (testing "Unknown values"
     (let [usd (java.util.Currency/getInstance "USD")]
