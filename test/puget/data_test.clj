@@ -32,6 +32,15 @@
             t]))))
 
 
+(defrecord TestRecord [x y])
+(extend-tagged-map TestRecord test/record)
+
+(deftest tagged-value-extension
+  (let [rec (TestRecord. :foo :bar)]
+    (is (= 'test/record (edn-tag rec)))
+    (is (= {:x :foo, :y :bar} (edn-value rec)))))
+
+
 (deftest built-in-tagged-values
   (testing "TaggedValue"
     (are [data t v s] (and (= t (edn-tag data))
