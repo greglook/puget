@@ -27,7 +27,7 @@
 (defn- color-text
   "Constructs a text doc, which may be colored if *colored-output* is true."
   [text & codes]
-  (if (and *colored-output* (not (empty? codes)))
+  (if (and *colored-output* (seq codes))
     [:span [:pass (ansi/esc codes)] text [:pass (ansi/escape :none)]]
     text))
 
