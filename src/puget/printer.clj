@@ -10,32 +10,54 @@
 
 ;; CONTROL VARS
 
-(def ^:dynamic *colored-output*
-  "Output ANSI colored output from print functions."
-  false)
-
-
 (def ^:dynamic *strict-mode*
   "If set, throw an exception if there is no defined canonical print method for
   a given value."
   false)
 
 
+(def ^:dynamic *colored-output*
+  "Output ANSI colored output from print functions."
+  false)
+
+
+(def ^:dynamic *color-scheme*
+  "Maps various syntax elements to color codes."
+  {; syntax elements
+   :delimiter [:bold :red]
+   :tag       [:red]
+
+   ; primitive values
+   :nil       [:bold :black]
+   :boolean   [:green]
+   :number    [:cyan]
+   :string    [:bold :magenta]
+   :keyword   [:bold :yellow]
+   :symbol    nil
+
+   ; special types
+   :function-symbol [:bold :blue]
+   :class-delimiter [:blue]
+   :class-name      [:bold :blue]})
+
+
 
 ;; COLORING FUNCTIONS
 
-(defn- color-text
-  "Constructs a text doc, which may be colored if *colored-output* is true."
-  [text & codes]
-  (if (and *colored-output* (seq codes))
-    [:span [:pass (ansi/esc codes)] text [:pass (ansi/escape :none)]]
-    text))
+(defn- color-doc
+  "Constructs a text doc, which may be colored if *colored-output* is true.
+  Element must be a key from the color-scheme map."
+  [element text]
+  (let [codes (seq (*color-scheme* element))]
+    (if (and *colored-output* codes)
+      [:span [:pass (ansi/esc codes)] text [:pass (ansi/escape :none)]]
+      text)))
 
 
 (defn- delimiter
   "Colors a delimiter apropriately."
   [delim]
-  (color-text delim :bold :red))
+  (color-doc :delimiter delim))
 
 
 
@@ -43,7 +65,7 @@
 
 (defn- canonize-dispatch
   [value]
-  (if (extends? data/TaggedValue (class value))
+  (if (satisfies? data/TaggedValue value)
     :tagged-value
     (type value)))
 
@@ -55,26 +77,28 @@
   #'canonize-dispatch)
 
 
-(defmacro ^:private color-primitive
-  [dispatch & codes]
+(defmacro ^:private canonize-element
+  "Defines a canonization of a primitive value type by mapping it to an element
+  in the color scheme."
+  [dispatch element]
   `(defmethod canonize ~dispatch
      [value#]
-     (color-text (pr-str value#) ~@codes)))
+     (color-doc ~element (pr-str value#))))
 
 
-(color-primitive nil :bold :black)
-(color-primitive java.lang.Boolean :green)
-(color-primitive java.lang.Number :cyan)
-(color-primitive java.lang.Character :bold :magenta)
-(color-primitive java.lang.String :bold :magenta)
-(color-primitive clojure.lang.Keyword :bold :yellow)
-(color-primitive clojure.lang.Symbol)
+(canonize-element nil                  :nil)
+(canonize-element java.lang.Boolean    :boolean)
+(canonize-element java.lang.Number     :number)
+(canonize-element java.lang.Character  :string)
+(canonize-element java.lang.String     :string)
+(canonize-element clojure.lang.Keyword :keyword)
+(canonize-element clojure.lang.Symbol  :symbol)
 
 
 (defmethod canonize clojure.lang.ISeq
   [s]
   (let [elements (if (symbol? (first s))
-                   (cons (color-text (str (first s)) :bold :blue)
+                   (cons (color-doc :function-symbol (str (first s)))
                          (map canonize (rest s)))
                    (map canonize s))]
     [:group
@@ -130,15 +154,8 @@
 
 (defmethod canonize :tagged-value
   [v]
-  (vary-meta
-    [:span (color-text (str \# (data/edn-tag v)) :red)
-     " " (canonize (data/edn-value v))]
-    assoc ::tagged-value true))
-
-
-(defn tagged-value-doc?
-  [doc]
-  (::tagged-value (meta doc)))
+  [:span (color-doc :tag (str \# (data/edn-tag v)))
+    " " (canonize (data/edn-value v))])
 
 
 (defmethod canonize :default
@@ -146,10 +163,10 @@
   (if *strict-mode*
     (throw (IllegalArgumentException.
              (str "No canonical representation for " (class value) ": " value)))
-    [:span (color-text "#<" :blue)
-     (color-text (.getName (class value)) :bold :blue)
+    [:span (color-doc :class-delimiter "#<")
+     (color-doc :class-name (.getName (class value)))
      " " (str value)
-     (color-text ">" :blue)]))
+     (color-doc :class-delimiter ">")]))
 
 
 
