@@ -153,3 +153,13 @@
   ^URI
   [^String uri]
   (URI. uri))
+
+
+
+;; DATA READERS
+
+(def data-readers
+  "Map of data readers supported by Puget. Merge project-specific readers into
+  this map."
+  {'bin read-bin
+   'uri read-uri})
