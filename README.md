@@ -67,7 +67,7 @@ To use this version with Leiningen, add the following dependency to your project
 definition:
 
 ```clojure
-[mvxcvi/puget "0.1.0"]
+[mvxcvi/puget "0.2.0"]
 ```
 
 ## License
