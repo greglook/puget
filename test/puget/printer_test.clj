@@ -53,8 +53,7 @@
   (let [tval (reify data/TaggedValue
                (edn-tag [this] 'foo)
                (edn-value [this] :bar/baz))
-        doc (canonize tval)]
-    (is (tagged-value-doc? doc))))
+        doc (canonize tval)]))
 
 
 (deftest default-canonize
@@ -71,5 +70,7 @@
 (deftest colored-printing
   (let [value [nil 1.0 true "foo" :bar]
         bw-str (with-out-str (pprint value))
-        colored-str (with-out-str (cprint value))]
-    (is (> (count colored-str) (count bw-str)))))
+        colored-str (with-out-str (cprint value))
+        thin-str (with-out-str (cprint value {:width 5}))]
+    (is (> (count colored-str) (count bw-str)))
+    (is (not= colored-str thin-str))))

@@ -85,17 +85,15 @@
   given symbol as the tag and use the body to calculate the value. The symbol
   'this' is bound to the data. This macro also defines a print-method which
   delegates to edn-str."
-  [t tag & body]
+  [t tag expr]
   `(do
      (extend-type ~t
        TaggedValue
        (edn-tag [~'this] (quote ~tag))
        (edn-value [~'this]
-         ~@(if (and (= 1 (count body))
-                    (or (symbol? (first body))
-                        (keyword? (first body))))
-             (list (list (first body) 'this))
-             body)))
+         ~(if (or (symbol? expr) (keyword? expr))
+            (list expr 'this)
+            expr)))
      (defprint-method ~t)))
 
 
@@ -155,3 +153,13 @@
   ^URI
   [^String uri]
   (URI. uri))
+
+
+
+;; DATA READERS
+
+(def data-readers
+  "Map of data readers supported by Puget. Merge project-specific readers into
+  this map."
+  {'bin read-bin
+   'uri read-uri})
