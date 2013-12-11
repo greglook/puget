@@ -67,7 +67,7 @@
   [value]
   (if (satisfies? data/TaggedValue value)
     :tagged-value
-    (type value)))
+    (class value)))
 
 
 (defmulti canonize
