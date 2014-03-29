@@ -133,7 +133,7 @@
 
 ; #bin - Binary data in the form of byte arrays.
 (extend-tagged-value
-  (Class/forName "[B") bin
+  (class (byte-array 0)) bin
   (->> this b64/encode (map char) (apply str)))
 
 
