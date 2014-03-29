@@ -10,10 +10,13 @@ it apart from FIPP and Clojure's native pretty-printing functions.
 ## ANSI Coloring
 
 Puget's first main feature is colorizing the printed data using ANSI escape
-codes. This is kind of like reverse syntax highlighting; different types are
-given different colors to make reading the printed output much easier for
-humans. The `*colored-output*` var can be set to enable colorization -
-alternately, the `cprint` function prints with colored output enabled.
+codes. This is kind of like syntax highlighting, except much easier since the
+code works directly with the data instead of parsing it from text.
+
+Different syntax elements are given different colors to make reading the
+printed output much easier for humans. The `*colored-output*` var can be set to
+enable colorization - alternately, the `cprint` function prints with colored
+output enabled:
 
 ![colorization example](screenshot.png)
 
@@ -43,7 +46,7 @@ var can be bound to true to throw an exception for these values instead.
 
 (binding [puget/*strict-mode* true]
   (puget/pprint usd))
-; IllegalArgumentException No canonical representation for class java.util.Currency: USD
+; IllegalArgumentException: No canonical representation for class java.util.Currency: USD
 ```
 
 ## EDN Tagged Values
@@ -67,7 +70,7 @@ To use this version with Leiningen, add the following dependency to your project
 definition:
 
 ```clojure
-[mvxcvi/puget "0.2.0"]
+[mvxcvi/puget "0.3.0"]
 ```
 
 ## License

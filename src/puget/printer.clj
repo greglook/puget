@@ -54,10 +54,16 @@
       text)))
 
 
-(defn- delimiter
-  "Colors a delimiter apropriately."
-  [delim]
-  (color-doc :delimiter delim))
+(defn color-text
+  "Produces text colored according to the active color scheme. This is mostly
+  useful to clients which want to produce output which matches data printed by
+  Puget, but which is not directly printed by the library. Note that this
+  function still obeys the *colored-output* var."
+  [element text]
+  (let [codes (seq (*color-scheme* element))]
+    (if (and *colored-output* codes)
+      (str (ansi/esc codes) text (ansi/escape :none))
+      text)))
 
 
 
@@ -67,7 +73,7 @@
   [value]
   (if (satisfies? data/TaggedValue value)
     :tagged-value
-    (type value)))
+    (class value)))
 
 
 (defmulti canonize
@@ -102,26 +108,26 @@
                          (map canonize (rest s)))
                    (map canonize s))]
     [:group
-     (delimiter "(")
+     (color-doc :delimiter "(")
      [:align (interpose :line elements)]
-     (delimiter ")")]))
+     (color-doc :delimiter ")")]))
 
 
 (defmethod canonize clojure.lang.IPersistentVector
   [v]
   [:group
-   (delimiter "[")
+   (color-doc :delimiter "[")
    [:align (interpose :line (map canonize v))]
-   (delimiter "]")])
+   (color-doc :delimiter "]")])
 
 
 (defmethod canonize clojure.lang.IPersistentSet
   [s]
   (let [entries (sort data/total-order (seq s))]
     [:group
-     (delimiter "#{")
+     (color-doc :delimiter "#{")
      [:align (interpose :line (map canonize entries))]
-     (delimiter "}")]))
+     (color-doc :delimiter "}")]))
 
 
 (defn- canonize-map
@@ -131,9 +137,9 @@
                      (sort-by first data/total-order)
                      (map canonize-kv))]
     [:group
-     (delimiter "{")
+     (color-doc :delimiter "{")
      [:align (interpose [:span "," :line] entries)]
-     (delimiter "}")]))
+     (color-doc :delimiter "}")]))
 
 
 (defmethod canonize clojure.lang.IPersistentMap
@@ -146,7 +152,7 @@
   (if *strict-mode*
     (throw (IllegalArgumentException.
              (str "No canonical representation for " (class r) ": " r)))
-    [:span (delimiter "#") (-> r class .getName) (canonize-map r)]))
+    [:span (color-doc :delimiter "#") (-> r class .getName) (canonize-map r)]))
 
 
 (prefer-method canonize clojure.lang.IRecord clojure.lang.IPersistentMap)
