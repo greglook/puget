@@ -46,6 +46,10 @@
     (are [data t v s] (and (= t (edn-tag data))
                            (= v (edn-value data))
                            (= s (edn-str data) (pr-str data)))
+         (tagged-value 'foo [:bar :baz])
+         'foo [:bar :baz]
+         "#foo [:bar :baz]"
+
          (java.util.Date. 1383271402749)
          'inst "2013-11-01T02:03:22.749-00:00"
          "#inst \"2013-11-01T02:03:22.749-00:00\""
