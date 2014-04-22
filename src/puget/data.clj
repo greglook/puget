@@ -2,8 +2,7 @@
   "Code to handle structured data, usually represented as EDN."
   (:refer-clojure :exclude [read read-string])
   (:require
-    [clojure.data.codec.base64 :as b64]
-    [clojure.edn :as edn])
+    [clojure.data.codec.base64 :as b64])
   (:import
     (java.net URI)
     (java.text SimpleDateFormat)
@@ -67,50 +66,6 @@
   ^String
   [v]
   (str \# (edn-tag v) \space (pr-str (edn-value v))))
-
-
-
-;; DATA READERS
-
-(def data-readers
-  "Atom containing a map of data readers supported by Puget."
-  (atom {} :validator map?))
-
-
-(defn register-reader!
-  "Registers a function as the data reader for an EDN tag."
-  [tag f]
-  {:pre [(symbol? tag)]}
-  (swap! data-readers assoc tag f))
-
-
-(defmacro defreader
-  [tag & body]
-  (let [reader-fn (symbol (str "read-" (name tag)))]
-    `(do
-       (defn ~reader-fn ~@body)
-       (register-reader! (quote ~tag) ~reader-fn))))
-
-
-(defn read
-  "Wraps clojure.edn/read to provide the currently-defined data readers as
-  default readers."
-  ([] (read *in*))
-  ([stream] (read nil stream))
-  ([opts stream]
-   (let [readers (merge @data-readers (:readers opts))
-         opts (assoc opts :readers readers)]
-     (edn/read opts stream))))
-
-
-(defn read-string
-  "Wraps clojure.edn/read-string to provide the currently-defined data readers
-  as default readers."
-  ([string] (read-string nil string))
-  ([opts string]
-   (let [readers (merge @data-readers (:readers opts))
-         opts (assoc opts :readers readers)]
-     (edn/read-string opts string))))
 
 
 
@@ -178,7 +133,7 @@
   (->> this b64/encode (map char) (apply str)))
 
 
-(defreader bin
+(defn read-bin
   "Reads a base64-encoded string into a byte array."
   ^bytes
   [^String bin]
@@ -189,7 +144,7 @@
 (extend-tagged-str URI uri)
 
 
-(defreader uri
+(defn read-uri
   "Constructs a URI from a string value."
   ^URI
   [^String uri]

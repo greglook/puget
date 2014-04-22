@@ -1,7 +1,8 @@
 (ns puget.data-test
   (:require
+    [clojure.edn :as edn]
     [clojure.test :refer :all]
-    [puget.data :as edn]))
+    [puget.data :as data]))
 
 
 (deftest total-ordering
@@ -19,7 +20,7 @@
                   #{'howdy 'doody}
                   '(2 3 4)
                   'x]]
-    (is (= (sort edn/total-order elements)
+    (is (= (sort data/total-order elements)
            [nil false true -123 0.0 3.14159M 4096N
             \a \b \c "one" "thirteen"
             :foo :zap :a-ns/baz :my-ns/bar
@@ -33,38 +34,37 @@
 
 
 (defrecord TestRecord [x y])
-(edn/extend-tagged-map TestRecord test/record)
+(data/extend-tagged-map TestRecord test/record)
 (deftest tagged-value-extension
   (let [rec (TestRecord. :foo :bar)]
-    (is (= 'test/record (edn/edn-tag rec)))
-    (is (= {:x :foo, :y :bar} (edn/edn-value rec)))))
+    (is (= 'test/record (data/edn-tag rec)))
+    (is (= {:x :foo, :y :bar} (data/edn-value rec)))))
 
 
 (deftest generic-tagged-value
-  (let [data (edn/tagged-value 'foo :bar)
-        string (edn/edn-str data)]
-    (is (= 'foo (edn/edn-tag data)))
-    (is (= :bar (edn/edn-value data)))
-    (is (= data (edn/read-string {:default edn/tagged-value} string)))))
+  (let [data (data/tagged-value 'foo :bar)
+        string (data/edn-str data)]
+    (is (= 'foo (data/edn-tag data)))
+    (is (= :bar (data/edn-value data)))
+    (is (= data (edn/read-string {:default data/tagged-value} string)))))
 
 
 (deftest byte-arrays
   (let [byte-arr (.getBytes "foobarbaz")
-        string (edn/edn-str byte-arr)
-        read-arr (edn/read-string string)]
-    (is (= 'bin (edn/edn-tag byte-arr)))
-    (is (= "Zm9vYmFyYmF6" (edn/edn-value byte-arr)))
+        string (data/edn-str byte-arr)
+        read-arr (edn/read-string {:readers {'bin data/read-bin}} string)]
+    (is (= 'bin (data/edn-tag byte-arr)))
+    (is (= "Zm9vYmFyYmF6" (data/edn-value byte-arr)))
     (is (= (count byte-arr) (count read-arr)))
     (is (= (seq byte-arr) (seq read-arr)))))
 
 
 (defn test-tagged-value
   [data t v]
-  (is (= t (edn/edn-tag data)))
-  (is (= v (edn/edn-value data)))
-  (let [s (edn/edn-str data)]
-    (is (= s (pr-str data)))
-    (is (= data (edn/read-string s)))))
+  (is (= t (data/edn-tag data)))
+  (is (= v (data/edn-value data)))
+  (let [s (data/edn-str data)]
+    (is (= s (pr-str data)))))
 
 
 (deftest built-in-printing
