@@ -34,7 +34,7 @@
 
 
 (defrecord TestRecord [x y])
-(data/extend-tagged-map TestRecord test/record)
+(data/extend-tagged-map TestRecord 'test/record)
 (deftest tagged-value-extension
   (let [rec (TestRecord. :foo :bar)]
     (is (= 'test/record (data/edn-tag rec)))

@@ -89,7 +89,7 @@
   `(do
      (extend-type ~t
        TaggedValue
-       (edn-tag [~'this] (quote ~tag))
+       (edn-tag [~'this] ~tag)
        (edn-value [~'this]
          ~(if (or (symbol? expr) (keyword? expr))
             (list expr 'this)
@@ -120,16 +120,16 @@
     (.format date-format date)))
 
 
-(extend-tagged-value Date inst format-utc)
+(extend-tagged-value Date 'inst format-utc)
 
 
 ; #uuid - Universally-unique identifier string.
-(extend-tagged-str UUID uuid)
+(extend-tagged-str UUID 'uuid)
 
 
 ; #bin - Binary data in the form of byte arrays.
 (extend-tagged-value
-  (class (byte-array 0)) bin
+  (class (byte-array 0)) 'bin
   (->> this b64/encode (map char) (apply str)))
 
 
@@ -141,7 +141,7 @@
 
 
 ; #uri - Universal Resource Identifier string.
-(extend-tagged-str URI uri)
+(extend-tagged-str URI 'uri)
 
 
 (defn read-uri
