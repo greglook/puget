@@ -70,7 +70,11 @@
 (deftest colored-printing
   (let [value [nil 1.0 true "foo" :bar]
         bw-str (with-out-str (pprint value))
-        colored-str (with-out-str (cprint value))
-        thin-str (with-out-str (cprint value {:width 5}))]
+        colored-str (cprint-str value)
+        thin-str (cprint-str value {:width 5})]
     (is (> (count colored-str) (count bw-str)))
-    (is (not= colored-str thin-str))))
+    (is (not= colored-str thin-str))
+    (is (= "123" (with-color (color-text :frobble "123"))))
+    (is (= "#{:baz}" (pprint-str #{:baz})))
+    (is (= (cprint-str :foo)
+           (with-color (color-text :keyword ":foo"))))))
