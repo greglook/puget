@@ -53,3 +53,9 @@
   the graphics."
   [string & codes]
   (str (esc codes) string (escape :none)))
+
+
+(defn strip
+  "Removes color codes from the given string."
+  [string]
+  (str/replace string #"\u001b\[[0-9;]*[mK]" ""))
