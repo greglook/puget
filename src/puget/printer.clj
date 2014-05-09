@@ -41,6 +41,13 @@
    :class-name      [:bold :blue]})
 
 
+(defmacro with-color
+  "Executes the given bodies with colored output enabled."
+  [& body]
+  `(binding [*colored-output* true]
+     ~@body))
+
+
 
 ;; COLORING FUNCTIONS
 
