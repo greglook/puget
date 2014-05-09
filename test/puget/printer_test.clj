@@ -1,6 +1,6 @@
 (ns puget.printer-test
   (:require
-    [clojure.string :as string]
+    [clojure.string :as str]
     [clojure.test :refer :all]
     (puget
       [data :as data]
@@ -9,7 +9,7 @@
 
 (deftest canonical-primitives
   (testing "Primitive values"
-    (are [v text] (= text (-> v pprint with-out-str string/trim))
+    (are [v text] (= text (-> v pprint with-out-str str/trim))
          nil     "nil"
          true    "true"
          false   "false"
@@ -29,7 +29,7 @@
 
 (deftest canonical-collections
   (testing "Collections"
-    (are [v text] (= text (-> v pprint with-out-str string/trim))
+    (are [v text] (= text (-> v pprint with-out-str str/trim))
          '(foo :bar)            "(foo :bar)"
          '(1 2 3)               "(1 2 3)"
          [4 "five" 6.0]         "[4 \"five\" 6.0]"

@@ -1,5 +1,5 @@
 (ns puget.ansi
-  (:require [clojure.string :as string]))
+  (:require [clojure.string :as str]))
 
 
 (def sgr-code
@@ -38,7 +38,7 @@
   codes."
   [codes]
   (let [codes (map sgr-code codes codes)
-        codes (string/join \; codes)]
+        codes (str/join \; codes)]
     (str \u001b \[ codes \m)))
 
 
