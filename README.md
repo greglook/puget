@@ -1,6 +1,8 @@
 Puget
 =====
 
+[![Build Status](https://travis-ci.org/greglook/puget.svg?branch=develop)](https://travis-ci.org/greglook/puget)
+
 Puget is a Clojure library for printing [EDN](https://github.com/edn-format/edn)
 values. Under the hood, Puget uses the
 [Fast Idiomatic Pretty-Printer](https://github.com/brandonbloom/fipp) library to
@@ -70,7 +72,7 @@ To use this version with Leiningen, add the following dependency to your project
 definition:
 
 ```clojure
-[mvxcvi/puget "0.3.0"]
+[mvxcvi/puget "0.4.0"]
 ```
 
 ## License

@@ -1,6 +1,8 @@
 (ns puget.data
   "Code to handle structured data, usually represented as EDN."
-  (:require [clojure.data.codec.base64 :as b64])
+  (:refer-clojure :exclude [read read-string])
+  (:require
+    [clojure.data.codec.base64 :as b64])
   (:import
     (java.net URI)
     (java.text SimpleDateFormat)
@@ -52,14 +54,12 @@
 
 
 
-;; EDN-TAGGED VALUE PROTOCOL
+;; TAGGED VALUE PROTOCOL
 
 (defprotocol TaggedValue
   (edn-tag [this] "Return the EDN tag symbol for this data type.")
   (edn-value [this] "Return the EDN value to follow the tag."))
 
-
-;; SERIALIZATION FUNCTIONS
 
 (defn edn-str
   "Converts the given TaggedValue data to a tagged EDN string."
@@ -68,17 +68,17 @@
   (str \# (edn-tag v) \space (pr-str (edn-value v))))
 
 
+
+;; EXTENSION FUNCTIONS
+
 (defmacro defprint-method
   "Defines a print-method for the given class which writes out the EDN
   serialization from `edn-str`."
   [t]
   `(defmethod print-method ~t
      [v# ^java.io.Writer w#]
-       (.write w# (edn-str v#))))
+     (.write w# (edn-str v#))))
 
-
-
-;; EXTENSION FUNCTIONS
 
 (defmacro extend-tagged-value
   "Extends the TaggedValue protocol with implementations which return the
@@ -89,7 +89,7 @@
   `(do
      (extend-type ~t
        TaggedValue
-       (edn-tag [~'this] (quote ~tag))
+       (edn-tag [~'this] ~tag)
        (edn-value [~'this]
          ~(if (or (symbol? expr) (keyword? expr))
             (list expr 'this)
@@ -111,7 +111,6 @@
 ;; BUILT-IN EDN TAGS
 
 ; #inst - Date-time instant as an ISO-8601 string.
-
 (defn- format-utc
   "Produces an ISO-8601 formatted date-time string from the given Date."
   [^Date date]
@@ -121,19 +120,16 @@
     (.format date-format date)))
 
 
-(extend-tagged-value Date inst format-utc)
+(extend-tagged-value Date 'inst format-utc)
 
 
 ; #uuid - Universally-unique identifier string.
-(extend-tagged-str UUID uuid)
+(extend-tagged-str UUID 'uuid)
 
-
-
-;; EXPANDED EDN TAG SUPPORT
 
 ; #bin - Binary data in the form of byte arrays.
 (extend-tagged-value
-  (class (byte-array 0)) bin
+  (class (byte-array 0)) 'bin
   (->> this b64/encode (map char) (apply str)))
 
 
@@ -145,7 +141,7 @@
 
 
 ; #uri - Universal Resource Identifier string.
-(extend-tagged-str URI uri)
+(extend-tagged-str URI 'uri)
 
 
 (defn read-uri
@@ -155,11 +151,21 @@
   (URI. uri))
 
 
+; #??? - default handling function
+(defrecord GenericTaggedValue
+  [tag value]
 
-;; DATA READERS
+  TaggedValue
+  (edn-tag [this] tag)
+  (edn-value [this] value))
 
-(def data-readers
-  "Map of data readers supported by Puget. Merge project-specific readers into
-  this map."
-  {'bin read-bin
-   'uri read-uri})
+
+(defprint-method GenericTaggedValue)
+
+
+(defn tagged-value
+  "Creates a generic tagged value record to represent some EDN value. This is
+  suitable for use as a default-data-reader function."
+  [tag value]
+  {:pre [(symbol? tag)]}
+  (->GenericTaggedValue tag value))

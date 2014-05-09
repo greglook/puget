@@ -1,7 +1,7 @@
 (ns puget.printer
   "Functions for canonical colored printing of EDN values."
   (:require
-    [clojure.string :as string]
+    [clojure.string :as str]
     [fipp.printer :refer [defprinter]]
     (puget
       [ansi :as ansi]
@@ -39,6 +39,13 @@
    :function-symbol [:bold :blue]
    :class-delimiter [:blue]
    :class-name      [:bold :blue]})
+
+
+(defmacro with-color
+  "Executes the given bodies with colored output enabled."
+  [& body]
+  `(binding [*colored-output* true]
+     ~@body))
 
 
 
@@ -181,6 +188,20 @@
 (defprinter pprint canonize {:width 80})
 
 
+(defn pprint-str
+  "Pretty-print a value to a string."
+  ([value]
+   (-> value
+       pprint
+       with-out-str
+       str/trim-newline))
+  ([value opts]
+   (-> value
+       (pprint opts)
+       with-out-str
+       str/trim-newline)))
+
+
 (defn cprint
   "Like pprint, but turns on colored output."
   ([value]
@@ -189,3 +210,17 @@
   ([value opts]
    (binding [*colored-output* true]
      (pprint value opts))))
+
+
+(defn cprint-str
+  "Pretty-prints a value to a colored string."
+  ([value]
+   (-> value
+       cprint
+       with-out-str
+       str/trim-newline))
+  ([value opts]
+   (-> value
+       (cprint opts)
+       with-out-str
+       str/trim-newline)))
