@@ -170,16 +170,23 @@
   (if *strict-mode*
     (throw (IllegalArgumentException.
              (str "No canonical representation for " (class r) ": " r)))
-    [:span (color-doc :delimiter "#") (-> r class .getName) (canonize-map r)]))
+    [:span
+     (color-doc :delimiter "#")
+     (.getName (class r))
+     (canonize-map r)]))
 
 
 (prefer-method canonize clojure.lang.IRecord clojure.lang.IPersistentMap)
 
 
 (defmethod canonize :tagged-value
-  [v]
-  [:span (color-doc :tag (str \# (data/edn-tag v)))
-    " " (canonize (data/edn-value v))])
+  [tv]
+  (let [tag   (data/edn-tag tv)
+        value (data/edn-value tv)]
+    [:span
+     (color-doc :tag (str \# tag))
+     (if (coll? value) :line " ")
+     (canonize value)]))
 
 
 (defmethod canonize :default
@@ -187,7 +194,8 @@
   (if *strict-mode*
     (throw (IllegalArgumentException.
              (str "No canonical representation for " (class value) ": " value)))
-    [:span (color-doc :class-delimiter "#<")
+    [:span
+     (color-doc :class-delimiter "#<")
      (color-doc :class-name (.getName (class value)))
      " " (str value)
      (color-doc :class-delimiter ">")]))
