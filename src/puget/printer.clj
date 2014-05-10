@@ -53,6 +53,16 @@
      ~@body))
 
 
+(defn set-color-scheme!
+  "Sets the color scheme for syntax elements. Pass either a map to merge into
+  the current color scheme, or a single element/colors pair. Colors should be
+  vector of color keywords."
+  ([colors]
+   (alter-var-root #'*color-scheme* merge colors))
+  ([element colors & more]
+   (set-color-scheme! (apply hash-map element colors more))))
+
+
 (defn set-map-commas!
   "Alters the *map-delimiter* var to be a comma."
   []
