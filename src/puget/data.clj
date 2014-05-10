@@ -11,7 +11,19 @@
 ;; TOTAL-ORDERING COMPARATOR
 
 (defn- type-priority
-  "Determines the 'priority' of the given value based on its type."
+  "Determines the 'priority' of the given value based on its type:
+  - nil
+  - Boolean
+  - Number
+  - Character
+  - String
+  - Keyword
+  - Symbol
+  - List
+  - Vector
+  - Set
+  - Map
+  - (all other types)"
   [x]
   (let [predicates [nil? false? true? number? char? string?
                     keyword? symbol? list? vector? set? map?]
@@ -32,22 +44,19 @@
 
 
 (defn total-order
-  "Comparator function that provides a total-ordering of EDN values.
+  "Comparator function that provides a total-ordering of EDN values. Values of
+  different types sort in order of their types, per `type-priority`. `false`
+  is before `true`, numbers are ordered by magnitude regardless of type, and
+  characters, strings, keywords, and symbols are ordered lexically.
 
-  Values of different types sort in order of their types:
-  - nil
-  - Boolean
-  - Number
-  - Character
-  - String
-  - Keyword
-  - Symbol
-  - List
-  - Vector
-  - Set
-  - Map
+  Sequential collections are sorted by comparing their elements one at a time.
+  If the sequences have equal leading elements, the longer one is ordered later.
+  Sets are compared by cardinality first, then elements in sorted order.
+  Finally, maps are compared by their entries in sorted order of their keys.
 
-  All other types are sorted by print representation."
+  All other types are sorted by class name. If the class implements
+  `Comparable`, the instances of it are compared using `compare`. Otherwise, the
+  values are ordered by print representation."
   [a b]
   (if (= a b) 0
     (let [pri-a (type-priority a)
@@ -56,25 +65,31 @@
         (< pri-a pri-b) -1
         (> pri-a pri-b)  1
 
+        (some #(% a) #{number? char? string? keyword? symbol?})
+        (compare a b)
+
         (map? a)
         (compare-seqs total-order
           (sort-by first total-order (seq a))
           (sort-by first total-order (seq b)))
 
         (set? a)
-        (let [cardinality (- (count a) (count b))]
-          (if (= cardinality 0)
-            (compare-seqs total-order a b)
-            cardinality))
+        (let [size-diff (- (count a) (count b))]
+          (if (not= size-diff 0)
+            size-diff
+            (compare-seqs total-order a b)))
 
         (coll? a)
         (compare-seqs total-order a b)
 
-        (instance? java.lang.Comparable a)
-        (compare a b)
-
         :else
-        (compare (pr-str a) (pr-str b))))))
+        (let [class-diff (compare (.getName (class a))
+                                  (.getName (class b)))]
+          (if (not= class-diff 0)
+            class-diff
+            (if (instance? java.lang.Comparable a)
+              (compare a b)
+              (compare (pr-str a) (pr-str b)))))))))
 
 
 
