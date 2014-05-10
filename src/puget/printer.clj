@@ -16,6 +16,11 @@
   false)
 
 
+(def ^:dynamic *map-delimiter*
+  "The text placed between key-value pairs."
+  "")
+
+
 (def ^:dynamic *colored-output*
   "Output ANSI colored output from print functions."
   false)
@@ -42,10 +47,16 @@
 
 
 (defmacro with-color
-  "Executes the given bodies with colored output enabled."
+  "Executes the given expressions with colored output enabled."
   [& body]
   `(binding [*colored-output* true]
      ~@body))
+
+
+(defn set-map-commas!
+  "Alters the *map-delimiter* var to be a comma."
+  []
+  (alter-var-root #'*map-delimiter* (constantly ",")))
 
 
 
@@ -145,7 +156,7 @@
                      (map canonize-kv))]
     [:group
      (color-doc :delimiter "{")
-     [:align (interpose [:span "," :line] entries)]
+     [:align (interpose [:span *map-delimiter* :line] entries)]
      (color-doc :delimiter "}")]))
 
 

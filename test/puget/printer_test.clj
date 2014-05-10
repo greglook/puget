@@ -29,11 +29,11 @@
 
 (deftest canonical-collections
   (testing "Collections"
-    (are [v text] (= text (-> v pprint with-out-str str/trim))
+    (are [v text] (= text (pprint-str v))
          '(foo :bar)            "(foo :bar)"
          '(1 2 3)               "(1 2 3)"
          [4 "five" 6.0]         "[4 \"five\" 6.0]"
-         {:foo 8 :bar 'baz}     "{:bar baz, :foo 8}" ; gets sorted
+         {:foo 8 :bar 'baz}     "{:bar baz :foo 8}" ; gets sorted
          #{:omega :alpha :beta} "#{:alpha :beta :omega}"))) ; also sorted
 
 
@@ -46,7 +46,7 @@
         (is (thrown? IllegalArgumentException (pprint r))
             "should not print non-EDN representation"))
       (is (= (with-out-str (pprint r))
-             "#puget.printer_test.TestRecord{:bar \\y, :foo \\x}\n")))))
+             "#puget.printer_test.TestRecord{:bar \\y :foo \\x}\n")))))
 
 
 (deftest canonical-tagged-value
