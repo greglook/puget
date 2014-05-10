@@ -10,6 +10,6 @@
    [fipp "0.4.1"]]
 
   :profiles
-  {:test
+  {:coverage
    {:plugins
     [[lein-cloverage "1.0.2"]]}})
