@@ -1,6 +1,5 @@
 (ns puget.data
   "Code to handle structured data, usually represented as EDN."
-  (:refer-clojure :exclude [read read-string])
   (:require
     [clojure.data.codec.base64 :as b64])
   (:import
@@ -57,12 +56,18 @@
         (< pri-a pri-b) -1
         (> pri-a pri-b)  1
 
-        (and (map? a) (map? b))
+        (map? a)
         (compare-seqs total-order
           (sort-by first total-order (seq a))
           (sort-by first total-order (seq b)))
 
-        (and (coll? a) (coll? b))
+        (set? a)
+        (let [cardinality (- (count a) (count b))]
+          (if (= cardinality 0)
+            (compare-seqs total-order a b)
+            cardinality))
+
+        (coll? a)
         (compare-seqs total-order a b)
 
         (instance? java.lang.Comparable a)
