@@ -22,6 +22,16 @@
     (or priority (count predicates))))
 
 
+(defn- compare-seqs
+  "Compare sequences using the given comparator. If any element of the
+  sequences orders differently, it determines the ordering. Otherwise, if the
+  prefix matches, the longer sequence sorts later."
+  [order xs ys]
+  (or (some #(when-not (= 0 %) %)
+            (map order xs ys))
+      (- (count xs) (count ys))))
+
+
 (defn total-order
   "Comparator function that provides a total-ordering of EDN values.
 
@@ -43,14 +53,23 @@
   (if (= a b) 0
     (let [pri-a (type-priority a)
           pri-b (type-priority b)]
-      (cond (< pri-a pri-b) -1
-            (> pri-a pri-b)  1
+      (cond
+        (< pri-a pri-b) -1
+        (> pri-a pri-b)  1
 
-            (instance? java.lang.Comparable a)
-            (compare a b)
+        (and (map? a) (map? b))
+        (compare-seqs total-order
+          (sort-by first total-order (seq a))
+          (sort-by first total-order (seq b)))
 
-            :else
-            (compare (pr-str a) (pr-str b))))))
+        (and (coll? a) (coll? b))
+        (compare-seqs total-order a b)
+
+        (instance? java.lang.Comparable a)
+        (compare a b)
+
+        :else
+        (compare (pr-str a) (pr-str b))))))
 
 
 

@@ -10,14 +10,20 @@
         elements [-123 4096N 3.14159M 0.0
                   nil true false
                   \c \b \a
+                  {:a 1 :b 2/3}
                   "thirteen" "one"
                   :foo :my-ns/bar :a-ns/baz :zap
                   'x 'aaa/foo 'z/bar 'y
                   t
                   {:x 1 :y 2}
+                  [1 \2 "3"]
                   '(1 2 3 4)
                   [1 2 3]
+                  '(1 2 3)
+                  [1 \2 "3"]
                   #{'howdy 'doody}
+                  {:a 1 :b 2/3 :c 'x}
+                  {:a 1 :b 4/3}
                   '(2 3 4)
                   'x]]
     (is (= (sort data/total-order elements)
@@ -25,10 +31,16 @@
             \a \b \c "one" "thirteen"
             :foo :zap :a-ns/baz :my-ns/bar
             'x 'x 'y 'aaa/foo 'z/bar
+            '(1 2 3)
             '(1 2 3 4)
             '(2 3 4)
             [1 2 3]
+            [1 \2 "3"]
+            [1 \2 "3"]
             #{'howdy 'doody}
+            {:a 1 :b 2/3}
+            {:a 1 :b 2/3 :c 'x}
+            {:a 1 :b 4/3}
             {:x 1 :y 2}
             t]))))
 
