@@ -3,6 +3,7 @@ Puget
 
 [![Build Status](https://travis-ci.org/greglook/puget.svg?branch=develop)](https://travis-ci.org/greglook/puget)
 [![Coverage Status](https://coveralls.io/repos/greglook/puget/badge.png?branch=develop)](https://coveralls.io/r/greglook/puget?branch=develop)
+[![Dependency Status](https://www.versioneye.com/user/projects/53718cc914c1586649000048/badge.png)](https://www.versioneye.com/user/projects/53718cc914c1586649000048)
 
 Puget is a Clojure library for printing [EDN](https://github.com/edn-format/edn)
 values. Under the hood, Puget uses the
