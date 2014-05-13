@@ -74,7 +74,30 @@ To use this version with Leiningen, add the following dependency to your project
 definition:
 
 ```clojure
-[mvxcvi/puget "0.4.0"]
+[mvxcvi/puget "0.5.0"]
+```
+
+From the REPL, you can use the following helper functions for some control of
+Puget:
+
+```clojure
+user=> (puget/set-color-scheme! :nil [:bold :black])
+{:boolean [:green]
+ :class-delimiter [:blue]
+ :class-name [:bold :blue]
+ :delimiter [:bold :red]
+ :function-symbol [:bold :blue]
+ :keyword [:bold :yellow]
+ :nil [:bold :black]
+ :number [:cyan]
+ :string [:bold :magenta]
+ :symbol nil
+ :tag [:red]}
+user=> (puget/set-map-commas!)
+","
+user=> (puget/pprint {:z 'qx :a 123})
+;; {:a 123, :z qx}
+nil
 ```
 
 ## License

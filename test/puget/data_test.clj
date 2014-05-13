@@ -5,32 +5,49 @@
     [puget.data :as data]))
 
 
-(deftest total-ordering
-  (let [t (java.util.Date. 1234567890)
-        elements [-123 4096N 3.14159M 0.0
-                  nil true false
-                  \c \b \a
-                  "thirteen" "one"
-                  :foo :my-ns/bar :a-ns/baz :zap
-                  'x 'aaa/foo 'z/bar 'y
-                  t
-                  {:x 1 :y 2}
-                  '(1 2 3 4)
-                  [1 2 3]
-                  #{'howdy 'doody}
-                  '(2 3 4)
-                  'x]]
-    (is (= (sort data/total-order elements)
-           [nil false true -123 0.0 3.14159M 4096N
-            \a \b \c "one" "thirteen"
-            :foo :zap :a-ns/baz :my-ns/bar
-            'x 'x 'y 'aaa/foo 'z/bar
-            '(1 2 3 4)
-            '(2 3 4)
-            [1 2 3]
-            #{'howdy 'doody}
-            {:x 1 :y 2}
-            t]))))
+(defn- is-sorted
+  [& values]
+  (is (= values (sort data/total-order (shuffle values)))))
+
+
+(deftest order-primitives
+  (is-sorted
+    nil false true 0 \a "a" :a 'a))
+
+(deftest order-numbers
+  (is-sorted
+    -123 0.0 3.14159M 4096N))
+
+(deftest order-strings
+  (is-sorted
+    "alpha" "alphabet" "beta" "omega"))
+
+(deftest order-keywords
+  (is-sorted
+    :foo :zap :a-ns/baz :my-ns/bar))
+
+(deftest order-symbols
+  (is-sorted
+    'x 'y 'aaa/foo 'z/bar))
+
+(deftest order-sequences
+  (is-sorted
+    '(1 2 3) [1 2 3] [1 2 3 4] [1 2 4] [1 \2 "3"] [\1] #{\1}))
+
+(deftest order-sets
+  (is-sorted
+    #{:one} #{:two} #{:zzz} #{:one :two} #{:one :zzz}))
+
+(deftest order-maps
+  (is-sorted
+    {:a 1 :b 2/3} {:a 1 :b 2/3 :c 'x} {:a 1 :b 4/3} {:x 1 :y 2}))
+
+(deftest order-classes
+  (is-sorted
+    (java.util.Currency/getInstance "JPY")
+    (java.util.Currency/getInstance "USD")
+    (java.util.Date. 1234567890)
+    (java.util.Date. 1234567891)))
 
 
 (defrecord TestRecord [x y])

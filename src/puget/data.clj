@@ -1,6 +1,5 @@
 (ns puget.data
   "Code to handle structured data, usually represented as EDN."
-  (:refer-clojure :exclude [read read-string])
   (:require
     [clojure.data.codec.base64 :as b64])
   (:import
@@ -12,20 +11,7 @@
 ;; TOTAL-ORDERING COMPARATOR
 
 (defn- type-priority
-  "Determines the 'priority' of the given value based on its type."
-  [x]
-  (let [predicates [nil? false? true? number? char? string?
-                    keyword? symbol? list? vector? set? map?]
-        priority (->> predicates
-                      (map vector (range))
-                      (some (fn [[i p]] (when (p x) i))))]
-    (or priority (count predicates))))
-
-
-(defn total-order
-  "Comparator function that provides a total-ordering of EDN values.
-
-  Values of different types sort in order of their types:
+  "Determines the 'priority' of the given value based on its type:
   - nil
   - Boolean
   - Number
@@ -37,20 +23,73 @@
   - Vector
   - Set
   - Map
+  - (all other types)"
+  [x]
+  (let [predicates [nil? false? true? number? char? string?
+                    keyword? symbol? list? vector? set? map?]
+        priority (->> predicates
+                      (map vector (range))
+                      (some (fn [[i p]] (when (p x) i))))]
+    (or priority (count predicates))))
 
-  All other types are sorted by print representation."
+
+(defn- compare-seqs
+  "Compare sequences using the given comparator. If any element of the
+  sequences orders differently, it determines the ordering. Otherwise, if the
+  prefix matches, the longer sequence sorts later."
+  [order xs ys]
+  (or (some #(when-not (= 0 %) %)
+            (map order xs ys))
+      (- (count xs) (count ys))))
+
+
+(defn total-order
+  "Comparator function that provides a total-ordering of EDN values. Values of
+  different types sort in order of their types, per `type-priority`. `false`
+  is before `true`, numbers are ordered by magnitude regardless of type, and
+  characters, strings, keywords, and symbols are ordered lexically.
+
+  Sequential collections are sorted by comparing their elements one at a time.
+  If the sequences have equal leading elements, the longer one is ordered later.
+  Sets are compared by cardinality first, then elements in sorted order.
+  Finally, maps are compared by their entries in sorted order of their keys.
+
+  All other types are sorted by class name. If the class implements
+  `Comparable`, the instances of it are compared using `compare`. Otherwise, the
+  values are ordered by print representation."
   [a b]
   (if (= a b) 0
     (let [pri-a (type-priority a)
           pri-b (type-priority b)]
-      (cond (< pri-a pri-b) -1
-            (> pri-a pri-b)  1
+      (cond
+        (< pri-a pri-b) -1
+        (> pri-a pri-b)  1
 
-            (instance? java.lang.Comparable a)
-            (compare a b)
+        (some #(% a) #{number? char? string? keyword? symbol?})
+        (compare a b)
 
-            :else
-            (compare (pr-str a) (pr-str b))))))
+        (map? a)
+        (compare-seqs total-order
+          (sort-by first total-order (seq a))
+          (sort-by first total-order (seq b)))
+
+        (set? a)
+        (let [size-diff (- (count a) (count b))]
+          (if (not= size-diff 0)
+            size-diff
+            (compare-seqs total-order a b)))
+
+        (coll? a)
+        (compare-seqs total-order a b)
+
+        :else
+        (let [class-diff (compare (.getName (class a))
+                                  (.getName (class b)))]
+          (if (not= class-diff 0)
+            class-diff
+            (if (instance? java.lang.Comparable a)
+              (compare a b)
+              (compare (pr-str a) (pr-str b)))))))))
 
 
 

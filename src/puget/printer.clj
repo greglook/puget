@@ -16,6 +16,11 @@
   false)
 
 
+(def ^:dynamic *map-delimiter*
+  "The text placed between key-value pairs."
+  "")
+
+
 (def ^:dynamic *colored-output*
   "Output ANSI colored output from print functions."
   false)
@@ -42,10 +47,26 @@
 
 
 (defmacro with-color
-  "Executes the given bodies with colored output enabled."
+  "Executes the given expressions with colored output enabled."
   [& body]
   `(binding [*colored-output* true]
      ~@body))
+
+
+(defn set-color-scheme!
+  "Sets the color scheme for syntax elements. Pass either a map to merge into
+  the current color scheme, or a single element/colors pair. Colors should be
+  vector of color keywords."
+  ([colors]
+   (alter-var-root #'*color-scheme* merge colors))
+  ([element colors & more]
+   (set-color-scheme! (apply hash-map element colors more))))
+
+
+(defn set-map-commas!
+  "Alters the *map-delimiter* var to be a comma."
+  []
+  (alter-var-root #'*map-delimiter* (constantly ",")))
 
 
 
@@ -145,7 +166,7 @@
                      (map canonize-kv))]
     [:group
      (color-doc :delimiter "{")
-     [:align (interpose [:span "," :line] entries)]
+     [:align (interpose [:span *map-delimiter* :line] entries)]
      (color-doc :delimiter "}")]))
 
 
@@ -159,16 +180,23 @@
   (if *strict-mode*
     (throw (IllegalArgumentException.
              (str "No canonical representation for " (class r) ": " r)))
-    [:span (color-doc :delimiter "#") (-> r class .getName) (canonize-map r)]))
+    [:span
+     (color-doc :delimiter "#")
+     (.getName (class r))
+     (canonize-map r)]))
 
 
 (prefer-method canonize clojure.lang.IRecord clojure.lang.IPersistentMap)
 
 
 (defmethod canonize :tagged-value
-  [v]
-  [:span (color-doc :tag (str \# (data/edn-tag v)))
-    " " (canonize (data/edn-value v))])
+  [tv]
+  (let [tag   (data/edn-tag tv)
+        value (data/edn-value tv)]
+    [:span
+     (color-doc :tag (str \# tag))
+     (if (coll? value) :line " ")
+     (canonize value)]))
 
 
 (defmethod canonize :default
@@ -176,7 +204,8 @@
   (if *strict-mode*
     (throw (IllegalArgumentException.
              (str "No canonical representation for " (class value) ": " value)))
-    [:span (color-doc :class-delimiter "#<")
+    [:span
+     (color-doc :class-delimiter "#<")
      (color-doc :class-name (.getName (class value)))
      " " (str value)
      (color-doc :class-delimiter ">")]))
