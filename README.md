@@ -3,7 +3,7 @@ Puget
 
 [![Build Status](https://travis-ci.org/greglook/puget.svg?branch=develop)](https://travis-ci.org/greglook/puget)
 [![Coverage Status](https://coveralls.io/repos/greglook/puget/badge.png?branch=develop)](https://coveralls.io/r/greglook/puget?branch=develop)
-[![Dependency Status](https://www.versioneye.com/user/projects/53718cc914c1586649000048/badge.png)](https://www.versioneye.com/clojure/mvxcvi:puget/0.5.0)
+[![Dependency Status](https://www.versioneye.com/user/projects/53718cc914c1586649000048/badge.png)](https://www.versioneye.com/clojure/mvxcvi:puget/0.5.1)
 
 Puget is a Clojure library for printing [EDN](https://github.com/edn-format/edn)
 values. Under the hood, Puget uses the
@@ -74,7 +74,7 @@ To use this version with Leiningen, add the following dependency to your project
 definition:
 
 ```clojure
-[mvxcvi/puget "0.4.0"]
+[mvxcvi/puget "0.5.1"]
 ```
 
 From the REPL, you can use the following helper functions for some control of
