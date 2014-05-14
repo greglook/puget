@@ -3,7 +3,7 @@ Puget
 
 [![Build Status](https://travis-ci.org/greglook/puget.svg?branch=develop)](https://travis-ci.org/greglook/puget)
 [![Coverage Status](https://coveralls.io/repos/greglook/puget/badge.png?branch=develop)](https://coveralls.io/r/greglook/puget?branch=develop)
-[![Dependency Status](https://www.versioneye.com/user/projects/53718cc914c1586649000048/badge.png)](https://www.versioneye.com/clojure/mvxcvi:puget/0.5.0)
+[![Dependency Status](https://www.versioneye.com/user/projects/53718cc914c1586649000048/badge.png)](https://www.versioneye.com/clojure/mvxcvi:puget/0.6.0-SNAPSHOT)
 
 Puget is a Clojure library for printing [EDN](https://github.com/edn-format/edn)
 values. Under the hood, Puget uses the
@@ -46,11 +46,11 @@ var can be bound to true to throw an exception for these values instead.
 (def usd (java.util.Currency/getInstance "USD"))
 
 (puget/pprint usd)
-; #<java.util.Currency USD>
+;; #<java.util.Currency USD>
 
 (binding [puget/*strict-mode* true]
   (puget/pprint usd))
-; IllegalArgumentException: No canonical representation for class java.util.Currency: USD
+;; IllegalArgumentException: No canonical representation for class java.util.Currency: USD
 ```
 
 ## EDN Tagged Values
@@ -68,13 +68,13 @@ data, and `#uri` for specifying Uniform Resource Identifiers.
 
 ## Installation
 
-Puget is [published on Clojars](https://clojars.org/mvxcvi/puget).
+Puget releases are [published on Clojars](https://clojars.org/mvxcvi/puget).
 
 To use this version with Leiningen, add the following dependency to your project
 definition:
 
 ```clojure
-[mvxcvi/puget "0.4.0"]
+[mvxcvi/puget "0.6.0-SNAPSHOT"]
 ```
 
 From the REPL, you can use the following helper functions for some control of
