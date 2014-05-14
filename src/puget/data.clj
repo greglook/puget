@@ -121,18 +121,17 @@
 
 (defmacro extend-tagged-value
   "Extends the TaggedValue protocol with implementations which return the
-  given symbol as the tag and use the body to calculate the value. The symbol
-  'this' is bound to the data. This macro also defines a print-method which
+  given symbol as the tag and use the given expression to calculate the value.
+  The expression should resolve to a function which accepts one argument and
+  returns the serialized value. This macro also defines a print-method which
   delegates to edn-str."
   [t tag expr]
-  `(do
+  `(let [value-fn# ~expr]
      (extend-type ~t
        TaggedValue
-       (edn-tag [~'this] ~tag)
-       (edn-value [~'this]
-         ~(if (or (symbol? expr) (keyword? expr))
-            (list expr 'this)
-            expr)))
+       (edn-tag [this#] ~tag)
+       (edn-value [this#]
+         (value-fn# this#)))
      (defprint-method ~t)))
 
 
@@ -143,7 +142,8 @@
 
 (defmacro extend-tagged-map
   [c tag]
-  `(extend-tagged-value ~c ~tag (into {} (seq ~'this))))
+  `(extend-tagged-value ~c ~tag
+     (comp (partial into {}) seq)))
 
 
 
@@ -169,7 +169,7 @@
 ; #bin - Binary data in the form of byte arrays.
 (extend-tagged-value
   (class (byte-array 0)) 'bin
-  (->> this b64/encode (map char) (apply str)))
+  #(->> % b64/encode (map char) (apply str)))
 
 
 (defn read-bin
