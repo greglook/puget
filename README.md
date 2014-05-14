@@ -6,12 +6,24 @@ Puget
 [![Dependency Status](https://www.versioneye.com/user/projects/53718cc914c1586649000048/badge.png)](https://www.versioneye.com/clojure/mvxcvi:puget/0.6.0-SNAPSHOT)
 
 Puget is a Clojure library for printing [EDN](https://github.com/edn-format/edn)
-values. Under the hood, Puget uses the
+values. Under the hood, Puget formats data into a _print document_ and uses the
 [Fast Idiomatic Pretty-Printer](https://github.com/brandonbloom/fipp) library to
-format values into a _print document_. Puget offers two main features which set
-it apart from FIPP and Clojure's native pretty-printing functions.
+render it. Puget offers two main features which set it apart from FIPP and
+Clojure's native pretty-printing functions: [syntax coloring](#syntax-coloring)
+and [canonical printing](#canonical-representation).
 
-## ANSI Coloring
+## Installation
+
+Puget releases are [published on Clojars](https://clojars.org/mvxcvi/puget).
+
+To use this version with Leiningen, add the following dependency to your project
+definition:
+
+```clojure
+[mvxcvi/puget "0.6.0-SNAPSHOT"]
+```
+
+## Syntax Coloring
 
 Puget's first main feature is colorizing the printed data using ANSI escape
 codes. This is kind of like syntax highlighting, except much easier since the
@@ -19,8 +31,8 @@ code works directly with the data instead of parsing it from text.
 
 Different syntax elements are given different colors to make reading the
 printed output much easier for humans. The `*colored-output*` var can be set to
-enable colorization - alternately, the `cprint` function prints with colored
-output enabled:
+enable colorization using the `with-color` macro - alternately, the `cprint`
+function prints with colored output enabled:
 
 ![colorization example](screenshot.png)
 
@@ -66,22 +78,35 @@ Puget extends this protocol to support the `#inst` and `#uuid` built-ins from
 the EDN standard. In addition, it supports `#bin` for base64-encoded binary
 data, and `#uri` for specifying Uniform Resource Identifiers.
 
-## Installation
-
-Puget releases are [published on Clojars](https://clojars.org/mvxcvi/puget).
-
-To use this version with Leiningen, add the following dependency to your project
-definition:
+To give your own types a tag extension, use the `extend-tagged-*` functions. For
+example, to extend `#inst` tagging to Joda `DateTime` objects:
 
 ```clojure
-[mvxcvi/puget "0.6.0-SNAPSHOT"]
+(require '(clj-time [core :as t] [format :as f]))
+
+(t/now)
+#<org.joda.time.DateTime 2014-05-14T00:58:40.922Z>
+
+(require 'puget.data)
+
+(puget.data/extend-tagged-value
+  org.joda.time.DateTime 'inst
+  (partial f/unparse (ftime/formatters :date-time)))
+
+(t/now)
+#inst "2014-05-14T01:05:53.885Z"
 ```
 
-From the REPL, you can use the following helper functions for some control of
-Puget:
+## Customization
+
+Puget's colors are defined in the `*color-scheme*` var, which maps syntax
+element keywords to a vector of ANSI style keywords to apply. The
+`set-color-scheme!` function offers a convenient way to change the color scheme
+by providing either color/style argument pairs or a single map of colors to
+merge into the current color scheme.
 
 ```clojure
-user=> (puget/set-color-scheme! :nil [:bold :black])
+(puget/set-color-scheme! :nil [:bold :black])
 {:boolean [:green]
  :class-delimiter [:blue]
  :class-name [:bold :blue]
@@ -93,11 +118,22 @@ user=> (puget/set-color-scheme! :nil [:bold :black])
  :string [:bold :magenta]
  :symbol nil
  :tag [:red]}
-user=> (puget/set-map-commas!)
-","
-user=> (puget/pprint {:z 'qx :a 123})
+```
+
+By default, Puget does not put any delimiters between map entries. This is
+controlled by the `*map-delimiter*` var. For convenience, Puget provides a
+function to change the delimiter to a comma instead:
+
+```clojure
+(def value {:z 'qx :a 123})
+
+(puget/pprint value)
+;; {:a 123 :z qx}
+
+(puget/set-map-commas!)
+
+(puget/pprint value)
 ;; {:a 123, :z qx}
-nil
 ```
 
 ## License
