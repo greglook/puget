@@ -2,7 +2,7 @@
   "Functions for canonical colored printing of EDN values."
   (:require
     [clojure.string :as str]
-    [fipp.printer :refer [defprinter]]
+    [fipp.printer :as fipp]
     (puget
       [ansi :as ansi]
       [data :as data])))
@@ -214,16 +214,22 @@
 
 ;; PRINT FUNCTIONS
 
-(defprinter pprint canonize {:width 80})
+(def ^:private default-opts
+  "Default Puget printing options."
+  {:width 80})
+
+
+(defn pprint
+  ([value]
+   (pprint value default-opts))
+  ([value opts]
+   (fipp/pprint-document (canonize value) opts)))
 
 
 (defn pprint-str
   "Pretty-print a value to a string."
   ([value]
-   (-> value
-       pprint
-       with-out-str
-       str/trim-newline))
+   (pprint-str value default-opts))
   ([value opts]
    (-> value
        (pprint opts)
@@ -234,8 +240,7 @@
 (defn cprint
   "Like pprint, but turns on colored output."
   ([value]
-   (binding [*colored-output* true]
-     (pprint value)))
+   (cprint value default-opts))
   ([value opts]
    (binding [*colored-output* true]
      (pprint value opts))))
@@ -244,10 +249,7 @@
 (defn cprint-str
   "Pretty-prints a value to a colored string."
   ([value]
-   (-> value
-       cprint
-       with-out-str
-       str/trim-newline))
+   (cprint-str value default-opts))
   ([value opts]
    (-> value
        (cprint opts)
