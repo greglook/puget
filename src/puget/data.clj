@@ -38,8 +38,7 @@
   sequences orders differently, it determines the ordering. Otherwise, if the
   prefix matches, the longer sequence sorts later."
   [order xs ys]
-  (or (some #(when-not (= 0 %) %)
-            (map order xs ys))
+  (or (first (remove zero? (map order xs ys)))
       (- (count xs) (count ys))))
 
 
