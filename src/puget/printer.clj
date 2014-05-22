@@ -5,7 +5,8 @@
     [fipp.printer :as fipp]
     (puget
       [ansi :as ansi]
-      [data :as data])))
+      [data :as data]
+      [order :as order])))
 
 
 ;; CONTROL VARS
@@ -151,7 +152,7 @@
 
 (defmethod canonize clojure.lang.IPersistentSet
   [s]
-  (let [entries (sort data/total-order (seq s))]
+  (let [entries (sort order/rank (seq s))]
     [:group
      (color-doc :delimiter "#{")
      [:align (interpose :line (map canonize entries))]
@@ -161,9 +162,7 @@
 (defn- canonize-map
   [m]
   (let [canonize-kv (fn [[k v]] [:span (canonize k) " " (canonize v)])
-        entries (->> (seq m)
-                     (sort-by first data/total-order)
-                     (map canonize-kv))]
+        entries (->> (seq m) (sort-by first order/rank) (map canonize-kv))]
     [:group
      (color-doc :delimiter "{")
      [:align (interpose [:span *map-delimiter* :line] entries)]
