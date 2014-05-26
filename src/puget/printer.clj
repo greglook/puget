@@ -2,10 +2,11 @@
   "Functions for canonical colored printing of EDN values."
   (:require
     [clojure.string :as str]
-    [fipp.printer :refer [defprinter]]
+    [fipp.printer :as fipp]
     (puget
       [ansi :as ansi]
-      [data :as data])))
+      [data :as data]
+      [order :as order])))
 
 
 ;; CONTROL VARS
@@ -151,7 +152,7 @@
 
 (defmethod canonize clojure.lang.IPersistentSet
   [s]
-  (let [entries (sort data/total-order (seq s))]
+  (let [entries (sort order/rank (seq s))]
     [:group
      (color-doc :delimiter "#{")
      [:align (interpose :line (map canonize entries))]
@@ -161,9 +162,7 @@
 (defn- canonize-map
   [m]
   (let [canonize-kv (fn [[k v]] [:span (canonize k) " " (canonize v)])
-        entries (->> (seq m)
-                     (sort-by first data/total-order)
-                     (map canonize-kv))]
+        entries (->> (seq m) (sort-by first order/rank) (map canonize-kv))]
     [:group
      (color-doc :delimiter "{")
      [:align (interpose [:span *map-delimiter* :line] entries)]
@@ -214,16 +213,22 @@
 
 ;; PRINT FUNCTIONS
 
-(defprinter pprint canonize {:width 80})
+(def ^:private default-opts
+  "Default Puget printing options."
+  {:width 80})
+
+
+(defn pprint
+  ([value]
+   (pprint value default-opts))
+  ([value opts]
+   (fipp/pprint-document (canonize value) opts)))
 
 
 (defn pprint-str
   "Pretty-print a value to a string."
   ([value]
-   (-> value
-       pprint
-       with-out-str
-       str/trim-newline))
+   (pprint-str value default-opts))
   ([value opts]
    (-> value
        (pprint opts)
@@ -234,8 +239,7 @@
 (defn cprint
   "Like pprint, but turns on colored output."
   ([value]
-   (binding [*colored-output* true]
-     (pprint value)))
+   (cprint value default-opts))
   ([value opts]
    (binding [*colored-output* true]
      (pprint value opts))))
@@ -244,10 +248,7 @@
 (defn cprint-str
   "Pretty-prints a value to a colored string."
   ([value]
-   (-> value
-       cprint
-       with-out-str
-       str/trim-newline))
+   (cprint-str value default-opts))
   ([value opts]
    (-> value
        (cprint opts)

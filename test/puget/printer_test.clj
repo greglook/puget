@@ -3,8 +3,25 @@
     [clojure.string :as str]
     [clojure.test :refer :all]
     (puget
-      [data :as data]
+      [data :refer [TaggedValue]]
       [printer :refer :all])))
+
+
+(deftest color-scheme-setting
+  (let [old-scheme *color-scheme*]
+    (set-color-scheme! {:tag [:green]})
+    (is (= [:green] (:tag *color-scheme*)))
+    (set-color-scheme! :nil [:black] :number [:bold :cyan])
+    (is (= [:black] (:nil *color-scheme*)))
+    (is (= [:bold :cyan] (:number *color-scheme*)))
+    (set-color-scheme! old-scheme)))
+
+
+(deftest map-delimiter-setting
+  (let [old-delim *map-delimiter*]
+    (set-map-commas!)
+    (is (= "," *map-delimiter*))
+    (alter-var-root #'*map-delimiter* (constantly old-delim))))
 
 
 (deftest canonical-primitives
@@ -50,7 +67,7 @@
 
 
 (deftest canonical-tagged-value
-  (let [tval (reify data/TaggedValue
+  (let [tval (reify TaggedValue
                (edn-tag [this] 'foo)
                (edn-value [this] :bar/baz))
         doc (canonize tval)]))
