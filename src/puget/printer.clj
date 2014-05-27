@@ -161,8 +161,18 @@
 
 (defn- canonize-map
   [m]
-  (let [canonize-kv (fn [[k v]] [:span (canonize k) " " (canonize v)])
-        entries (->> (seq m) (sort-by first order/rank) (map canonize-kv))]
+  (let [canonize-kv
+        (fn [[k v]]
+          [:span
+           (canonize k)
+           (cond
+             (satisfies? data/TaggedValue v) " "
+             (coll? v) :line
+             :else " ")
+           (canonize v)])
+        entries (->> (seq m)
+                     (sort-by first order/rank)
+                     (map canonize-kv))]
     [:group
      (color-doc :delimiter "{")
      [:align (interpose [:span *map-delimiter* :line] entries)]
