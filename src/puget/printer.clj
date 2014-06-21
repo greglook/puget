@@ -64,6 +64,14 @@
    :class-name      [:bold :blue]})
 
 
+(defn- illegal-when-strict
+  "Checks whether strict mode is enabled and throws an exception if so."
+  [value]
+  (when (:strict *options*)
+    (throw (IllegalArgumentException.
+             (str "No canonical representation for " (class value) ": " value)))))
+
+
 (defmacro with-color
   "Executes the given expressions with colored output enabled."
   [& body]
@@ -202,14 +210,12 @@
 
 
 (defmethod canonize clojure.lang.IRecord
-  [r]
-  (if *strict-mode*
-    (throw (IllegalArgumentException.
-             (str "No canonical representation for " (class r) ": " r)))
-    [:span
-     (color-doc :delimiter "#")
-     (.getName (class r))
-     (canonize-map r)]))
+  [record]
+  (illegal-when-strict record)
+  [:span
+   (color-doc :delimiter "#")
+   (.getName (class record))
+   (canonize-map record)])
 
 
 (prefer-method canonize clojure.lang.IRecord clojure.lang.IPersistentMap)
@@ -227,14 +233,12 @@
 
 (defmethod canonize :default
   [value]
-  (if *strict-mode*
-    (throw (IllegalArgumentException.
-             (str "No canonical representation for " (class value) ": " value)))
-    [:span
-     (color-doc :class-delimiter "#<")
-     (color-doc :class-name (.getName (class value)))
-     " " (str value)
-     (color-doc :class-delimiter ">")]))
+  (illegal-when-strict value)
+  [:span
+   (color-doc :class-delimiter "#<")
+   (color-doc :class-name (.getName (class value)))
+   " " (str value)
+   (color-doc :class-delimiter ">")])
 
 
 
