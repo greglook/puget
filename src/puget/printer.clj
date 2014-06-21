@@ -244,22 +244,20 @@
 
 ;; PRINT FUNCTIONS
 
-(def ^:private default-opts
-  "Default Puget printing options."
-  {:width 80})
-
-
 (defn pprint
   ([value]
-   (pprint value default-opts))
+   (pprint value *options*))
   ([value opts]
-   (fipp/pprint-document (canonize value) opts)))
+   (let [doc (if-let [m (and (:print-meta opts) (meta value))]
+               [:align [:span "^" (canonize m)] :line (canonize value)]
+               (canonize value))]
+     (fipp/pprint-document doc {:width (:width opts)}))))
 
 
 (defn pprint-str
   "Pretty-print a value to a string."
   ([value]
-   (pprint-str value default-opts))
+   (pprint-str value *options*))
   ([value opts]
    (-> value
        (pprint opts)
@@ -270,7 +268,7 @@
 (defn cprint
   "Like pprint, but turns on colored output."
   ([value]
-   (cprint value default-opts))
+   (cprint value *options*))
   ([value opts]
    (with-color (pprint value opts))))
 
@@ -278,7 +276,7 @@
 (defn cprint-str
   "Pretty-prints a value to a colored string."
   ([value]
-   (cprint-str value default-opts))
+   (cprint-str value *options*))
   ([value opts]
    (-> value
        (cprint opts)
