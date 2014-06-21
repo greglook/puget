@@ -11,6 +11,22 @@
 
 ;; CONTROL VARS
 
+; TODO: the dynamism here is probably overkill and makes var resolution much
+; more expensive. The control functions below use alter-var-root anyway, so
+; it's probably better to make these normal vars. Potentially, overrides can
+; be supported better through an 'opts' map passed to the printer functions.
+
+(def ^:dynamic *options*
+  "Printer control options.
+
+  TODO: document individual options."
+  {:map-delimiter ""
+   :color-scheme {}
+   :print-color false
+   :print-meta nil    ; default to clojure.core/*print-meta* ?
+   :strict false})
+
+
 (def ^:dynamic *strict-mode*
   "If true, throw an exception if there is no canonical EDN representation for
   a given value. This generally applies to any non-primitive value which does
@@ -78,8 +94,8 @@
   "Constructs a text doc, which may be colored if *colored-output* is true.
   Element must be a key from the color-scheme map."
   [element text]
-  (let [codes (seq (*color-scheme* element))]
-    (if (and *colored-output* codes)
+  (let [codes (-> *options* :color-scheme (get element) seq)]
+    (if (and (:print-color *options*) codes)
       [:span [:pass (ansi/esc codes)] text [:pass (ansi/escape :none)]]
       text)))
 
@@ -90,8 +106,8 @@
   Puget, but which is not directly printed by the library. Note that this
   function still obeys the *colored-output* var."
   [element text]
-  (let [codes (seq (*color-scheme* element))]
-    (if (and *colored-output* codes)
+  (let [codes (-> *options* :color-scheme (get element) seq)]
+    (if (and (:print-color *options*) codes)
       (str (ansi/esc codes) text (ansi/escape :none))
       text)))
 
@@ -176,7 +192,7 @@
                      (map canonize-kv))]
     [:group
      (color-doc :delimiter "{")
-     [:align (interpose [:span *map-delimiter* :line] entries)]
+     [:align (interpose [:span (:map-delimiter *options*) :line] entries)]
      (color-doc :delimiter "}")]))
 
 
