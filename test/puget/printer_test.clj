@@ -7,23 +7,21 @@
       [printer :refer :all])))
 
 
-#_
 (deftest color-scheme-setting
-  (let [old-scheme *color-scheme*]
+  (let [old-scheme (:color-scheme *options*)]
     (set-color-scheme! {:tag [:green]})
-    (is (= [:green] (:tag *color-scheme*)))
+    (is (= [:green] (:tag (:color-scheme *options*))))
     (set-color-scheme! :nil [:black] :number [:bold :cyan])
-    (is (= [:black] (:nil *color-scheme*)))
-    (is (= [:bold :cyan] (:number *color-scheme*)))
+    (is (= [:black] (:nil (:color-scheme *options*))))
+    (is (= [:bold :cyan] (:number (:color-scheme *options*))))
     (set-color-scheme! old-scheme)))
 
 
-#_
 (deftest map-delimiter-setting
-  (let [old-delim *map-delimiter*]
-    (set-map-commas!)
-    (is (= "," *map-delimiter*))
-    (alter-var-root #'*map-delimiter* (constantly old-delim))))
+  (let [old-delim (:map-delimiter *options*)]
+    (use-map-commas!)
+    (is (= "," (:map-delimiter *options*)))
+    (alter-var-root #'*options* assoc :map-delimiter old-delim)))
 
 
 (deftest canonical-primitives
