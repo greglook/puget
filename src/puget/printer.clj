@@ -19,49 +19,62 @@
 (def ^:dynamic *options*
   "Printer control options.
 
-  TODO: document individual options."
-  {:map-delimiter ""
-   :color-scheme {}
-   :print-color false
-   :print-meta nil    ; default to clojure.core/*print-meta* ?
-   :strict false})
+  :width
+  Number of characters to try to wrap pretty-printed forms at.
 
-
-(def ^:dynamic *strict-mode*
-  "If true, throw an exception if there is no canonical EDN representation for
+  :strict
+  If true, throw an exception if there is no canonical EDN representation for
   a given value. This generally applies to any non-primitive value which does
-  not extend puget.data/TaggedValue and is not a built-in collection."
-  false)
+  not extend puget.data/TaggedValue and is not a built-in collection.
+
+  :map-delimiter
+  The text placed between key-value pairs in a map.
+
+  :print-meta
+  If true, metadata will be printed before values. If nil, defaults to the
+  value of *print-meta*.
+
+  :print-color
+  When true, ouptut ANSI colored text from print functions.
+
+  :color-scheme
+  Map of syntax element keywords to ANSI color codes."
+  {:width 80
+   :strict false
+   :map-delimiter ""
+   :print-meta nil
+   :print-color false
+   :color-scheme
+   {; syntax elements
+    :delimiter [:bold :red]
+    :tag       [:red]
+
+    ; primitive values
+    :nil       [:bold :black]
+    :boolean   [:green]
+    :number    [:cyan]
+    :string    [:bold :magenta]
+    :keyword   [:bold :yellow]
+    :symbol    nil
+
+    ; special types
+    :function-symbol [:bold :blue]
+    :class-delimiter [:blue]
+    :class-name      [:bold :blue]}})
 
 
-(def ^:dynamic *map-delimiter*
-  "The text placed between key-value pairs."
-  "")
+(defmacro with-color
+  "Executes the given expressions with colored output enabled."
+  [& body]
+  `(binding [*options* (assoc *options* :print-color true)]
+     ~@body))
 
 
-(def ^:dynamic *colored-output*
-  "Output ANSI colored text from print functions."
-  false)
-
-
-(def ^:dynamic *color-scheme*
-  "Maps various syntax elements to color codes."
-  {; syntax elements
-   :delimiter [:bold :red]
-   :tag       [:red]
-
-   ; primitive values
-   :nil       [:bold :black]
-   :boolean   [:green]
-   :number    [:cyan]
-   :string    [:bold :magenta]
-   :keyword   [:bold :yellow]
-   :symbol    nil
-
-   ; special types
-   :function-symbol [:bold :blue]
-   :class-delimiter [:blue]
-   :class-name      [:bold :blue]})
+(defmacro with-strict-mode
+  "Executes the given expressions with strict mode enabled."
+  [& body]
+  `(binding [*options* (assoc *options* :strict true)]
+     ~@body))
 
 
 (defn- illegal-when-strict
@@ -71,14 +84,7 @@
     (throw (IllegalArgumentException.
              (str "No canonical representation for " (class value) ": " value)))))
 
-
-(defmacro with-color
-  "Executes the given expressions with colored output enabled."
-  [& body]
-  `(binding [*colored-output* true]
-     ~@body))
-
-
+#_
 (defn set-color-scheme!
   "Sets the color scheme for syntax elements. Pass either a map to merge into
   the current color scheme, or a single element/colors pair. Colors should be
@@ -89,6 +95,7 @@
    (set-color-scheme! (apply hash-map element colors more))))
 
 
+#_
 (defn set-map-commas!
   "Alters the *map-delimiter* var to be a comma."
   []

@@ -7,6 +7,7 @@
       [printer :refer :all])))
 
 
+#_
 (deftest color-scheme-setting
   (let [old-scheme *color-scheme*]
     (set-color-scheme! {:tag [:green]})
@@ -17,6 +18,7 @@
     (set-color-scheme! old-scheme)))
 
 
+#_
 (deftest map-delimiter-setting
   (let [old-delim *map-delimiter*]
     (set-map-commas!)
@@ -59,7 +61,7 @@
 (deftest canonical-records
   (testing "Records"
     (let [r (->TestRecord \x \y)]
-      (binding [*strict-mode* true]
+      (with-strict-mode
         (is (thrown? IllegalArgumentException (pprint r))
             "should not print non-EDN representation"))
       (is (= (with-out-str (pprint r))
@@ -76,7 +78,7 @@
 (deftest default-canonize
   (testing "Unknown values"
     (let [usd (java.util.Currency/getInstance "USD")]
-      (binding [*strict-mode* true]
+      (with-strict-mode
         (is (thrown? IllegalArgumentException
                      (pprint usd))
                      "should not print non-EDN representation"))
