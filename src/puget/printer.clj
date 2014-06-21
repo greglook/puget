@@ -12,8 +12,9 @@
 ;; CONTROL VARS
 
 (def ^:dynamic *strict-mode*
-  "If set, throw an exception if there is no defined canonical print method for
-  a given value."
+  "If true, throw an exception if there is no canonical EDN representation for
+  a given value. This generally applies to any non-primitive value which does
+  not extend puget.data/TaggedValue and is not a built-in collection."
   false)
 
 
@@ -23,7 +24,7 @@
 
 
 (def ^:dynamic *colored-output*
-  "Output ANSI colored output from print functions."
+  "Output ANSI colored text from print functions."
   false)
 
 
@@ -251,8 +252,7 @@
   ([value]
    (cprint value default-opts))
   ([value opts]
-   (binding [*colored-output* true]
-     (pprint value opts))))
+   (with-color (pprint value opts))))
 
 
 (defn cprint-str
