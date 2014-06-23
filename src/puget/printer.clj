@@ -96,7 +96,7 @@
 
 
 
-;; DISPATCH MULTIMETHOD
+;;;;; CANONIZING MULTIMETHOD ;;;;;
 
 (defn- canonize-dispatch
   [value]
@@ -111,6 +111,9 @@
   syntax highlighting if desired."
   #'canonize-dispatch)
 
+
+
+;;;;; PRIMITIVE VALUES ;;;;;
 
 (defmacro ^:private canonize-element
   "Defines a canonization of a primitive value type by mapping it to an element
@@ -129,6 +132,9 @@
 (canonize-element clojure.lang.Keyword :keyword)
 (canonize-element clojure.lang.Symbol  :symbol)
 
+
+
+;;;;; COLLECTIONS ;;;;;
 
 (defmethod canonize clojure.lang.ISeq
   [s]
@@ -198,6 +204,25 @@
 (prefer-method canonize clojure.lang.IRecord clojure.lang.IPersistentMap)
 
 
+
+;;;;; CLOJURE-SPECIFIC TYPES ;;;;;
+
+; TODO: regex
+
+
+(defmethod canonize clojure.lang.Var
+  [v]
+  (when *strict-mode*
+    (throw (IllegalArgumentException.
+             (str "No canonical representation for " (class v) ": " v))))
+  [:span
+   (color-doc :delimiter "#'")
+   (color-doc :symbol (subs (str v) 2))])
+
+
+
+;;;;; OTHER TYPES ;;;;;
+
 (defmethod canonize :tagged-value
   [tv]
   (let [tag   (data/edn-tag tv)
@@ -221,7 +246,7 @@
 
 
 
-;; PRINT FUNCTIONS
+;;;;; PRINT FUNCTIONS ;;;;;
 
 (def ^:private default-opts
   "Default Puget printing options."

@@ -66,6 +66,16 @@
              "#puget.printer_test.TestRecord{:bar \\y :foo \\x}\n")))))
 
 
+(deftest clojure-types
+  (testing "vars"
+    (let [v #'TaggedValue]
+      (binding [*strict-mode* true]
+        (is (thrown? IllegalArgumentException (pprint v))
+            "should not print non-EDN representation"))
+      (is (= (pprint-str v)
+             "#'puget.data/TaggedValue")))))
+
+
 (deftest canonical-tagged-value
   (let [tval (reify TaggedValue
                (edn-tag [this] 'foo)
