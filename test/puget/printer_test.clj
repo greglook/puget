@@ -62,18 +62,46 @@
       (with-strict-mode
         (is (thrown? IllegalArgumentException (pprint r))
             "should not print non-EDN representation"))
-      (is (= (with-out-str (pprint r))
-             "#puget.printer_test.TestRecord{:bar \\y :foo \\x}\n")))))
+      (is (= "#puget.printer_test.TestRecord{:bar \\y :foo \\x}\n"
+             (with-out-str (pprint r)))))))
 
 
 (deftest clojure-types
+  (testing "regex"
+    (let [v #"\d+"]
+      (with-strict-mode
+        (is (thrown? IllegalArgumentException (pprint v))
+            "should not print non-EDN representation"))
+      (is (= "#\"\\d+\"" (pprint-str v)))))
   (testing "vars"
     (let [v #'TaggedValue]
       (with-strict-mode
         (is (thrown? IllegalArgumentException (pprint v))
             "should not print non-EDN representation"))
-      (is (= (pprint-str v)
-             "#'puget.data/TaggedValue")))))
+      (is (= "#'puget.data/TaggedValue"
+             (pprint-str v)))))
+  (testing "atom"
+    (let [v (atom :foo)]
+      (with-strict-mode
+        (is (thrown? IllegalArgumentException (pprint v))
+            "should not print non-EDN representation"))
+      (is (re-seq #"#<Atom@[0-9a-f]+ :foo>" (pprint-str v)))))
+  (testing "delay"
+    (let [v (delay (+ 8 14))]
+      (with-strict-mode
+        (is (thrown? IllegalArgumentException (pprint v))
+            "should not print non-EDN representation"))
+      (is (re-seq #"#<Delay@[0-9a-f]+ pending>" (pprint-str v)))
+      (is (= 22 @v))
+      (is (re-seq #"#<Delay@[0-9a-f]+ 22>" (pprint-str v)))))
+  (testing "future"
+    (let [v (future (do (Thread/sleep 100) :done))]
+      (with-strict-mode
+        (is (thrown? IllegalArgumentException (pprint v))
+            "should not print non-EDN representation"))
+      (is (re-seq #"#<Future@[0-9a-f]+ pending>" (pprint-str v)))
+      (is (= :done @v))
+      (is (re-seq #"#<Future@[0-9a-f]+ :done>" (pprint-str v))))))
 
 
 (deftest canonical-tagged-value
@@ -90,8 +118,7 @@
         (is (thrown? IllegalArgumentException
                      (pprint usd))
                      "should not print non-EDN representation"))
-      (is (= (with-out-str (pprint usd))
-             "#<java.util.Currency USD>\n")))))
+      (is (= "#<java.util.Currency USD>" (pprint-str usd))))))
 
 
 (deftest metadata-printing
@@ -104,7 +131,7 @@
 (deftest colored-printing
   (let [value [nil 1.0 true "foo" :bar]
         bw-str (with-out-str (pprint value))
-        colored-str (cprint-str value)
+        colored-str (with-out-str (cprint value))
         thin-str (cprint-str value {:width 5})]
     (is (> (count colored-str) (count bw-str)))
     (is (not= colored-str thin-str))

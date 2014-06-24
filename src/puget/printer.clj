@@ -89,6 +89,22 @@
 
 
 
+;;;;; UTILITY FUNCTIONS ;;;;;
+
+(defn- system-id
+  [obj]
+  (Integer/toHexString (System/identityHashCode obj)))
+
+
+(defn- illegal-when-strict
+  "Checks whether strict mode is enabled and throws an exception if so."
+  [value]
+  (when (:strict *options*)
+    (throw (IllegalArgumentException.
+             (str "No canonical EDN representation for " (class value) ": " value)))))
+
+
+
 ;;;;; COLORING FUNCTIONS ;;;;;
 
 (defn- color-doc
@@ -128,14 +144,6 @@
   for printing with fipp. This method also supports ANSI color escapes for
   syntax highlighting if desired."
   #'canonize-dispatch)
-
-
-(defn- illegal-when-strict
-  "Checks whether strict mode is enabled and throws an exception if so."
-  [value]
-  (when (:strict *options*)
-    (throw (IllegalArgumentException.
-             (str "No canonical EDN representation for " (class value) ": " value)))))
 
 
 (defn- canonical-document
@@ -244,7 +252,13 @@
 
 ;;;;; CLOJURE TYPES ;;;;;
 
-; TODO: regex/atom
+(defmethod canonize java.util.regex.Pattern
+  [value]
+  (illegal-when-strict value)
+  [:span
+   (color-doc :delimiter "#")
+   (color-doc :string (str \" value \"))])
+
 
 (defmethod canonize clojure.lang.Var
   [value]
@@ -254,7 +268,44 @@
    (color-doc :symbol (subs (str value) 2))])
 
 
-; TODO: atom
+(defmethod canonize clojure.lang.Atom
+  [value]
+  (illegal-when-strict value)
+  [:span
+   (color-doc :class-delimiter "#<")
+   (color-doc :class-name "Atom")
+   (color-doc :class-delimiter "@")
+   (system-id value) " "
+   (canonize @value)
+   (color-doc :class-delimiter ">")])
+
+
+(defmethod canonize clojure.lang.Delay
+  [value]
+  (illegal-when-strict value)
+  [:span
+   (color-doc :class-delimiter "#<")
+   (color-doc :class-name "Delay")
+   (color-doc :class-delimiter "@")
+   (system-id value) " "
+   (if (realized? value)
+     (canonize @value)
+     (color-doc :nil "pending"))
+   (color-doc :class-delimiter ">")])
+
+
+(defmethod canonize java.util.concurrent.Future
+  [value]
+  (illegal-when-strict value)
+  [:span
+   (color-doc :class-delimiter "#<")
+   (color-doc :class-name "Future")
+   (color-doc :class-delimiter "@")
+   (system-id value) " "
+   (if (future-done? value)
+     (canonize @value)
+     (color-doc :nil "pending"))
+   (color-doc :class-delimiter ">")])
 
 
 
