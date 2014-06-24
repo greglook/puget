@@ -160,11 +160,11 @@
 ;;;;; COLLECTION TYPES ;;;;;
 
 (defmethod canonize clojure.lang.ISeq
-  [s]
-  (let [elements (if (symbol? (first s))
-                   (cons (color-doc :function-symbol (str (first s)))
-                         (map canonize (rest s)))
-                   (map canonize s))]
+  [value]
+  (let [elements (if (symbol? (first value))
+                   (cons (color-doc :function-symbol (str (first value)))
+                         (map canonize (rest value)))
+                   (map canonize value))]
     [:group
      (color-doc :delimiter "(")
      [:align (interpose :line elements)]
@@ -172,16 +172,16 @@
 
 
 (defmethod canonize clojure.lang.IPersistentVector
-  [v]
+  [value]
   [:group
    (color-doc :delimiter "[")
-   [:align (interpose :line (map canonize v))]
+   [:align (interpose :line (map canonize value))]
    (color-doc :delimiter "]")])
 
 
 (defmethod canonize clojure.lang.IPersistentSet
-  [s]
-  (let [entries (sort order/rank (seq s))]
+  [value]
+  (let [entries (sort order/rank (seq value))]
     [:group
      (color-doc :delimiter "#{")
      [:align (interpose :line (map canonize entries))]
@@ -189,7 +189,7 @@
 
 
 (defn- canonize-map
-  [m]
+  [value]
   (let [canonize-kv
         (fn [[k v]]
           [:span
@@ -199,7 +199,7 @@
              (coll? v) :line
              :else " ")
            (canonize v)])
-        entries (->> (seq m)
+        entries (->> (seq value)
                      (sort-by first order/rank)
                      (map canonize-kv))]
     [:group
@@ -209,17 +209,17 @@
 
 
 (defmethod canonize clojure.lang.IPersistentMap
-  [m]
-  (canonize-map m))
+  [value]
+  (canonize-map value))
 
 
 (defmethod canonize clojure.lang.IRecord
-  [record]
-  (illegal-when-strict record)
+  [value]
+  (illegal-when-strict value)
   [:span
    (color-doc :delimiter "#")
-   (.getName (class record))
-   (canonize-map record)])
+   (.getName (class value))
+   (canonize-map value)])
 
 
 (prefer-method canonize clojure.lang.IRecord clojure.lang.IPersistentMap)
@@ -235,9 +235,9 @@
 ;;;;; OTHER TYPES ;;;;;
 
 (defmethod canonize :tagged-value
-  [tv]
-  (let [tag   (data/edn-tag tv)
-        value (data/edn-value tv)]
+  [tagged-value]
+  (let [tag   (data/edn-tag tagged-value)
+        value (data/edn-value tagged-value)]
     [:span
      (color-doc :tag (str \# tag))
      (if (coll? value) :line " ")
