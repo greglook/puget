@@ -3,7 +3,7 @@ Puget
 
 [![Build Status](https://travis-ci.org/greglook/puget.svg?branch=develop)](https://travis-ci.org/greglook/puget)
 [![Coverage Status](https://coveralls.io/repos/greglook/puget/badge.png?branch=develop)](https://coveralls.io/r/greglook/puget?branch=develop)
-[![Dependency Status](https://www.versioneye.com/user/projects/53718cc914c1586649000048/badge.png)](https://www.versioneye.com/clojure/mvxcvi:puget/0.6.0-SNAPSHOT)
+[![Dependency Status](https://www.versioneye.com/user/projects/53718cc914c1586649000048/badge.png)](https://www.versioneye.com/clojure/mvxcvi:puget/0.6.0)
 
 Puget is a Clojure library for printing [EDN](https://github.com/edn-format/edn)
 values. Under the hood, Puget formats data into a _print document_ and uses the
@@ -20,7 +20,7 @@ To use this version with Leiningen, add the following dependency to your project
 definition:
 
 ```clojure
-[mvxcvi/puget "0.6.0-SNAPSHOT"]
+[mvxcvi/puget "0.6.0"]
 ```
 
 ## Syntax Coloring
