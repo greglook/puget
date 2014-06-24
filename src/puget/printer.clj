@@ -9,12 +9,7 @@
       [order :as order])))
 
 
-;; CONTROL VARS
-
-; TODO: the dynamism here is probably overkill and makes var resolution much
-; more expensive. The control functions below use alter-var-root anyway, so
-; it's probably better to make these normal vars. Potentially, overrides can
-; be supported better through an 'opts' map passed to the printer functions.
+;;;;; CONTROL VARS ;;;;;
 
 (def ^:dynamic *options*
   "Printer control options.
@@ -88,7 +83,7 @@
 (defn set-color-scheme!
   "Sets the color scheme for syntax elements. Pass either a map to merge into
   the current color scheme, or a single element/colors pair. Colors should be
-  vector of color keywords."
+  vector of ANSI style keywords."
   ([colors]
    (alter-var-root #'*options* update-in [:color-scheme] merge colors))
   ([element colors & more]
@@ -102,11 +97,11 @@
 
 
 
-;; COLORING FUNCTIONS
+;;;;; COLORING FUNCTIONS ;;;;;
 
 (defn- color-doc
-  "Constructs a text doc, which may be colored if *colored-output* is true.
-  Element must be a key from the color-scheme map."
+  "Constructs a text doc, which may be colored if :print-color is true. Element
+  should be a key from the color-scheme map."
   [element text]
   (let [codes (-> *options* :color-scheme (get element) seq)]
     (if (and (:print-color *options*) codes)
@@ -118,7 +113,7 @@
   "Produces text colored according to the active color scheme. This is mostly
   useful to clients which want to produce output which matches data printed by
   Puget, but which is not directly printed by the library. Note that this
-  function still obeys the *colored-output* var."
+  function still obeys the :print-color option."
   [element text]
   (let [codes (-> *options* :color-scheme (get element) seq)]
     (if (and (:print-color *options*) codes)
@@ -127,7 +122,7 @@
 
 
 
-;; DISPATCH MULTIMETHOD
+;;;;; CANONIZE MULTIMETHOD ;;;;;
 
 (defn- canonize-dispatch
   [value]
@@ -160,6 +155,9 @@
 (canonize-element clojure.lang.Keyword :keyword)
 (canonize-element clojure.lang.Symbol  :symbol)
 
+
+
+;;;;; COLLECTION TYPES ;;;;;
 
 (defmethod canonize clojure.lang.ISeq
   [s]
@@ -227,6 +225,15 @@
 (prefer-method canonize clojure.lang.IRecord clojure.lang.IPersistentMap)
 
 
+
+;;;;; CLOJURE TYPES ;;;;;
+
+; TODO: vars, regexes, atoms
+
+
+
+;;;;; OTHER TYPES ;;;;;
+
 (defmethod canonize :tagged-value
   [tv]
   (let [tag   (data/edn-tag tv)
@@ -248,7 +255,7 @@
 
 
 
-;; PRINT FUNCTIONS
+;;;;; PRINT FUNCTIONS ;;;;;
 
 (defn pprint
   ([value]
