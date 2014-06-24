@@ -8,20 +8,20 @@
 
 
 (deftest color-scheme-setting
-  (let [old-scheme *color-scheme*]
+  (let [old-scheme (:color-scheme *options*)]
     (set-color-scheme! {:tag [:green]})
-    (is (= [:green] (:tag *color-scheme*)))
+    (is (= [:green] (:tag (:color-scheme *options*))))
     (set-color-scheme! :nil [:black] :number [:bold :cyan])
-    (is (= [:black] (:nil *color-scheme*)))
-    (is (= [:bold :cyan] (:number *color-scheme*)))
+    (is (= [:black] (:nil (:color-scheme *options*))))
+    (is (= [:bold :cyan] (:number (:color-scheme *options*))))
     (set-color-scheme! old-scheme)))
 
 
 (deftest map-delimiter-setting
-  (let [old-delim *map-delimiter*]
-    (set-map-commas!)
-    (is (= "," *map-delimiter*))
-    (alter-var-root #'*map-delimiter* (constantly old-delim))))
+  (let [old-delim (:map-delimiter *options*)]
+    (use-map-commas!)
+    (is (= "," (:map-delimiter *options*)))
+    (alter-var-root #'*options* assoc :map-delimiter old-delim)))
 
 
 (deftest canonical-primitives
@@ -59,11 +59,49 @@
 (deftest canonical-records
   (testing "Records"
     (let [r (->TestRecord \x \y)]
-      (binding [*strict-mode* true]
+      (with-strict-mode
         (is (thrown? IllegalArgumentException (pprint r))
             "should not print non-EDN representation"))
-      (is (= (with-out-str (pprint r))
-             "#puget.printer_test.TestRecord{:bar \\y :foo \\x}\n")))))
+      (is (= "#puget.printer_test.TestRecord{:bar \\y :foo \\x}\n"
+             (with-out-str (pprint r)))))))
+
+
+(deftest clojure-types
+  (testing "regex"
+    (let [v #"\d+"]
+      (with-strict-mode
+        (is (thrown? IllegalArgumentException (pprint v))
+            "should not print non-EDN representation"))
+      (is (= "#\"\\d+\"" (pprint-str v)))))
+  (testing "vars"
+    (let [v #'TaggedValue]
+      (with-strict-mode
+        (is (thrown? IllegalArgumentException (pprint v))
+            "should not print non-EDN representation"))
+      (is (= "#'puget.data/TaggedValue"
+             (pprint-str v)))))
+  (testing "atom"
+    (let [v (atom :foo)]
+      (with-strict-mode
+        (is (thrown? IllegalArgumentException (pprint v))
+            "should not print non-EDN representation"))
+      (is (re-seq #"#<Atom@[0-9a-f]+ :foo>" (pprint-str v)))))
+  (testing "delay"
+    (let [v (delay (+ 8 14))]
+      (with-strict-mode
+        (is (thrown? IllegalArgumentException (pprint v))
+            "should not print non-EDN representation"))
+      (is (re-seq #"#<Delay@[0-9a-f]+ pending>" (pprint-str v)))
+      (is (= 22 @v))
+      (is (re-seq #"#<Delay@[0-9a-f]+ 22>" (pprint-str v)))))
+  (testing "future"
+    (let [v (future (do (Thread/sleep 100) :done))]
+      (with-strict-mode
+        (is (thrown? IllegalArgumentException (pprint v))
+            "should not print non-EDN representation"))
+      (is (re-seq #"#<Future@[0-9a-f]+ pending>" (pprint-str v)))
+      (is (= :done @v))
+      (is (re-seq #"#<Future@[0-9a-f]+ :done>" (pprint-str v))))))
 
 
 (deftest canonical-tagged-value
@@ -76,18 +114,24 @@
 (deftest default-canonize
   (testing "Unknown values"
     (let [usd (java.util.Currency/getInstance "USD")]
-      (binding [*strict-mode* true]
+      (with-strict-mode
         (is (thrown? IllegalArgumentException
                      (pprint usd))
                      "should not print non-EDN representation"))
-      (is (= (with-out-str (pprint usd))
-             "#<java.util.Currency USD>\n")))))
+      (is (= "#<java.util.Currency USD>" (pprint-str usd))))))
+
+
+(deftest metadata-printing
+  (let [value ^:foo [:bar]]
+    (binding [*print-meta* true]
+      (is (= "^{:foo true}\n[:bar]" (pprint-str value)))
+      (is (= "[:bar]" (pprint-str value {:print-meta false}))))))
 
 
 (deftest colored-printing
   (let [value [nil 1.0 true "foo" :bar]
         bw-str (with-out-str (pprint value))
-        colored-str (cprint-str value)
+        colored-str (with-out-str (cprint value))
         thin-str (cprint-str value {:width 5})]
     (is (> (count colored-str) (count bw-str)))
     (is (not= colored-str thin-str))
