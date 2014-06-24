@@ -251,7 +251,10 @@
   (illegal-when-strict value)
   [:span
    (color-doc :delimiter "#'")
-   (color-doc :symbol (subs (str v) 2))])
+   (color-doc :symbol (subs (str value) 2))])
+
+
+; TODO: atom
 
 
 

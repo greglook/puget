@@ -69,7 +69,7 @@
 (deftest clojure-types
   (testing "vars"
     (let [v #'TaggedValue]
-      (binding [*strict-mode* true]
+      (with-strict-mode
         (is (thrown? IllegalArgumentException (pprint v))
             "should not print non-EDN representation"))
       (is (= (pprint-str v)
