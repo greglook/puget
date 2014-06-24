@@ -246,12 +246,9 @@
 
 ; TODO: regex/atom
 
-
 (defmethod canonize clojure.lang.Var
-  [v]
-  (when *strict-mode*
-    (throw (IllegalArgumentException.
-             (str "No canonical representation for " (class v) ": " v))))
+  [value]
+  (illegal-when-strict value)
   [:span
    (color-doc :delimiter "#'")
    (color-doc :symbol (subs (str v) 2))])
