@@ -72,14 +72,6 @@
      ~@body))
 
 
-(defn- illegal-when-strict
-  "Checks whether strict mode is enabled and throws an exception if so."
-  [value]
-  (when (:strict *options*)
-    (throw (IllegalArgumentException.
-             (str "No canonical representation for " (class value) ": " value)))))
-
-
 (defn set-color-scheme!
   "Sets the color scheme for syntax elements. Pass either a map to merge into
   the current color scheme, or a single element/colors pair. Colors should be
@@ -137,6 +129,30 @@
   syntax highlighting if desired."
   #'canonize-dispatch)
 
+
+(defn- illegal-when-strict
+  "Checks whether strict mode is enabled and throws an exception if so."
+  [value]
+  (when (:strict *options*)
+    (throw (IllegalArgumentException.
+             (str "No canonical EDN representation for " (class value) ": " value)))))
+
+
+(defn- canonical-document
+  "Constructs a complete canonical print document for the given value."
+  [value]
+  (let [print-meta? (if (nil? (:print-meta *options*))
+                      *print-meta*
+                      (:print-meta *options*))]
+    (if-let [metadata (and print-meta? (meta value))]
+      [:align
+       [:span (color-doc :delimiter "^") (canonize metadata)]
+        :line (canonize value)]
+      (canonize value))))
+
+
+
+;;;;; PRIMITIVE TYPES ;;;;;
 
 (defmacro ^:private canonize-element
   "Defines a canonization of a primitive value type by mapping it to an element
@@ -258,19 +274,21 @@
 ;;;;; PRINT FUNCTIONS ;;;;;
 
 (defn pprint
+  "Pretty-prints a value to *out*. Options may be passed to override the
+  default *options* map."
   ([value]
-   (pprint value *options*))
+   (pprint value nil))
   ([value opts]
-   (let [doc (if-let [m (and (:print-meta opts) (meta value))]
-               [:align [:span "^" (canonize m)] :line (canonize value)]
-               (canonize value))]
-     (fipp/pprint-document doc {:width (:width opts)}))))
+   (binding [*options* (merge *options* opts)]
+     (fipp/pprint-document
+       (canonical-document value)
+       {:width (:width *options*)}))))
 
 
 (defn pprint-str
   "Pretty-print a value to a string."
   ([value]
-   (pprint-str value *options*))
+   (pprint-str value nil))
   ([value opts]
    (-> value
        (pprint opts)
@@ -281,7 +299,7 @@
 (defn cprint
   "Like pprint, but turns on colored output."
   ([value]
-   (cprint value *options*))
+   (cprint value nil))
   ([value opts]
    (with-color (pprint value opts))))
 
@@ -289,9 +307,6 @@
 (defn cprint-str
   "Pretty-prints a value to a colored string."
   ([value]
-   (cprint-str value *options*))
+   (cprint-str value nil))
   ([value opts]
-   (-> value
-       (cprint opts)
-       with-out-str
-       str/trim-newline)))
+   (with-color (pprint-str value opts))))
