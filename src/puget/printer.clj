@@ -58,17 +58,36 @@
     :class-name      [:bold :blue]}})
 
 
+(defn merge-options
+  "Merges a map of options into the current option map, taking care to combine
+  the color scheme correctly."
+  [opts]
+  (let [colors (merge (:color-scheme *options*)
+                      (:color-scheme opts))]
+    (-> *options*
+        (merge opts)
+        (assoc :color-scheme colors))))
+
+
+(defmacro with-options
+  "Executes the given expressions with a set of options merged into the current
+  option map."
+  [opts & body]
+  `(binding [*options* (merge-options ~opts)]
+     ~@body))
+
+
 (defmacro with-color
   "Executes the given expressions with colored output enabled."
   [& body]
-  `(binding [*options* (assoc *options* :print-color true)]
+  `(with-options {:print-color true}
      ~@body))
 
 
 (defmacro with-strict-mode
   "Executes the given expressions with strict mode enabled."
   [& body]
-  `(binding [*options* (assoc *options* :strict true)]
+  `(with-options {:strict true}
      ~@body))
 
 
