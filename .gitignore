@@ -10,5 +10,6 @@ pom.xml.asc
 .lein-failures
 .lein-plugins
 .lein-repl-history
+.nrepl-port
 ns-dep-graph.png
 TODO.*
