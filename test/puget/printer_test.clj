@@ -8,20 +8,20 @@
 
 
 (deftest color-scheme-setting
-  (let [old-scheme *color-scheme*]
+  (let [old-scheme (:color-scheme *options*)]
     (set-color-scheme! {:tag [:green]})
-    (is (= [:green] (:tag *color-scheme*)))
+    (is (= [:green] (:tag (:color-scheme *options*))))
     (set-color-scheme! :nil [:black] :number [:bold :cyan])
-    (is (= [:black] (:nil *color-scheme*)))
-    (is (= [:bold :cyan] (:number *color-scheme*)))
+    (is (= [:black] (:nil (:color-scheme *options*))))
+    (is (= [:bold :cyan] (:number (:color-scheme *options*))))
     (set-color-scheme! old-scheme)))
 
 
 (deftest map-delimiter-setting
-  (let [old-delim *map-delimiter*]
-    (set-map-commas!)
-    (is (= "," *map-delimiter*))
-    (alter-var-root #'*map-delimiter* (constantly old-delim))))
+  (let [old-delim (:map-delimiter *options*)]
+    (use-map-commas!)
+    (is (= "," (:map-delimiter *options*)))
+    (alter-var-root #'*options* assoc :map-delimiter old-delim)))
 
 
 (deftest canonical-primitives
@@ -59,7 +59,7 @@
 (deftest canonical-records
   (testing "Records"
     (let [r (->TestRecord \x \y)]
-      (binding [*strict-mode* true]
+      (with-strict-mode
         (is (thrown? IllegalArgumentException (pprint r))
             "should not print non-EDN representation"))
       (is (= (with-out-str (pprint r))
@@ -86,12 +86,19 @@
 (deftest default-canonize
   (testing "Unknown values"
     (let [usd (java.util.Currency/getInstance "USD")]
-      (binding [*strict-mode* true]
+      (with-strict-mode
         (is (thrown? IllegalArgumentException
                      (pprint usd))
                      "should not print non-EDN representation"))
       (is (= (with-out-str (pprint usd))
              "#<java.util.Currency USD>\n")))))
+
+
+(deftest metadata-printing
+  (let [value ^:foo [:bar]]
+    (binding [*print-meta* true]
+      (is (= "^{:foo true}\n[:bar]" (pprint-str value)))
+      (is (= "[:bar]" (pprint-str value {:print-meta false}))))))
 
 
 (deftest colored-printing
