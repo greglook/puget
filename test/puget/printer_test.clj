@@ -84,6 +84,13 @@
              "#<java.util.Currency USD>\n")))))
 
 
+(deftest metadata-printing
+  (let [value ^:foo [:bar]]
+    (binding [*print-meta* true]
+      (is (= "^{:foo true}\n[:bar]" (pprint-str value)))
+      (is (= "[:bar]" (pprint-str value {:print-meta false}))))))
+
+
 (deftest colored-printing
   (let [value [nil 1.0 true "foo" :bar]
         bw-str (with-out-str (pprint value))
