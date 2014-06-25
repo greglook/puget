@@ -25,6 +25,10 @@
   :map-delimiter
   The text placed between key-value pairs in a map.
 
+  :map-coll-separator
+  The text placed between a map key and a collection value. The keyword :line
+  will cause line breaks if the whole map does not fit on a single line.
+
   :print-meta
   If true, metadata will be printed before values. If nil, defaults to the
   value of *print-meta*.
@@ -36,7 +40,8 @@
   Map of syntax element keywords to ANSI color codes."
   {:width 80
    :strict false
-   :map-delimiter ""
+   :map-delimiter ","
+   :map-coll-separator " "
    :print-meta nil
    :print-color false
    :color-scheme
@@ -89,12 +94,6 @@
    (alter-var-root #'*options* update-in [:color-scheme] merge colors))
   ([element colors & more]
    (set-color-scheme! (apply hash-map element colors more))))
-
-
-(defn use-map-commas!
-  "Alters the map-delimiter var to be a comma."
-  []
-  (alter-var-root #'*options* assoc :map-delimiter ","))
 
 
 
@@ -229,7 +228,7 @@
            (canonize k)
            (cond
              (satisfies? data/TaggedValue v) " "
-             (coll? v) :line
+             (coll? v) (:map-coll-separator *options*)
              :else " ")
            (canonize v)])
         entries (->> (seq value)

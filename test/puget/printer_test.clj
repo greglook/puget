@@ -24,13 +24,6 @@
     (set-color-scheme! old-scheme)))
 
 
-(deftest map-delimiter-setting
-  (let [old-delim (:map-delimiter *options*)]
-    (use-map-commas!)
-    (is (= "," (:map-delimiter *options*)))
-    (alter-var-root #'*options* assoc :map-delimiter old-delim)))
-
-
 (deftest canonical-primitives
   (testing "Primitive values"
     (are [v text] (= text (-> v pprint with-out-str str/trim))
@@ -57,7 +50,7 @@
          '(foo :bar)            "(foo :bar)"
          '(1 2 3)               "(1 2 3)"
          [4 "five" 6.0]         "[4 \"five\" 6.0]"
-         {:foo 8 :bar 'baz}     "{:bar baz :foo 8}" ; gets sorted
+         {:foo 8 :bar 'baz}     "{:bar baz, :foo 8}" ; gets sorted
          #{:omega :alpha :beta} "#{:alpha :beta :omega}"))) ; also sorted
 
 
@@ -67,7 +60,7 @@
   (testing "Records"
     (let [r (->TestRecord \x \y)]
       (should-fail-when-strict r)
-      (is (= "#puget.printer_test.TestRecord{:bar \\y :foo \\x}\n"
+      (is (= "#puget.printer_test.TestRecord{:bar \\y, :foo \\x}\n"
              (with-out-str (pprint r)))))))
 
 
