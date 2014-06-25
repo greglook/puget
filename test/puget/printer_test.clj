@@ -7,6 +7,13 @@
       [printer :refer :all])))
 
 
+(defn- should-fail-when-strict
+  [value]
+  (with-options {:strict true}
+    (is (thrown? IllegalArgumentException (pprint value))
+        "should not print non-EDN representation")))
+
+
 (deftest color-scheme-setting
   (let [old-scheme (:color-scheme *options*)]
     (set-color-scheme! {:tag [:green]})
@@ -15,13 +22,6 @@
     (is (= [:black] (:nil (:color-scheme *options*))))
     (is (= [:bold :cyan] (:number (:color-scheme *options*))))
     (set-color-scheme! old-scheme)))
-
-
-(deftest map-delimiter-setting
-  (let [old-delim (:map-delimiter *options*)]
-    (use-map-commas!)
-    (is (= "," (:map-delimiter *options*)))
-    (alter-var-root #'*options* assoc :map-delimiter old-delim)))
 
 
 (deftest canonical-primitives
@@ -50,7 +50,7 @@
          '(foo :bar)            "(foo :bar)"
          '(1 2 3)               "(1 2 3)"
          [4 "five" 6.0]         "[4 \"five\" 6.0]"
-         {:foo 8 :bar 'baz}     "{:bar baz :foo 8}" ; gets sorted
+         {:foo 8 :bar 'baz}     "{:bar baz, :foo 8}" ; gets sorted
          #{:omega :alpha :beta} "#{:alpha :beta :omega}"))) ; also sorted
 
 
@@ -59,46 +59,34 @@
 (deftest canonical-records
   (testing "Records"
     (let [r (->TestRecord \x \y)]
-      (with-strict-mode
-        (is (thrown? IllegalArgumentException (pprint r))
-            "should not print non-EDN representation"))
-      (is (= "#puget.printer_test.TestRecord{:bar \\y :foo \\x}\n"
+      (should-fail-when-strict r)
+      (is (= "#puget.printer_test.TestRecord{:bar \\y, :foo \\x}\n"
              (with-out-str (pprint r)))))))
 
 
 (deftest clojure-types
   (testing "regex"
     (let [v #"\d+"]
-      (with-strict-mode
-        (is (thrown? IllegalArgumentException (pprint v))
-            "should not print non-EDN representation"))
+      (should-fail-when-strict v)
       (is (= "#\"\\d+\"" (pprint-str v)))))
   (testing "vars"
     (let [v #'TaggedValue]
-      (with-strict-mode
-        (is (thrown? IllegalArgumentException (pprint v))
-            "should not print non-EDN representation"))
+      (should-fail-when-strict v)
       (is (= "#'puget.data/TaggedValue"
              (pprint-str v)))))
   (testing "atom"
     (let [v (atom :foo)]
-      (with-strict-mode
-        (is (thrown? IllegalArgumentException (pprint v))
-            "should not print non-EDN representation"))
+      (should-fail-when-strict v)
       (is (re-seq #"#<Atom@[0-9a-f]+ :foo>" (pprint-str v)))))
   (testing "delay"
     (let [v (delay (+ 8 14))]
-      (with-strict-mode
-        (is (thrown? IllegalArgumentException (pprint v))
-            "should not print non-EDN representation"))
+      (should-fail-when-strict v)
       (is (re-seq #"#<Delay@[0-9a-f]+ pending>" (pprint-str v)))
       (is (= 22 @v))
       (is (re-seq #"#<Delay@[0-9a-f]+ 22>" (pprint-str v)))))
   (testing "future"
     (let [v (future (do (Thread/sleep 100) :done))]
-      (with-strict-mode
-        (is (thrown? IllegalArgumentException (pprint v))
-            "should not print non-EDN representation"))
+      (should-fail-when-strict v)
       (is (re-seq #"#<Future@[0-9a-f]+ pending>" (pprint-str v)))
       (is (= :done @v))
       (is (re-seq #"#<Future@[0-9a-f]+ :done>" (pprint-str v))))))
@@ -114,10 +102,7 @@
 (deftest default-canonize
   (testing "Unknown values"
     (let [usd (java.util.Currency/getInstance "USD")]
-      (with-strict-mode
-        (is (thrown? IllegalArgumentException
-                     (pprint usd))
-                     "should not print non-EDN representation"))
+      (should-fail-when-strict usd)
       (is (= "#<java.util.Currency USD>" (pprint-str usd))))))
 
 

@@ -3,7 +3,7 @@ Puget
 
 [![Build Status](https://travis-ci.org/greglook/puget.svg?branch=master)](https://travis-ci.org/greglook/puget)
 [![Coverage Status](https://coveralls.io/repos/greglook/puget/badge.png?branch=master)](https://coveralls.io/r/greglook/puget?branch=master)
-[![Dependency Status](https://www.versioneye.com/user/projects/53718bfb14c1589a89000144/badge.png)](https://www.versioneye.com/clojure/mvxcvi:puget/0.6.1)
+[![Dependency Status](https://www.versioneye.com/user/projects/53718bfb14c1589a89000144/badge.png)](https://www.versioneye.com/clojure/mvxcvi:puget/0.6.2)
 
 Puget is a Clojure library for printing [EDN](https://github.com/edn-format/edn)
 values. Under the hood, Puget formats data into a _print document_ and uses the
@@ -20,7 +20,7 @@ To use this version with Leiningen, add the following dependency to your project
 definition:
 
 ```clojure
-[mvxcvi/puget "0.6.1"]
+[mvxcvi/puget "0.6.2"]
 ```
 
 See [Whidbey](https://github.com/greglook/whidbey) for nREPL and Leiningen integration.
@@ -32,7 +32,7 @@ codes. This is kind of like syntax highlighting, except much easier since the
 code works directly with the data instead of parsing it from text.
 
 Different syntax elements are given different colors to make reading the
-printed output much easier for humans. The `*colored-output*` var can be set to
+printed output much easier for humans. The `:print-color` option can be set to
 enable colorization using the `with-color` macro - alternately, the `cprint`
 function prints with colored output enabled:
 
@@ -51,8 +51,8 @@ even if they have different types. This ordering is used to sort the values in
 sets and the keys in maps so that they are always printed the same way.
 
 By default, values with types which have no canonical representation defined
-will be printed in the same style as Clojure's pretty-print. The `*strict-mode*`
-var can be bound to true to throw an exception for these values instead.
+will be printed in the same style as Clojure's pretty-print. The `:strict-mode`
+option can be set to true to throw an exception for these values instead.
 
 ```clojure
 (require '[puget.printer :as puget])
@@ -99,13 +99,18 @@ example, to extend `#inst` tagging to Joda `DateTime` objects:
 #inst "2014-05-14T01:05:53.885Z"
 ```
 
-## Customization
+## Further Customization
 
-Puget's colors are defined by the `:color-scheme` key in the `*options*` var,
-which maps syntax element keywords to a vector of ANSI style keywords to apply.
-The `set-color-scheme!` function offers a convenient way to change the color
-scheme by providing either color/style argument pairs or a single map of colors
-to merge into the current color scheme.
+Puget's printing is controlled by a map of options in the dynamic var
+`puget.printer/*options*`. This can be bound with the `with-options` macro for
+convenience. The options include print width, whether Puget is being strict,
+whether to print metadata, etc.
+
+Puget's colors are defined by the `:color-scheme` key, which maps syntax element
+keywords to a vector of ANSI style keywords to apply.  The `set-color-scheme!`
+function offers a convenient way to change the colors by providing either
+color/style argument pairs or a single map of colors to merge into the current
+color scheme.
 
 ```clojure
 (puget/set-color-scheme! :nil [:bold :black])
@@ -120,22 +125,6 @@ to merge into the current color scheme.
  :string [:bold :magenta]
  :symbol nil
  :tag [:red]}
-```
-
-By default, Puget does not put any delimiters between map entries. This is
-controlled by the `:map-delimiter` key. For convenience, Puget provides a
-function to change the delimiter to a comma instead:
-
-```clojure
-(def value {:z 'qx :a 123})
-
-(puget/pprint value)
-;; {:a 123 :z qx}
-
-(puget/use-map-commas!)
-
-(puget/pprint value)
-;; {:a 123, :z qx}
 ```
 
 ## License

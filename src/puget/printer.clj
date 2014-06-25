@@ -25,6 +25,10 @@
   :map-delimiter
   The text placed between key-value pairs in a map.
 
+  :map-coll-separator
+  The text placed between a map key and a collection value. The keyword :line
+  will cause line breaks if the whole map does not fit on a single line.
+
   :print-meta
   If true, metadata will be printed before values. If nil, defaults to the
   value of *print-meta*.
@@ -36,7 +40,8 @@
   Map of syntax element keywords to ANSI color codes."
   {:width 80
    :strict false
-   :map-delimiter ""
+   :map-delimiter ","
+   :map-coll-separator " "
    :print-meta nil
    :print-color false
    :color-scheme
@@ -59,21 +64,18 @@
 
 
 (defn merge-options
-  "Merges a map of options into the current option map, taking care to combine
-  the color scheme correctly."
-  [opts]
-  (let [colors (merge (:color-scheme *options*)
-                      (:color-scheme opts))]
-    (-> *options*
-        (merge opts)
-        (assoc :color-scheme colors))))
+  "Merges maps of printer options, taking care to combine the color scheme
+  correctly."
+  [a b]
+  (let [colors (merge (:color-scheme a) (:color-scheme b))]
+    (-> a (merge b) (assoc :color-scheme colors))))
 
 
 (defmacro with-options
   "Executes the given expressions with a set of options merged into the current
   option map."
   [opts & body]
-  `(binding [*options* (merge-options ~opts)]
+  `(binding [*options* (merge-options *options* ~opts)]
      ~@body))
 
 
@@ -81,13 +83,6 @@
   "Executes the given expressions with colored output enabled."
   [& body]
   `(with-options {:print-color true}
-     ~@body))
-
-
-(defmacro with-strict-mode
-  "Executes the given expressions with strict mode enabled."
-  [& body]
-  `(with-options {:strict true}
      ~@body))
 
 
@@ -99,12 +94,6 @@
    (alter-var-root #'*options* update-in [:color-scheme] merge colors))
   ([element colors & more]
    (set-color-scheme! (apply hash-map element colors more))))
-
-
-(defn use-map-commas!
-  "Alters the map-delimiter var to be a comma."
-  []
-  (alter-var-root #'*options* assoc :map-delimiter ","))
 
 
 
@@ -239,7 +228,7 @@
            (canonize k)
            (cond
              (satisfies? data/TaggedValue v) " "
-             (coll? v) :line
+             (coll? v) (:map-coll-separator *options*)
              :else " ")
            (canonize v)])
         entries (->> (seq value)
