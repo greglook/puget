@@ -23,6 +23,8 @@ definition:
 [mvxcvi/puget "0.6.1"]
 ```
 
+See [Whidbey](https://github.com/greglook/whidbey) for nREPL and Leiningen integration.
+
 ## Syntax Coloring
 
 Puget's first main feature is colorizing the printed data using ANSI escape
