@@ -62,7 +62,7 @@ var can be bound to true to throw an exception for these values instead.
 (puget/pprint usd)
 ;; #<java.util.Currency USD>
 
-(binding [puget/*strict-mode* true]
+(puget/with-options {:strict true}
   (puget/pprint usd))
 ;; IllegalArgumentException: No canonical representation for class java.util.Currency: USD
 ```
@@ -101,11 +101,11 @@ example, to extend `#inst` tagging to Joda `DateTime` objects:
 
 ## Customization
 
-Puget's colors are defined in the `*color-scheme*` var, which maps syntax
-element keywords to a vector of ANSI style keywords to apply. The
-`set-color-scheme!` function offers a convenient way to change the color scheme
-by providing either color/style argument pairs or a single map of colors to
-merge into the current color scheme.
+Puget's colors are defined by the `:color-scheme` key in the `*options*` var,
+which maps syntax element keywords to a vector of ANSI style keywords to apply.
+The `set-color-scheme!` function offers a convenient way to change the color
+scheme by providing either color/style argument pairs or a single map of colors
+to merge into the current color scheme.
 
 ```clojure
 (puget/set-color-scheme! :nil [:bold :black])
@@ -123,7 +123,7 @@ merge into the current color scheme.
 ```
 
 By default, Puget does not put any delimiters between map entries. This is
-controlled by the `*map-delimiter*` var. For convenience, Puget provides a
+controlled by the `:map-delimiter` key. For convenience, Puget provides a
 function to change the delimiter to a comma instead:
 
 ```clojure
@@ -132,7 +132,7 @@ function to change the delimiter to a comma instead:
 (puget/pprint value)
 ;; {:a 123 :z qx}
 
-(puget/set-map-commas!)
+(puget/use-map-commas!)
 
 (puget/pprint value)
 ;; {:a 123, :z qx}
