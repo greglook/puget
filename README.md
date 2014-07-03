@@ -123,6 +123,7 @@ color scheme.
  :nil [:bold :black]
  :number [:cyan]
  :string [:bold :magenta]
+ :character [:bold :magenta]
  :symbol nil
  :tag [:red]}
 ```
