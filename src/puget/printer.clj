@@ -54,6 +54,7 @@
     :boolean   [:green]
     :number    [:cyan]
     :string    [:bold :magenta]
+    :character [:bold :magenta]
     :keyword   [:bold :yellow]
     :symbol    nil
 
@@ -182,7 +183,7 @@
 (canonize-element nil                  :nil)
 (canonize-element java.lang.Boolean    :boolean)
 (canonize-element java.lang.Number     :number)
-(canonize-element java.lang.Character  :string)
+(canonize-element java.lang.Character  :character)
 (canonize-element java.lang.String     :string)
 (canonize-element clojure.lang.Keyword :keyword)
 (canonize-element clojure.lang.Symbol  :symbol)
