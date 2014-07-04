@@ -14,14 +14,10 @@ and [canonical printing](#canonical-representation).
 
 ## Installation
 
-Puget releases are [published on Clojars](https://clojars.org/mvxcvi/puget).
+Puget releases are published on Clojars. To use the latest version with
+Leiningen, add the following dependency to your project definition:
 
-To use this version with Leiningen, add the following dependency to your project
-definition:
-
-```clojure
-[mvxcvi/puget "0.7.0-SNAPSHOT"]
-```
+[![Clojars Project](http://clojars.org/mvxcvi/puget/latest-version.svg)](http://clojars.org/mvxcvi/puget)
 
 See [Whidbey](https://github.com/greglook/whidbey) for nREPL and Leiningen integration.
 
