@@ -9,7 +9,7 @@
   :dependencies
   [[org.clojure/clojure "1.6.0"]
    [org.clojure/data.codec "0.1.0"]
-   [fipp "0.4.2"]]
+   [fipp "0.4.3"]]
 
   :profiles
   {:coverage
