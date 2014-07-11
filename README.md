@@ -3,7 +3,7 @@ Puget
 
 [![Build Status](https://travis-ci.org/greglook/puget.svg?branch=master)](https://travis-ci.org/greglook/puget)
 [![Coverage Status](https://coveralls.io/repos/greglook/puget/badge.png?branch=master)](https://coveralls.io/r/greglook/puget?branch=master)
-[![Dependency Status](https://www.versioneye.com/user/projects/53718bfb14c1589a89000144/badge.png)](https://www.versioneye.com/clojure/mvxcvi:puget/0.6.2)
+[![Dependency Status](https://www.versioneye.com/user/projects/53718bfb14c1589a89000144/badge.png)](https://www.versioneye.com/clojure/mvxcvi:puget/0.6.3)
 
 Puget is a Clojure library for printing [EDN](https://github.com/edn-format/edn)
 values. Under the hood, Puget formats data into a _print document_ and uses the
@@ -14,14 +14,10 @@ and [canonical printing](#canonical-representation).
 
 ## Installation
 
-Puget releases are [published on Clojars](https://clojars.org/mvxcvi/puget).
+Puget releases are published on Clojars. To use the latest version with
+Leiningen, add the following dependency to your project definition:
 
-To use this version with Leiningen, add the following dependency to your project
-definition:
-
-```clojure
-[mvxcvi/puget "0.6.2"]
-```
+[![Clojars Project](http://clojars.org/mvxcvi/puget/latest-version.svg)](http://clojars.org/mvxcvi/puget)
 
 See [Whidbey](https://github.com/greglook/whidbey) for nREPL and Leiningen integration.
 
@@ -123,6 +119,7 @@ color scheme.
  :nil [:bold :black]
  :number [:cyan]
  :string [:bold :magenta]
+ :character [:bold :magenta]
  :symbol nil
  :tag [:red]}
 ```
