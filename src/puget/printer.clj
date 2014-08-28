@@ -277,6 +277,18 @@
    (color-doc :symbol (subs (str value) 2))])
 
 
+(defmethod canonize clojure.lang.IDeref
+  [value]
+  (illegal-when-strict value)
+  [:span
+   (color-doc :class-delimiter "#<")
+   (color-doc :class-name (.getName (class value)))
+   (color-doc :class-delimiter "@")
+   (system-id value) " "
+   (canonize @value)
+   (color-doc :class-delimiter ">")])
+
+
 (defmethod canonize clojure.lang.Atom
   [value]
   (illegal-when-strict value)
@@ -286,6 +298,20 @@
    (color-doc :class-delimiter "@")
    (system-id value) " "
    (canonize @value)
+   (color-doc :class-delimiter ">")])
+
+
+(defmethod canonize clojure.lang.IPending
+  [value]
+  (illegal-when-strict value)
+  [:span
+   (color-doc :class-delimiter "#<")
+   (color-doc :class-name (.getName (class value)))
+   (color-doc :class-delimiter "@")
+   (system-id value) " "
+   (if (realized? value)
+     (canonize @value)
+     (color-doc :nil "pending"))
    (color-doc :class-delimiter ">")])
 
 
@@ -315,6 +341,12 @@
      (canonize @value)
      (color-doc :nil "pending"))
    (color-doc :class-delimiter ">")])
+
+
+(prefer-method canonize clojure.lang.ISeq clojure.lang.IPending)
+(prefer-method canonize clojure.lang.IPending clojure.lang.IDeref)
+(prefer-method canonize java.util.concurrent.Future clojure.lang.IDeref)
+(prefer-method canonize java.util.concurrent.Future clojure.lang.IPending)
 
 
 
