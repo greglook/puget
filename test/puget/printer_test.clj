@@ -63,8 +63,17 @@
       (is (= "#puget.printer_test.TestRecord{:bar \\y, :foo \\x}\n"
              (with-out-str (pprint r)))))))
 
+(deftype ADeref []
+  clojure.lang.IDeref
+  (deref [this] 123))
+
+(deftype APending []
+  clojure.lang.IPending
+  (isRealized [this] false))
 
 (deftest clojure-types
+  (testing "seq"
+    (is (= "()" (pprint-str (lazy-seq)))))
   (testing "regex"
     (let [v #"\d+"]
       (should-fail-when-strict v)
@@ -89,7 +98,18 @@
       (should-fail-when-strict v)
       (is (re-seq #"#<Future@[0-9a-f]+ pending>" (pprint-str v)))
       (is (= :done @v))
-      (is (re-seq #"#<Future@[0-9a-f]+ :done>" (pprint-str v))))))
+      (is (re-seq #"#<Future@[0-9a-f]+ :done>" (pprint-str v)))))
+  (testing "custom IDeref"
+    (let [v (ADeref.)]
+      (should-fail-when-strict v)
+      (is (re-seq #"#<puget.printer_test.ADeref@[0-9a-f]+ 123>"
+                  (pprint-str v)))))
+  (testing "custom IPending"
+    (let [v (APending.)]
+      (should-fail-when-strict v)
+      (is (re-seq #"#<puget.printer_test.APending@[0-9a-f]+ pending"
+                  (pprint-str v)))))
+  )
 
 
 (deftest canonical-tagged-value
