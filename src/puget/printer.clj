@@ -277,70 +277,59 @@
    (color-doc :symbol (subs (str value) 2))])
 
 
+
+;;;;; OTHER TYPES ;;;;;
+
+(defn- unknown-doc
+  "Renders common syntax doc for an unknown representation of a value."
+  ([value]
+   (unknown-doc value (str value)))
+  ([value repr]
+   (unknown-doc value (.getName (class value)) repr))
+  ([value tag repr]
+   (illegal-when-strict value)
+   [:span
+    (color-doc :class-delimiter "#<")
+    (color-doc :class-name tag)
+    (color-doc :class-delimiter "@")
+    (system-id value)
+    " "
+    repr
+    (color-doc :class-delimiter ">")]))
+
+
 (defmethod canonize clojure.lang.IDeref
   [value]
-  (illegal-when-strict value)
-  [:span
-   (color-doc :class-delimiter "#<")
-   (color-doc :class-name (.getName (class value)))
-   (color-doc :class-delimiter "@")
-   (system-id value) " "
-   (canonize @value)
-   (color-doc :class-delimiter ">")])
+  (unknown-doc value (canonize @value)))
 
 
 (defmethod canonize clojure.lang.Atom
   [value]
-  (illegal-when-strict value)
-  [:span
-   (color-doc :class-delimiter "#<")
-   (color-doc :class-name "Atom")
-   (color-doc :class-delimiter "@")
-   (system-id value) " "
-   (canonize @value)
-   (color-doc :class-delimiter ">")])
+  (unknown-doc value "Atom" (canonize @value)))
 
 
 (defmethod canonize clojure.lang.IPending
   [value]
-  (illegal-when-strict value)
-  [:span
-   (color-doc :class-delimiter "#<")
-   (color-doc :class-name (.getName (class value)))
-   (color-doc :class-delimiter "@")
-   (system-id value) " "
-   (if (realized? value)
-     (canonize @value)
-     (color-doc :nil "pending"))
-   (color-doc :class-delimiter ">")])
+  (unknown-doc value
+    (if (realized? value)
+      (canonize @value)
+      (color-doc :nil "pending"))))
 
 
 (defmethod canonize clojure.lang.Delay
   [value]
-  (illegal-when-strict value)
-  [:span
-   (color-doc :class-delimiter "#<")
-   (color-doc :class-name "Delay")
-   (color-doc :class-delimiter "@")
-   (system-id value) " "
-   (if (realized? value)
-     (canonize @value)
-     (color-doc :nil "pending"))
-   (color-doc :class-delimiter ">")])
+  (unknown-doc value "Delay"
+    (if (realized? value)
+      (canonize @value)
+      (color-doc :nil "pending"))))
 
 
 (defmethod canonize java.util.concurrent.Future
   [value]
-  (illegal-when-strict value)
-  [:span
-   (color-doc :class-delimiter "#<")
-   (color-doc :class-name "Future")
-   (color-doc :class-delimiter "@")
-   (system-id value) " "
-   (if (future-done? value)
-     (canonize @value)
-     (color-doc :nil "pending"))
-   (color-doc :class-delimiter ">")])
+  (unknown-doc value "Future"
+    (if (future-done? value)
+      (canonize @value)
+      (color-doc :nil "pending"))))
 
 
 (prefer-method canonize clojure.lang.ISeq clojure.lang.IPending)
@@ -350,7 +339,7 @@
 
 
 
-;;;;; OTHER TYPES ;;;;;
+;;;;; SPECIAL TYPES ;;;;;
 
 (defmethod canonize :tagged-value
   [tagged-value]
@@ -364,12 +353,7 @@
 
 (defmethod canonize :default
   [value]
-  (illegal-when-strict value)
-  [:span
-   (color-doc :class-delimiter "#<")
-   (color-doc :class-name (.getName (class value)))
-   " " (str value)
-   (color-doc :class-delimiter ">")])
+  (unknown-doc value))
 
 
 
