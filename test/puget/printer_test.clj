@@ -51,7 +51,9 @@
          '(1 2 3)               "(1 2 3)"
          [4 "five" 6.0]         "[4 \"five\" 6.0]"
          {:foo 8 :bar 'baz}     "{:bar baz, :foo 8}" ; gets sorted
-         #{:omega :alpha :beta} "#{:alpha :beta :omega}"))) ; also sorted
+         #{:omega :alpha :beta} "#{:alpha :beta :omega}")) ; also sorted
+  (testing "Map collection separator"
+    (is (= "{:bar\n [:a :b]}" (pprint-str {:bar [:a :b]} {:width 10, :map-coll-separator :line})))))
 
 
 (defrecord TestRecord [foo bar])
@@ -62,6 +64,7 @@
       (should-fail-when-strict r)
       (is (= "#puget.printer_test.TestRecord{:bar \\y, :foo \\x}\n"
              (with-out-str (pprint r)))))))
+
 
 (deftype ADeref []
   clojure.lang.IDeref
@@ -108,8 +111,7 @@
     (let [v (APending.)]
       (should-fail-when-strict v)
       (is (re-seq #"#<puget.printer_test.APending@[0-9a-f]+ pending"
-                  (pprint-str v)))))
-  )
+                  (pprint-str v))))))
 
 
 (deftest canonical-tagged-value
