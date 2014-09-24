@@ -115,10 +115,14 @@
 
 
 (deftest canonical-tagged-value
-  (let [tval (reify TaggedValue
-               (edn-tag [this] 'foo)
-               (edn-value [this] :bar/baz))
-        doc (canonize tval)]))
+  (let [tv (reify TaggedValue
+             (edn-tag [this] 'foo)
+             (edn-value [this] :bar/baz))]
+    (is (= "#foo :bar/baz" (pprint-str tv))))
+  (let [tv (reify TaggedValue
+             (edn-tag [this] 'frobble/biznar)
+             (edn-value [this] [:foo :bar :baz]))]
+    (is (= "#frobble/biznar\n[:foo :bar :baz]" (pprint-str tv)))))
 
 
 (deftest default-canonize
