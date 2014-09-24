@@ -30,7 +30,7 @@ code works directly with the data instead of parsing it from text.
 Different syntax elements are given different colors to make reading the
 printed output much easier for humans. The `:print-color` option can be set to
 enable colorization using the `with-color` macro - alternately, the `cprint`
-function prints with colored output enabled:
+function always prints with colored output enabled:
 
 ![colorization example](screenshot.png)
 
@@ -47,8 +47,8 @@ even if they have different types. This ordering is used to sort the values in
 sets and the keys in maps so that they are always printed the same way.
 
 By default, values with types which have no canonical representation defined
-will be printed in the same style as Clojure's pretty-print. The `:strict-mode`
-option can be set to true to throw an exception for these values instead.
+will be printed in the same style as Clojure's pretty-print. In strict mode,
+Puget will throw an exception for these values instead.
 
 ```clojure
 (require '[puget.printer :as puget])
@@ -56,10 +56,9 @@ option can be set to true to throw an exception for these values instead.
 (def usd (java.util.Currency/getInstance "USD"))
 
 (puget/pprint usd)
-;; #<java.util.Currency USD>
+;; #<java.util.Currency@4cc4ee24 USD>
 
-(puget/with-options {:strict true}
-  (puget/pprint usd))
+(puget/pprint usd {:strict true)
 ;; IllegalArgumentException: No canonical representation for class java.util.Currency: USD
 ```
 
@@ -89,7 +88,7 @@ example, to extend `#inst` tagging to Joda `DateTime` objects:
 
 (puget.data/extend-tagged-value
   org.joda.time.DateTime 'inst
-  (partial f/unparse (ftime/formatters :date-time)))
+  (partial f/unparse (f/formatters :date-time)))
 
 (t/now)
 #inst "2014-05-14T01:05:53.885Z"
@@ -97,10 +96,12 @@ example, to extend `#inst` tagging to Joda `DateTime` objects:
 
 ## Further Customization
 
-Puget's printing is controlled by a map of options in the dynamic var
+Puget's printing is controlled by a map of options which include print width,
+the color scheme, whether to be strict about value representations, whether to
+print metadata, etc. The default options are held in the dynamic var
 `puget.printer/*options*`. This can be bound with the `with-options` macro for
-convenience. The options include print width, whether Puget is being strict,
-whether to print metadata, etc.
+convenience, or a map can be passed directly into Puget's print functions to
+override the defaults.
 
 Puget's colors are defined by the `:color-scheme` key, which maps syntax element
 keywords to a vector of ANSI style keywords to apply.  The `set-color-scheme!`
