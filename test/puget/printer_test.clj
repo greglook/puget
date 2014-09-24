@@ -125,7 +125,7 @@
   (testing "Unknown values"
     (let [usd (java.util.Currency/getInstance "USD")]
       (should-fail-when-strict usd)
-      (is (= "#<java.util.Currency USD>" (pprint-str usd))))))
+      (is (re-seq #"#<java.util.Currency@[0-9a-f]+ USD>" (pprint-str usd))))))
 
 
 (deftest metadata-printing
