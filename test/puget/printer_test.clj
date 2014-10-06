@@ -56,6 +56,13 @@
     (is (= "{:bar\n [:a :b]}" (pprint-str {:bar [:a :b]} {:width 10, :map-coll-separator :line})))))
 
 
+(deftest unsorted-keys
+  (testing "Unsorted collection keys"
+    (with-options {:sort-keys false}
+      (is (= "#{:zeta :book}" (pprint-str (set [:zeta :book]))))
+      (is (= "{:9 x, :2 y}" (pprint-str (array-map :9 'x, :2 'y)))))))
+
+
 (defrecord TestRecord [foo bar])
 
 (deftest canonical-records
