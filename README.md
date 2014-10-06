@@ -62,6 +62,9 @@ Puget will throw an exception for these values instead.
 ;; IllegalArgumentException: No canonical representation for class java.util.Currency: USD
 ```
 
+Whether or not the entries in collections are sorted can be controlled with the
+`:sort-keys` option.
+
 ## EDN Tagged Values
 
 All of Clojure's primitive types are given their standard canonical print
