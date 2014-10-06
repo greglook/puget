@@ -17,6 +17,11 @@
   :width
   Number of characters to try to wrap pretty-printed forms at.
 
+  :sort-keys
+  Print maps and sets with ordered keys. Defaults to true, which will sort all
+  collections. If a number, counted collections will be sorted up to the set
+  size. Otherwise, collections are not sorted before printing.
+
   :strict
   If true, throw an exception if there is no canonical EDN representation for
   a given value. This generally applies to any non-primitive value which does
@@ -39,6 +44,7 @@
   :color-scheme
   Map of syntax element keywords to ANSI color codes."
   {:width 80
+   :sort-keys true
    :strict false
    :map-delimiter ","
    :map-coll-separator " "
@@ -111,6 +117,19 @@
   (when (:strict *options*)
     (throw (IllegalArgumentException.
              (str "No canonical EDN representation for " (class value) ": " value)))))
+
+
+(defn- sort-entries
+  "Takes a sequence of entries and determines whether to sort them. Returns an
+  appropriately sorted (or unsorted) sequence."
+  [value sort-fn]
+  (let [mode (:sort-keys *options*)]
+    (if (or (true? mode)
+            (and (number? mode)
+                 (counted? value)
+                 (>= mode (count value))))
+      (sort-fn value)
+      (seq value))))
 
 
 
@@ -214,7 +233,7 @@
 
 (defmethod canonize clojure.lang.IPersistentSet
   [value]
-  (let [entries (sort order/rank (seq value))]
+  (let [entries (sort-entries value (partial sort order/rank))]
     [:group
      (color-doc :delimiter "#{")
      [:align (interpose :line (map canonize entries))]
@@ -232,9 +251,8 @@
              (coll? v) (:map-coll-separator *options*)
              :else " ")
            (canonize v)])
-        entries (->> (seq value)
-                     (sort-by first order/rank)
-                     (map canonize-kv))]
+        ks (sort-entries value (partial sort-by first order/rank))
+        entries (map canonize-kv ks)]
     [:group
      (color-doc :delimiter "{")
      [:align (interpose [:span (:map-delimiter *options*) :line] entries)]
