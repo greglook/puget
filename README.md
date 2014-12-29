@@ -58,7 +58,7 @@ Puget will throw an exception for these values instead.
 (puget/pprint usd)
 ;; #<java.util.Currency@4cc4ee24 USD>
 
-(puget/pprint usd {:strict true)
+(puget/pprint usd {:strict true})
 ;; IllegalArgumentException: No canonical representation for class java.util.Currency: USD
 ```
 
