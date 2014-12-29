@@ -383,7 +383,7 @@
   ([value]
    (pprint value nil))
   ([value opts]
-   (binding [*options* (merge *options* opts)]
+   (with-options opts
      (fipp/pprint-document
        (canonical-document value)
        {:width (:width *options*)}))))
