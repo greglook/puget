@@ -6,6 +6,9 @@
 
   :deploy-branches ["master"]
 
+  :aliases {"docs" ["do" ["hiera"] ["marg" "--dir" "target/docs"]]
+            "tests" ["do" ["check"] ["test"] ["cloverage"]]}
+
   :dependencies
   [[org.clojure/clojure "1.6.0"]
    [org.clojure/data.codec "0.1.0"]
