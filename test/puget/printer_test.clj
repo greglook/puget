@@ -51,7 +51,19 @@
          '(1 2 3)               "(1 2 3)"
          [4 "five" 6.0]         "[4 \"five\" 6.0]"
          {:foo 8 :bar 'baz}     "{:bar baz, :foo 8}" ; gets sorted
-         #{:omega :alpha :beta} "#{:alpha :beta :omega}"))) ; also sorted
+         #{:omega :alpha :beta} "#{:alpha :beta :omega}")) ; also sorted
+  (testing "Map collection separator"
+    (is (= "{:bar\n [:a :b]}" (pprint-str {:bar [:a :b]} {:width 10, :map-coll-separator :line})))))
+
+
+(deftest unsorted-keys
+  (testing "Unsorted collection keys"
+    (with-options {:sort-keys false}
+      (is (= "#{:zeta :book}" (pprint-str (set [:zeta :book]))))
+      (is (= "{:9 x, :2 y}" (pprint-str (array-map :9 'x, :2 'y)))))
+    (with-options {:sort-keys 2}
+      (is (= "{:a 1, :b 0}" (pprint-str (array-map :b 0 :a 1))))
+      (is (= "{:z 2, :a 5, :m 8}" (pprint-str (array-map :z 2 :a 5 :m 8)))))))
 
 
 (defrecord TestRecord [foo bar])
@@ -62,6 +74,7 @@
       (should-fail-when-strict r)
       (is (= "#puget.printer_test.TestRecord{:bar \\y, :foo \\x}\n"
              (with-out-str (pprint r)))))))
+
 
 (deftype ADeref []
   clojure.lang.IDeref
@@ -108,22 +121,25 @@
     (let [v (APending.)]
       (should-fail-when-strict v)
       (is (re-seq #"#<puget.printer_test.APending@[0-9a-f]+ pending"
-                  (pprint-str v)))))
-  )
+                  (pprint-str v))))))
 
 
 (deftest canonical-tagged-value
-  (let [tval (reify TaggedValue
-               (edn-tag [this] 'foo)
-               (edn-value [this] :bar/baz))
-        doc (canonize tval)]))
+  (let [tv (reify TaggedValue
+             (edn-tag [this] 'foo)
+             (edn-value [this] :bar/baz))]
+    (is (= "#foo :bar/baz" (pprint-str tv))))
+  (let [tv (reify TaggedValue
+             (edn-tag [this] 'frobble/biznar)
+             (edn-value [this] [:foo :bar :baz]))]
+    (is (= "#frobble/biznar\n[:foo :bar :baz]" (pprint-str tv)))))
 
 
 (deftest default-canonize
   (testing "Unknown values"
     (let [usd (java.util.Currency/getInstance "USD")]
       (should-fail-when-strict usd)
-      (is (= "#<java.util.Currency USD>" (pprint-str usd))))))
+      (is (re-seq #"#<java.util.Currency@[0-9a-f]+ USD>" (pprint-str usd))))))
 
 
 (deftest metadata-printing

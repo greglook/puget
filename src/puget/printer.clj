@@ -17,6 +17,11 @@
   :width
   Number of characters to try to wrap pretty-printed forms at.
 
+  :sort-keys
+  Print maps and sets with ordered keys. Defaults to true, which will sort all
+  collections. If a number, counted collections will be sorted up to the set
+  size. Otherwise, collections are not sorted before printing.
+
   :strict
   If true, throw an exception if there is no canonical EDN representation for
   a given value. This generally applies to any non-primitive value which does
@@ -39,6 +44,7 @@
   :color-scheme
   Map of syntax element keywords to ANSI color codes."
   {:width 80
+   :sort-keys true
    :strict false
    :map-delimiter ","
    :map-coll-separator " "
@@ -111,6 +117,19 @@
   (when (:strict *options*)
     (throw (IllegalArgumentException.
              (str "No canonical EDN representation for " (class value) ": " value)))))
+
+
+(defn- sort-entries
+  "Takes a sequence of entries and determines whether to sort them. Returns an
+  appropriately sorted (or unsorted) sequence."
+  [value sort-fn]
+  (let [mode (:sort-keys *options*)]
+    (if (or (true? mode)
+            (and (number? mode)
+                 (counted? value)
+                 (>= mode (count value))))
+      (sort-fn value)
+      (seq value))))
 
 
 
@@ -214,7 +233,7 @@
 
 (defmethod canonize clojure.lang.IPersistentSet
   [value]
-  (let [entries (sort order/rank (seq value))]
+  (let [entries (sort-entries value (partial sort order/rank))]
     [:group
      (color-doc :delimiter "#{")
      [:align (interpose :line (map canonize entries))]
@@ -232,9 +251,8 @@
              (coll? v) (:map-coll-separator *options*)
              :else " ")
            (canonize v)])
-        entries (->> (seq value)
-                     (sort-by first order/rank)
-                     (map canonize-kv))]
+        ks (sort-entries value (partial sort-by first order/rank))
+        entries (map canonize-kv ks)]
     [:group
      (color-doc :delimiter "{")
      [:align (interpose [:span (:map-delimiter *options*) :line] entries)]
@@ -277,70 +295,59 @@
    (color-doc :symbol (subs (str value) 2))])
 
 
+
+;;;;; OTHER TYPES ;;;;;
+
+(defn- unknown-doc
+  "Renders common syntax doc for an unknown representation of a value."
+  ([value]
+   (unknown-doc value (str value)))
+  ([value repr]
+   (unknown-doc value (.getName (class value)) repr))
+  ([value tag repr]
+   (illegal-when-strict value)
+   [:span
+    (color-doc :class-delimiter "#<")
+    (color-doc :class-name tag)
+    (color-doc :class-delimiter "@")
+    (system-id value)
+    " "
+    repr
+    (color-doc :class-delimiter ">")]))
+
+
 (defmethod canonize clojure.lang.IDeref
   [value]
-  (illegal-when-strict value)
-  [:span
-   (color-doc :class-delimiter "#<")
-   (color-doc :class-name (.getName (class value)))
-   (color-doc :class-delimiter "@")
-   (system-id value) " "
-   (canonize @value)
-   (color-doc :class-delimiter ">")])
+  (unknown-doc value (canonize @value)))
 
 
 (defmethod canonize clojure.lang.Atom
   [value]
-  (illegal-when-strict value)
-  [:span
-   (color-doc :class-delimiter "#<")
-   (color-doc :class-name "Atom")
-   (color-doc :class-delimiter "@")
-   (system-id value) " "
-   (canonize @value)
-   (color-doc :class-delimiter ">")])
+  (unknown-doc value "Atom" (canonize @value)))
 
 
 (defmethod canonize clojure.lang.IPending
   [value]
-  (illegal-when-strict value)
-  [:span
-   (color-doc :class-delimiter "#<")
-   (color-doc :class-name (.getName (class value)))
-   (color-doc :class-delimiter "@")
-   (system-id value) " "
-   (if (realized? value)
-     (canonize @value)
-     (color-doc :nil "pending"))
-   (color-doc :class-delimiter ">")])
+  (unknown-doc value
+    (if (realized? value)
+      (canonize @value)
+      (color-doc :nil "pending"))))
 
 
 (defmethod canonize clojure.lang.Delay
   [value]
-  (illegal-when-strict value)
-  [:span
-   (color-doc :class-delimiter "#<")
-   (color-doc :class-name "Delay")
-   (color-doc :class-delimiter "@")
-   (system-id value) " "
-   (if (realized? value)
-     (canonize @value)
-     (color-doc :nil "pending"))
-   (color-doc :class-delimiter ">")])
+  (unknown-doc value "Delay"
+    (if (realized? value)
+      (canonize @value)
+      (color-doc :nil "pending"))))
 
 
 (defmethod canonize java.util.concurrent.Future
   [value]
-  (illegal-when-strict value)
-  [:span
-   (color-doc :class-delimiter "#<")
-   (color-doc :class-name "Future")
-   (color-doc :class-delimiter "@")
-   (system-id value) " "
-   (if (future-done? value)
-     (canonize @value)
-     (color-doc :nil "pending"))
-   (color-doc :class-delimiter ">")])
+  (unknown-doc value "Future"
+    (if (future-done? value)
+      (canonize @value)
+      (color-doc :nil "pending"))))
 
 
 (prefer-method canonize clojure.lang.ISeq clojure.lang.IPending)
@@ -350,7 +357,7 @@
 
 
 
-;;;;; OTHER TYPES ;;;;;
+;;;;; SPECIAL TYPES ;;;;;
 
 (defmethod canonize :tagged-value
   [tagged-value]
@@ -364,12 +371,7 @@
 
 (defmethod canonize :default
   [value]
-  (illegal-when-strict value)
-  [:span
-   (color-doc :class-delimiter "#<")
-   (color-doc :class-name (.getName (class value)))
-   " " (str value)
-   (color-doc :class-delimiter ">")])
+  (unknown-doc value))
 
 
 
@@ -381,7 +383,7 @@
   ([value]
    (pprint value nil))
   ([value opts]
-   (binding [*options* (merge *options* opts)]
+   (with-options opts
      (fipp/pprint-document
        (canonical-document value)
        {:width (:width *options*)}))))

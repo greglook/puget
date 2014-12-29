@@ -1,10 +1,13 @@
-(defproject mvxcvi/puget "0.6.4"
+(defproject mvxcvi/puget "0.6.6"
   :description "Colorizing canonical Clojure printer for EDN values."
   :url "https://github.com/greglook/puget"
   :license {:name "Public Domain"
             :url "http://unlicense.org/"}
 
   :deploy-branches ["master"]
+
+  :aliases {"docs" ["do" ["hiera"] ["marg" "--dir" "target/docs"]]
+            "tests" ["do" ["check"] ["test"] ["cloverage"]]}
 
   :dependencies
   [[org.clojure/clojure "1.6.0"]
