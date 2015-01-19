@@ -46,13 +46,13 @@
 
 
 (deftest generic-tagged-value
-  (let [data (data/->tagged-value 'foo :bar)
+  (let [data (data/tagged-value 'foo :bar)
         {:keys [tag value]} (data/->edn data)
         string (data/edn-str data)]
     (is (= 'foo tag))
     (is (= :bar value))
     (is (= "#foo :bar" (str data)))
-    (is (= data (edn/read-string {:default data/->tagged-value} string)))))
+    (is (= data (edn/read-string {:default data/tagged-value} string)))))
 
 
 (defrecord TestRecord [x y])

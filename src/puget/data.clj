@@ -35,7 +35,7 @@
     (str \# tag \space (pr-str value))))
 
 
-(defn ->tagged-value
+(defn tagged-value
   "Creates a generic tagged value record to represent some EDN value. This is
   suitable for use as a default-data-reader function."
   [tag value]
@@ -67,7 +67,7 @@
        ExtendedNotation
        (->edn
          [this#]
-         (->tagged-value ~tag (value-fn# this#))))))
+         (tagged-value ~tag (value-fn# this#))))))
 
 
 (defmacro extend-tagged-str
