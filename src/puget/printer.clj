@@ -9,39 +9,39 @@
       [order :as order])))
 
 
-;;;;; CONTROL VARS ;;;;;
+;; ## Control Vars
 
 (def ^:dynamic *options*
   "Printer control options.
 
-  :width
+  `:width`
   Number of characters to try to wrap pretty-printed forms at.
 
-  :sort-keys
+  `:sort-keys`
   Print maps and sets with ordered keys. Defaults to true, which will sort all
   collections. If a number, counted collections will be sorted up to the set
   size. Otherwise, collections are not sorted before printing.
 
-  :strict
+  `:strict`
   If true, throw an exception if there is no canonical EDN representation for
   a given value. This generally applies to any non-primitive value which does
   not extend puget.data/TaggedValue and is not a built-in collection.
 
-  :map-delimiter
+  `:map-delimiter`
   The text placed between key-value pairs in a map.
 
-  :map-coll-separator
+  `:map-coll-separator`
   The text placed between a map key and a collection value. The keyword :line
   will cause line breaks if the whole map does not fit on a single line.
 
-  :print-meta
+  `:print-meta`
   If true, metadata will be printed before values. If nil, defaults to the
   value of *print-meta*.
 
-  :print-color
+  `:print-color`
   When true, ouptut ANSI colored text from print functions.
 
-  :color-scheme
+  `:color-scheme`
   Map of syntax element keywords to ANSI color codes."
   {:width 80
    :sort-keys true
@@ -104,24 +104,26 @@
 
 
 
-;;;;; UTILITY FUNCTIONS ;;;;;
+;; ## Utility Functions
 
 (defn- system-id
+  "Returns the system id for the object as a hex string."
   [obj]
   (Integer/toHexString (System/identityHashCode obj)))
 
 
-(defn- illegal-when-strict
-  "Checks whether strict mode is enabled and throws an exception if so."
+(defn- illegal-when-strict!
+  "Throws an exception if strict mode is enabled. The error indincates that the
+  given value has no EDN representation."
   [value]
   (when (:strict *options*)
     (throw (IllegalArgumentException.
              (str "No canonical EDN representation for " (class value) ": " value)))))
 
 
-(defn- sort-entries
-  "Takes a sequence of entries and determines whether to sort them. Returns an
-  appropriately sorted (or unsorted) sequence."
+(defn- order-collection
+  "Takes a sequence of entries and checks the `:sort-keys` option to determine
+  whether to sort them. Returns an appropriately ordered sequence."
   [value sort-fn]
   (let [mode (:sort-keys *options*)]
     (if (or (true? mode)
@@ -133,11 +135,11 @@
 
 
 
-;;;;; COLORING FUNCTIONS ;;;;;
+;; ## Coloring Functions
 
 (defn- color-doc
-  "Constructs a text doc, which may be colored if :print-color is true. Element
-  should be a key from the color-scheme map."
+  "Constructs a text doc, which may be colored if `:print-color` is true.
+  Element should be a key from the color-scheme map."
   [element text]
   (let [codes (-> *options* :color-scheme (get element) seq)]
     (if (and (:print-color *options*) codes)
@@ -149,7 +151,7 @@
   "Produces text colored according to the active color scheme. This is mostly
   useful to clients which want to produce output which matches data printed by
   Puget, but which is not directly printed by the library. Note that this
-  function still obeys the :print-color option."
+  function still obeys the `:print-color` option."
   [element text]
   (let [codes (-> *options* :color-scheme (get element) seq)]
     (if (and (:print-color *options*) codes)
@@ -158,7 +160,7 @@
 
 
 
-;;;;; CANONIZE MULTIMETHOD ;;;;;
+;; ## Canonize Multimethod
 
 (defn- canonize-dispatch
   [value]
@@ -187,8 +189,26 @@
       (canonize value))))
 
 
+(defn- unknown-document
+  "Renders common syntax doc for an unknown representation of a value."
+  ([value]
+   (unknown-document value (str value)))
+  ([value repr]
+   (unknown-document value (.getName (class value)) repr))
+  ([value tag repr]
+   (illegal-when-strict! value)
+   [:span
+    (color-doc :class-delimiter "#<")
+    (color-doc :class-name tag)
+    (color-doc :class-delimiter "@")
+    (system-id value)
+    " "
+    repr
+    (color-doc :class-delimiter ">")]))
 
-;;;;; PRIMITIVE TYPES ;;;;;
+
+
+;; ## Primitive Types
 
 (defmacro ^:private canonize-element
   "Defines a canonization of a primitive value type by mapping it to an element
@@ -209,7 +229,7 @@
 
 
 
-;;;;; COLLECTION TYPES ;;;;;
+;; ## Collection Types
 
 (defmethod canonize clojure.lang.ISeq
   [value]
@@ -233,7 +253,7 @@
 
 (defmethod canonize clojure.lang.IPersistentSet
   [value]
-  (let [entries (sort-entries value (partial sort order/rank))]
+  (let [entries (order-collection value (partial sort order/rank))]
     [:group
      (color-doc :delimiter "#{")
      [:align (interpose :line (map canonize entries))]
@@ -251,7 +271,7 @@
              (coll? v) (:map-coll-separator *options*)
              :else " ")
            (canonize v)])
-        ks (sort-entries value (partial sort-by first order/rank))
+        ks (order-collection value (partial sort-by first order/rank))
         entries (map canonize-kv ks)]
     [:group
      (color-doc :delimiter "{")
@@ -266,7 +286,7 @@
 
 (defmethod canonize clojure.lang.IRecord
   [value]
-  (illegal-when-strict value)
+  (illegal-when-strict! value)
   [:span
    (color-doc :delimiter "#")
    (.getName (class value))
@@ -277,11 +297,11 @@
 
 
 
-;;;;; CLOJURE TYPES ;;;;;
+;; ## Clojure Types
 
 (defmethod canonize java.util.regex.Pattern
   [value]
-  (illegal-when-strict value)
+  (illegal-when-strict! value)
   [:span
    (color-doc :delimiter "#")
    (color-doc :string (str \" value \"))])
@@ -289,46 +309,25 @@
 
 (defmethod canonize clojure.lang.Var
   [value]
-  (illegal-when-strict value)
+  (illegal-when-strict! value)
   [:span
    (color-doc :delimiter "#'")
    (color-doc :symbol (subs (str value) 2))])
 
 
-
-;;;;; OTHER TYPES ;;;;;
-
-(defn- unknown-doc
-  "Renders common syntax doc for an unknown representation of a value."
-  ([value]
-   (unknown-doc value (str value)))
-  ([value repr]
-   (unknown-doc value (.getName (class value)) repr))
-  ([value tag repr]
-   (illegal-when-strict value)
-   [:span
-    (color-doc :class-delimiter "#<")
-    (color-doc :class-name tag)
-    (color-doc :class-delimiter "@")
-    (system-id value)
-    " "
-    repr
-    (color-doc :class-delimiter ">")]))
-
-
 (defmethod canonize clojure.lang.IDeref
   [value]
-  (unknown-doc value (canonize @value)))
+  (unknown-document value (canonize @value)))
 
 
 (defmethod canonize clojure.lang.Atom
   [value]
-  (unknown-doc value "Atom" (canonize @value)))
+  (unknown-document value "Atom" (canonize @value)))
 
 
 (defmethod canonize clojure.lang.IPending
   [value]
-  (unknown-doc value
+  (unknown-document value
     (if (realized? value)
       (canonize @value)
       (color-doc :nil "pending"))))
@@ -336,7 +335,7 @@
 
 (defmethod canonize clojure.lang.Delay
   [value]
-  (unknown-doc value "Delay"
+  (unknown-document value "Delay"
     (if (realized? value)
       (canonize @value)
       (color-doc :nil "pending"))))
@@ -344,7 +343,7 @@
 
 (defmethod canonize java.util.concurrent.Future
   [value]
-  (unknown-doc value "Future"
+  (unknown-document value "Future"
     (if (future-done? value)
       (canonize @value)
       (color-doc :nil "pending"))))
@@ -357,7 +356,7 @@
 
 
 
-;;;;; SPECIAL TYPES ;;;;;
+;; ## Special Types
 
 (defmethod canonize :tagged-value
   [tagged-value]
@@ -371,11 +370,11 @@
 
 (defmethod canonize :default
   [value]
-  (unknown-doc value))
+  (unknown-document value))
 
 
 
-;;;;; PRINT FUNCTIONS ;;;;;
+;; ## Printing Functions
 
 (defn pprint
   "Pretty-prints a value to *out*. Options may be passed to override the
