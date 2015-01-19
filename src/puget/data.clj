@@ -75,15 +75,15 @@
     (.format date)))
 
 
-;; `inst` Date-time instant as an ISO-8601 string.
+;; `inst` tags a date-time instant represented as an ISO-8601 string.
 (extend-tagged-value Date 'inst format-utc)
 
 
-;; `uuid` Universally-unique identifier string.
+;; `uuid` tags a universally-unique identifier string.
 (extend-tagged-str UUID 'uuid)
 
 
-;; `bin` Binary data in the form of byte arrays.
+;; `bin` tags byte data represented as a base64-encoded string.
 (extend-tagged-value
   (class (byte-array 0))
   'bin
@@ -97,7 +97,7 @@
   (b64/decode (.getBytes bin)))
 
 
-;; `uri` Universal Resource Identifier string.
+;; `uri` tags a Universal Resource Identifier string.
 (extend-tagged-str URI 'uri)
 
 
