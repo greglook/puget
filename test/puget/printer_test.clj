@@ -3,7 +3,7 @@
     [clojure.string :as str]
     [clojure.test :refer :all]
     (puget
-      [data :refer [TaggedValue]]
+      [data :as data]
       [printer :refer :all])))
 
 
@@ -24,7 +24,7 @@
     (set-color-scheme! old-scheme)))
 
 
-(deftest canonical-primitives
+(deftest formatting-primitives
   (testing "Primitive values"
     (are [v text] (= text (-> v pprint with-out-str str/trim))
          nil     "nil"
@@ -44,7 +44,7 @@
          'ns/sym "ns/sym")))
 
 
-(deftest canonical-collections
+(deftest formatting-collections
   (testing "Collections"
     (are [v text] (= text (pprint-str v))
          '(foo :bar)            "(foo :bar)"
@@ -68,7 +68,7 @@
 
 (defrecord TestRecord [foo bar])
 
-(deftest canonical-records
+(deftest formatting-records
   (testing "Records"
     (let [r (->TestRecord \x \y)]
       (should-fail-when-strict r)
@@ -92,9 +92,9 @@
       (should-fail-when-strict v)
       (is (= "#\"\\d+\"" (pprint-str v)))))
   (testing "vars"
-    (let [v #'TaggedValue]
+    (let [v #'*options*]
       (should-fail-when-strict v)
-      (is (= "#'puget.data/TaggedValue"
+      (is (= "#'puget.printer/*options*"
              (pprint-str v)))))
   (testing "atom"
     (let [v (atom :foo)]
@@ -124,18 +124,14 @@
                   (pprint-str v))))))
 
 
-(deftest canonical-tagged-value
-  (let [tv (reify TaggedValue
-             (edn-tag [this] 'foo)
-             (edn-value [this] :bar/baz))]
+(deftest formatting-tagged-values
+  (let [tv (data/tagged-value 'foo :bar/baz)]
     (is (= "#foo :bar/baz" (pprint-str tv))))
-  (let [tv (reify TaggedValue
-             (edn-tag [this] 'frobble/biznar)
-             (edn-value [this] [:foo :bar :baz]))]
+  (let [tv (data/tagged-value 'frobble/biznar [:foo :bar :baz])]
     (is (= "#frobble/biznar\n[:foo :bar :baz]" (pprint-str tv)))))
 
 
-(deftest default-canonize
+(deftest default-formatting
   (testing "Unknown values"
     (let [usd (java.util.Currency/getInstance "USD")]
       (should-fail-when-strict usd)
