@@ -189,6 +189,24 @@
       (canonize value))))
 
 
+(defn- unknown-document
+  "Renders common syntax doc for an unknown representation of a value."
+  ([value]
+   (unknown-document value (str value)))
+  ([value repr]
+   (unknown-document value (.getName (class value)) repr))
+  ([value tag repr]
+   (illegal-when-strict! value)
+   [:span
+    (color-doc :class-delimiter "#<")
+    (color-doc :class-name tag)
+    (color-doc :class-delimiter "@")
+    (system-id value)
+    " "
+    repr
+    (color-doc :class-delimiter ">")]))
+
+
 
 ;; ## Primitive Types
 
@@ -297,40 +315,19 @@
    (color-doc :symbol (subs (str value) 2))])
 
 
-
-;; ## Other Types
-
-(defn- unknown-doc
-  "Renders common syntax doc for an unknown representation of a value."
-  ([value]
-   (unknown-doc value (str value)))
-  ([value repr]
-   (unknown-doc value (.getName (class value)) repr))
-  ([value tag repr]
-   (illegal-when-strict! value)
-   [:span
-    (color-doc :class-delimiter "#<")
-    (color-doc :class-name tag)
-    (color-doc :class-delimiter "@")
-    (system-id value)
-    " "
-    repr
-    (color-doc :class-delimiter ">")]))
-
-
 (defmethod canonize clojure.lang.IDeref
   [value]
-  (unknown-doc value (canonize @value)))
+  (unknown-document value (canonize @value)))
 
 
 (defmethod canonize clojure.lang.Atom
   [value]
-  (unknown-doc value "Atom" (canonize @value)))
+  (unknown-document value "Atom" (canonize @value)))
 
 
 (defmethod canonize clojure.lang.IPending
   [value]
-  (unknown-doc value
+  (unknown-document value
     (if (realized? value)
       (canonize @value)
       (color-doc :nil "pending"))))
@@ -338,7 +335,7 @@
 
 (defmethod canonize clojure.lang.Delay
   [value]
-  (unknown-doc value "Delay"
+  (unknown-document value "Delay"
     (if (realized? value)
       (canonize @value)
       (color-doc :nil "pending"))))
@@ -346,7 +343,7 @@
 
 (defmethod canonize java.util.concurrent.Future
   [value]
-  (unknown-doc value "Future"
+  (unknown-document value "Future"
     (if (future-done? value)
       (canonize @value)
       (color-doc :nil "pending"))))
@@ -373,7 +370,7 @@
 
 (defmethod canonize :default
   [value]
-  (unknown-doc value))
+  (unknown-document value))
 
 
 
