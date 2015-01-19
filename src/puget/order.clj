@@ -1,5 +1,5 @@
 (ns puget.order
-  "Total ordering comparator for Clojure values.")
+  "This namespace provides a total-ordering comparator for Clojure values.")
 
 
 (defn- type-priority
