@@ -163,6 +163,9 @@
 ;; ## Canonize Multimethod
 
 (defn- canonize-dispatch
+  "Dispatches the method to use for value formatting. Values which use
+  extended notation are rendered as tagged values; others are dispatched on
+  their `type`."
   [value]
   (if (satisfies? data/ExtendedNotation value)
     ::tagged-value
