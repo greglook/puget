@@ -160,9 +160,9 @@
 
 
 
-;; ## Canonize Multimethod
+;; ## Formatting Multimethod
 
-(defn- canonize-dispatch
+(defn- formatter-dispatch
   "Dispatches the method to use for value formatting. Values which use
   extended notation are rendered as tagged values; others are dispatched on
   their `type`."
@@ -172,11 +172,11 @@
     (type value)))
 
 
-(defmulti canonize
+(defmulti format-doc
   "Converts the given value into a 'canonical' structured document, suitable
   for printing with fipp. This method also supports ANSI color escapes for
   syntax highlighting if desired."
-  #'canonize-dispatch)
+  #'formatter-dispatch)
 
 
 (defn- canonical-document
@@ -187,9 +187,9 @@
                       (:print-meta *options*))]
     (if-let [metadata (and print-meta? (meta value))]
       [:align
-       [:span (color-doc :delimiter "^") (canonize metadata)]
-        :line (canonize value)]
-      (canonize value))))
+       [:span (color-doc :delimiter "^") (format-doc metadata)]
+        :line (format-doc value)]
+      (format-doc value))))
 
 
 (defn- unknown-document
@@ -213,96 +213,101 @@
 
 ;; ## Primitive Types
 
-(defmacro ^:private canonize-element
+(defmacro ^:private format-element
   "Defines a canonization of a primitive value type by mapping it to an element
   in the color scheme."
   [dispatch element]
-  `(defmethod canonize ~dispatch
+  `(defmethod format-doc ~dispatch
      [value#]
      (color-doc ~element (pr-str value#))))
 
 
-(canonize-element nil                  :nil)
-(canonize-element java.lang.Boolean    :boolean)
-(canonize-element java.lang.Number     :number)
-(canonize-element java.lang.Character  :character)
-(canonize-element java.lang.String     :string)
-(canonize-element clojure.lang.Keyword :keyword)
-(canonize-element clojure.lang.Symbol  :symbol)
+(format-element nil                  :nil)
+(format-element java.lang.Boolean    :boolean)
+(format-element java.lang.Number     :number)
+(format-element java.lang.Character  :character)
+(format-element java.lang.String     :string)
+(format-element clojure.lang.Keyword :keyword)
+(format-element clojure.lang.Symbol  :symbol)
 
 
 
 ;; ## Collection Types
 
-(defmethod canonize clojure.lang.ISeq
+(defn- format-entry
+  "Formats a canonical print document for a key-value entry in a map."
+  [[k v]]
+  [:span
+   (format-doc k)
+   (cond
+     (satisfies? data/ExtendedNotation v) " "
+     (coll? v) (:map-coll-separator *options*)
+     :else " ")
+   (format-doc v)])
+
+
+(defn- format-map
+  "Formats a canonical print document for a map value."
   [value]
-  (let [elements (if (symbol? (first value))
-                   (cons (color-doc :function-symbol (str (first value)))
-                         (map canonize (rest value)))
-                   (map canonize value))]
-    [:group
-     (color-doc :delimiter "(")
-     [:align (interpose :line elements)]
-     (color-doc :delimiter ")")]))
-
-
-(defmethod canonize clojure.lang.IPersistentVector
-  [value]
-  [:group
-   (color-doc :delimiter "[")
-   [:align (interpose :line (map canonize value))]
-   (color-doc :delimiter "]")])
-
-
-(defmethod canonize clojure.lang.IPersistentSet
-  [value]
-  (let [entries (order-collection value (partial sort order/rank))]
-    [:group
-     (color-doc :delimiter "#{")
-     [:align (interpose :line (map canonize entries))]
-     (color-doc :delimiter "}")]))
-
-
-(defn- canonize-map
-  [value]
-  (let [canonize-kv
-        (fn [[k v]]
-          [:span
-           (canonize k)
-           (cond
-             (satisfies? data/ExtendedNotation v) " "
-             (coll? v) (:map-coll-separator *options*)
-             :else " ")
-           (canonize v)])
-        ks (order-collection value (partial sort-by first order/rank))
-        entries (map canonize-kv ks)]
+  (let [ks (order-collection value (partial sort-by first order/rank))
+        entries (map format-entry ks)]
     [:group
      (color-doc :delimiter "{")
      [:align (interpose [:span (:map-delimiter *options*) :line] entries)]
      (color-doc :delimiter "}")]))
 
 
-(defmethod canonize clojure.lang.IPersistentMap
+
+(defmethod format-doc clojure.lang.ISeq
   [value]
-  (canonize-map value))
+  (let [elements (if (symbol? (first value))
+                   (cons (color-doc :function-symbol (str (first value)))
+                         (map format-doc (rest value)))
+                   (map format-doc value))]
+    [:group
+     (color-doc :delimiter "(")
+     [:align (interpose :line elements)]
+     (color-doc :delimiter ")")]))
 
 
-(defmethod canonize clojure.lang.IRecord
+(defmethod format-doc clojure.lang.IPersistentVector
+  [value]
+  [:group
+   (color-doc :delimiter "[")
+   [:align (interpose :line (map format-doc value))]
+   (color-doc :delimiter "]")])
+
+
+(defmethod format-doc clojure.lang.IPersistentSet
+  [value]
+  (let [entries (order-collection value (partial sort order/rank))]
+    [:group
+     (color-doc :delimiter "#{")
+     [:align (interpose :line (map format-doc entries))]
+     (color-doc :delimiter "}")]))
+
+
+(defmethod format-doc clojure.lang.IPersistentMap
+  [value]
+  (format-map value))
+
+
+(defmethod format-doc clojure.lang.IRecord
   [value]
   (illegal-when-strict! value)
   [:span
    (color-doc :delimiter "#")
    (.getName (class value))
-   (canonize-map value)])
+   (format-map value)])
 
 
-(prefer-method canonize clojure.lang.IRecord clojure.lang.IPersistentMap)
+(prefer-method format-doc clojure.lang.IRecord clojure.lang.IPersistentMap)
 
 
 
 ;; ## Clojure Types
 
-(defmethod canonize java.util.regex.Pattern
+(defmethod format-doc java.util.regex.Pattern
   [value]
   (illegal-when-strict! value)
   [:span
@@ -310,7 +315,7 @@
    (color-doc :string (str \" value \"))])
 
 
-(defmethod canonize clojure.lang.Var
+(defmethod format-doc clojure.lang.Var
   [value]
   (illegal-when-strict! value)
   [:span
@@ -318,59 +323,59 @@
    (color-doc :symbol (subs (str value) 2))])
 
 
-(defmethod canonize clojure.lang.IDeref
+(defmethod format-doc clojure.lang.IDeref
   [value]
-  (unknown-document value (canonize @value)))
+  (unknown-document value (format-doc @value)))
 
 
-(defmethod canonize clojure.lang.Atom
+(defmethod format-doc clojure.lang.Atom
   [value]
-  (unknown-document value "Atom" (canonize @value)))
+  (unknown-document value "Atom" (format-doc @value)))
 
 
-(defmethod canonize clojure.lang.IPending
+(defmethod format-doc clojure.lang.IPending
   [value]
   (unknown-document value
     (if (realized? value)
-      (canonize @value)
+      (format-doc @value)
       (color-doc :nil "pending"))))
 
 
-(defmethod canonize clojure.lang.Delay
+(defmethod format-doc clojure.lang.Delay
   [value]
   (unknown-document value "Delay"
     (if (realized? value)
-      (canonize @value)
+      (format-doc @value)
       (color-doc :nil "pending"))))
 
 
-(defmethod canonize java.util.concurrent.Future
+(defmethod format-doc java.util.concurrent.Future
   [value]
   (unknown-document value "Future"
     (if (future-done? value)
-      (canonize @value)
+      (format-doc @value)
       (color-doc :nil "pending"))))
 
 
-(prefer-method canonize clojure.lang.ISeq clojure.lang.IPending)
-(prefer-method canonize clojure.lang.IPending clojure.lang.IDeref)
-(prefer-method canonize java.util.concurrent.Future clojure.lang.IDeref)
-(prefer-method canonize java.util.concurrent.Future clojure.lang.IPending)
+(prefer-method format-doc clojure.lang.ISeq clojure.lang.IPending)
+(prefer-method format-doc clojure.lang.IPending clojure.lang.IDeref)
+(prefer-method format-doc java.util.concurrent.Future clojure.lang.IDeref)
+(prefer-method format-doc java.util.concurrent.Future clojure.lang.IPending)
 
 
 
 ;; ## Special Types
 
-(defmethod canonize ::tagged-value
+(defmethod format-doc ::tagged-value
   [tagged-value]
   (let [{:keys [tag value]} (data/->edn tagged-value)]
     [:span
      (color-doc :tag (str \# tag))
      (if (coll? value) :line " ")
-     (canonize value)]))
+     (format-doc value)]))
 
 
-(defmethod canonize :default
+(defmethod format-doc :default
   [value]
   (unknown-document value))
 
