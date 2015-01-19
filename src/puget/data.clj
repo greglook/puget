@@ -9,29 +9,53 @@
 
 ;; ## Tagged-value Protocol
 
-(defprotocol TaggedValue
-  (edn-tag [this] "Return the EDN tag symbol for this data type.")
-  (edn-value [this] "Return the EDN value to follow the tag."))
+(defprotocol ExtendedNotation
+  "Protocol for types which use extended notation for EDN representation."
+
+  (->edn
+    [value]
+    "Converts the given value into a tagged value representation for EDN
+    serialization. Returns a `TaggedValue` record."))
+
+
+(defrecord TaggedValue
+  [tag value]
+
+  ExtendedNotation
+
+  (->edn
+    [this]
+    this)
+
+
+  Object
+
+  (toString
+    [this]
+    (str \# tag \space (pr-str value))))
+
+
+(defn ->tagged-value
+  "Creates a generic tagged value record to represent some EDN value. This is
+  suitable for use as a default-data-reader function."
+  [tag value]
+  {:pre [(symbol? tag)]}
+  (->TaggedValue tag value))
 
 
 (defn edn-str
-  "Converts the given TaggedValue data to a tagged EDN string."
+  "Converts the given value to a tagged EDN string. Falls back to `pr-str` if
+  `v` does not use extended notation."
   ^String
   [v]
-  (str \# (edn-tag v) \space (pr-str (edn-value v))))
+  (if (satisfies? ExtendedNotation v)
+    (let [{:keys [tag value]} (->edn v)]
+      (str \# tag \space (edn-str value)))
+    (pr-str v)))
 
 
 
 ;; ## Extension Functions
-
-(defmacro defprint-method
-  "Defines a print-method for the given class which writes out the EDN
-  serialization from `edn-str`."
-  [t]
-  `(defmethod print-method ~t
-     [v# ^java.io.Writer w#]
-     (.write w# (edn-str v#))))
-
 
 (defmacro extend-tagged-value
   "Defines an EDN representation for a type `t`. The tag will be the symbol
@@ -40,11 +64,10 @@
   [t tag expr]
   `(let [value-fn# ~expr]
      (extend-type ~t
-       TaggedValue
-       (edn-tag [this#] ~tag)
-       (edn-value [this#]
-         (value-fn# this#)))
-     (defprint-method ~t)))
+       ExtendedNotation
+       (->edn
+         [this#]
+         (->tagged-value ~tag (value-fn# this#))))))
 
 
 (defmacro extend-tagged-str
@@ -106,23 +129,3 @@
   ^URI
   [^String uri]
   (URI. uri))
-
-
-;; Default tag reader.
-(defrecord GenericTaggedValue
-  [tag value]
-
-  TaggedValue
-  (edn-tag [this] tag)
-  (edn-value [this] value))
-
-
-(defprint-method GenericTaggedValue)
-
-
-(defn tagged-value
-  "Creates a generic tagged value record to represent some EDN value. This is
-  suitable for use as a default-data-reader function."
-  [tag value]
-  {:pre [(symbol? tag)]}
-  (->GenericTaggedValue tag value))

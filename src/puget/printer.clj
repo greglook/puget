@@ -164,9 +164,9 @@
 
 (defn- canonize-dispatch
   [value]
-  (if (satisfies? data/TaggedValue value)
-    :tagged-value
-    (class value)))
+  (if (satisfies? data/ExtendedNotation value)
+    ::tagged-value
+    (type value)))
 
 
 (defmulti canonize
@@ -267,7 +267,7 @@
           [:span
            (canonize k)
            (cond
-             (satisfies? data/TaggedValue v) " "
+             (satisfies? data/ExtendedNotation v) " "
              (coll? v) (:map-coll-separator *options*)
              :else " ")
            (canonize v)])
@@ -358,10 +358,9 @@
 
 ;; ## Special Types
 
-(defmethod canonize :tagged-value
+(defmethod canonize ::tagged-value
   [tagged-value]
-  (let [tag   (data/edn-tag tagged-value)
-        value (data/edn-value tagged-value)]
+  (let [{:keys [tag value]} (data/->edn tagged-value)]
     [:span
      (color-doc :tag (str \# tag))
      (if (coll? value) :line " ")

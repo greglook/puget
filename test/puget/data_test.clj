@@ -7,11 +7,11 @@
 
 (defn test-tagged-value
   [data t v & [reader]]
-  (is (= t (data/edn-tag data)))
-  (is (= v (data/edn-value data)))
+  (let [{:keys [tag value]} (data/->edn data)]
+    (is (= t tag))
+    (is (= v value)))
   (let [s (data/edn-str data)
         data' (edn/read-string (if reader {:readers {t reader}} {}) s)]
-    (is (= s (pr-str data)))
     (is (= data data'))))
 
 
@@ -36,26 +36,29 @@
 
 (deftest bin-tagged-values
   (let [byte-arr (.getBytes "foobarbaz")
+        {:keys [tag value]} (data/->edn byte-arr)
         string (data/edn-str byte-arr)
         read-arr (edn/read-string {:readers {'bin data/read-bin}} string)]
-    (is (= 'bin (data/edn-tag byte-arr)))
-    (is (= "Zm9vYmFyYmF6" (data/edn-value byte-arr)))
+    (is (= 'bin tag))
+    (is (= "Zm9vYmFyYmF6" value))
     (is (= (count byte-arr) (count read-arr)))
     (is (= (seq byte-arr) (seq read-arr)))))
 
 
 (deftest generic-tagged-value
-  (let [data (data/tagged-value 'foo :bar)
+  (let [data (data/->tagged-value 'foo :bar)
+        {:keys [tag value]} (data/->edn data)
         string (data/edn-str data)]
-    (is (= 'foo (data/edn-tag data)))
-    (is (= :bar (data/edn-value data)))
-    (is (= "#foo :bar" (pr-str data)))
-    (is (= data (edn/read-string {:default data/tagged-value} string)))))
+    (is (= 'foo tag))
+    (is (= :bar value))
+    (is (= "#foo :bar" (str data)))
+    (is (= data (edn/read-string {:default data/->tagged-value} string)))))
 
 
 (defrecord TestRecord [x y])
 (data/extend-tagged-map TestRecord 'test/record)
 (deftest tagged-value-extension
-  (let [rec (TestRecord. :foo :bar)]
-    (is (= 'test/record (data/edn-tag rec)))
-    (is (= {:x :foo, :y :bar} (data/edn-value rec)))))
+  (let [rec (TestRecord. :foo :bar)
+        {:keys [tag value]} (data/->edn rec)]
+    (is (= 'test/record tag))
+    (is (= {:x :foo, :y :bar} value))))

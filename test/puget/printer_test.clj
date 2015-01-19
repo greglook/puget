@@ -3,7 +3,7 @@
     [clojure.string :as str]
     [clojure.test :refer :all]
     (puget
-      [data :refer [TaggedValue]]
+      [data :as data]
       [printer :refer :all])))
 
 
@@ -92,9 +92,9 @@
       (should-fail-when-strict v)
       (is (= "#\"\\d+\"" (pprint-str v)))))
   (testing "vars"
-    (let [v #'TaggedValue]
+    (let [v #'*options*]
       (should-fail-when-strict v)
-      (is (= "#'puget.data/TaggedValue"
+      (is (= "#'puget.printer/*options*"
              (pprint-str v)))))
   (testing "atom"
     (let [v (atom :foo)]
@@ -125,13 +125,9 @@
 
 
 (deftest canonical-tagged-value
-  (let [tv (reify TaggedValue
-             (edn-tag [this] 'foo)
-             (edn-value [this] :bar/baz))]
+  (let [tv (data/->tagged-value 'foo :bar/baz)]
     (is (= "#foo :bar/baz" (pprint-str tv))))
-  (let [tv (reify TaggedValue
-             (edn-tag [this] 'frobble/biznar)
-             (edn-value [this] [:foo :bar :baz]))]
+  (let [tv (data/->tagged-value 'frobble/biznar [:foo :bar :baz])]
     (is (= "#frobble/biznar\n[:foo :bar :baz]" (pprint-str tv)))))
 
 
