@@ -124,10 +124,10 @@
                   (pprint-str v))))))
 
 
-(deftest formatting-tagged-values
-  (let [tv (data/tagged-value 'foo :bar/baz)]
+(deftest formatting-tagged-literals
+  (let [tv (data/tagged-literal 'foo :bar/baz)]
     (is (= "#foo :bar/baz" (pprint-str tv))))
-  (let [tv (data/tagged-value 'frobble/biznar [:foo :bar :baz])]
+  (let [tv (data/tagged-literal 'frobble/biznar [:foo :bar :baz])]
     (is (= "#frobble/biznar\n[:foo :bar :baz]" (pprint-str tv)))))
 
 

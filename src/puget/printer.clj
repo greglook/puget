@@ -163,12 +163,12 @@
 ;; ## Formatting Multimethod
 
 (defn- formatter-dispatch
-  "Dispatches the method to use for value formatting. Values which use
-  extended notation are rendered as tagged values; others are dispatched on
-  their `type`."
+  "Dispatches the method to use for value formatting. Values which use extended
+  notation are rendered as tagged literals; others are dispatched on their
+  `type`."
   [value]
   (if (satisfies? data/ExtendedNotation value)
-    ::tagged-value
+    ::tagged-literal
     (type value)))
 
 
@@ -366,13 +366,13 @@
 
 ;; ## Special Types
 
-(defmethod format-doc ::tagged-value
-  [tagged-value]
-  (let [{:keys [tag value]} (data/->edn tagged-value)]
+(defmethod format-doc ::tagged-literal
+  [value]
+  (let [{:keys [tag form]} (data/->edn value)]
     [:span
      (color-doc :tag (str \# tag))
-     (if (coll? value) :line " ")
-     (format-doc value)]))
+     (if (coll? form) :line " ")
+     (format-doc form)]))
 
 
 (defmethod format-doc :default
