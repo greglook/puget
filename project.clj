@@ -14,6 +14,8 @@
    [org.clojure/data.codec "0.1.0"]
    [fipp "0.5.1"]]
 
+  :cljfmt {:indents {with-options [[:block 1]]}}
+
   :profiles
   {:coverage
    {:plugins
