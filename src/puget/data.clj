@@ -97,11 +97,10 @@
 (defn- format-utc
   "Produces an ISO-8601 formatted date-time string from the given Date."
   [^Date date]
-  (->
-    "yyyy-MM-dd'T'HH:mm:ss.SSS-00:00"
-    java.text.SimpleDateFormat.
-    (doto (.setTimeZone (TimeZone/getTimeZone "GMT")))
-    (.format date)))
+  (-> "yyyy-MM-dd'T'HH:mm:ss.SSS-00:00"
+      java.text.SimpleDateFormat.
+      (doto (.setTimeZone (TimeZone/getTimeZone "GMT")))
+      (.format date)))
 
 
 ;; `inst` tags a date-time instant represented as an ISO-8601 string.

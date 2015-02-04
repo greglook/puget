@@ -188,7 +188,7 @@
     (if-let [metadata (and print-meta? (meta value))]
       [:align
        [:span (color-doc :delimiter "^") (format-doc metadata)]
-        :line (format-doc value)]
+       :line (format-doc value)]
       (format-doc value))))
 
 
@@ -335,26 +335,26 @@
 
 (defmethod format-doc clojure.lang.IPending
   [value]
-  (unknown-document value
-    (if (realized? value)
-      (format-doc @value)
-      (color-doc :nil "pending"))))
+  (let [doc (if (realized? value)
+              (format-doc @value)
+              (color-doc :nil "pending"))]
+    (unknown-document value doc)))
 
 
 (defmethod format-doc clojure.lang.Delay
   [value]
-  (unknown-document value "Delay"
-    (if (realized? value)
-      (format-doc @value)
-      (color-doc :nil "pending"))))
+  (let [doc (if (realized? value)
+              (format-doc @value)
+              (color-doc :nil "pending"))]
+    (unknown-document value "Delay" doc)))
 
 
 (defmethod format-doc java.util.concurrent.Future
   [value]
-  (unknown-document value "Future"
-    (if (future-done? value)
-      (format-doc @value)
-      (color-doc :nil "pending"))))
+  (let [doc (if (future-done? value)
+              (format-doc @value)
+              (color-doc :nil "pending"))]
+    (unknown-document value "Future" doc)))
 
 
 (prefer-method format-doc clojure.lang.ISeq clojure.lang.IPending)

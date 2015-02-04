@@ -51,7 +51,8 @@
   `Comparable`, the instances of it are compared using `compare`. Otherwise, the
   values are ordered by print representation."
   [a b]
-  (if (= a b) 0
+  (if (= a b)
+    0
     (let [pri-a (type-priority a)
           pri-b (type-priority b)]
       (cond

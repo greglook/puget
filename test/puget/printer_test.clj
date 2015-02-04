@@ -27,31 +27,31 @@
 (deftest formatting-primitives
   (testing "Primitive values"
     (are [v text] (= text (-> v pprint with-out-str str/trim))
-         nil     "nil"
-         true    "true"
-         false   "false"
-         0       "0"
-         1234N   "1234N"
-         2.718   "2.718"
-         3.14M   "3.14M"
-         3/10    "3/10"
-         \a      "\\a"
-         \space  "\\space"
-         "foo"   "\"foo\""
-         :key    ":key"
-         :ns/key ":ns/key"
-         'sym    "sym"
-         'ns/sym "ns/sym")))
+      nil     "nil"
+      true    "true"
+      false   "false"
+      0       "0"
+      1234N   "1234N"
+      2.718   "2.718"
+      3.14M   "3.14M"
+      3/10    "3/10"
+      \a      "\\a"
+      \space  "\\space"
+      "foo"   "\"foo\""
+      :key    ":key"
+      :ns/key ":ns/key"
+      'sym    "sym"
+      'ns/sym "ns/sym")))
 
 
 (deftest formatting-collections
   (testing "Collections"
     (are [v text] (= text (pprint-str v))
-         '(foo :bar)            "(foo :bar)"
-         '(1 2 3)               "(1 2 3)"
-         [4 "five" 6.0]         "[4 \"five\" 6.0]"
-         {:foo 8 :bar 'baz}     "{:bar baz, :foo 8}" ; gets sorted
-         #{:omega :alpha :beta} "#{:alpha :beta :omega}")) ; also sorted
+      '(foo :bar)            "(foo :bar)"
+      '(1 2 3)               "(1 2 3)"
+      [4 "five" 6.0]         "[4 \"five\" 6.0]"
+      {:foo 8 :bar 'baz}     "{:bar baz, :foo 8}" ; gets sorted
+      #{:omega :alpha :beta} "#{:alpha :beta :omega}")) ; also sorted
   (testing "Map collection separator"
     (is (= "{:bar\n [:a :b]}" (pprint-str {:bar [:a :b]} {:width 10, :map-coll-separator :line})))))
 
