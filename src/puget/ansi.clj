@@ -1,7 +1,8 @@
 (ns puget.ansi
   "This namespace defines functions to apply ANSI color codes to text."
   (:require
-    [clojure.string :as str]))
+    [clojure.string :as str]
+    [puget.color :as color]))
 
 
 (def sgr-code
@@ -61,3 +62,17 @@
   "Removes color codes from the given string."
   [string]
   (str/replace string #"\u001b\[[0-9;]*[mK]" ""))
+
+
+(defmethod color/document :ansi
+  [element text options]
+  (if-let [codes (-> options :color-scheme (get element) seq)]
+    [:span [:pass (esc codes)] text [:pass (escape :none)]]
+    text))
+
+
+(defmethod color/text :ansi
+  [element text options]
+  (if-let [codes (-> options :color-scheme (get element) seq)]
+    (str (esc codes) text (escape :none))
+    text))
