@@ -7,6 +7,7 @@
       [ansi]
       [color :as color]
       [data :as data]
+      [html]
       [order :as order])))
 
 
@@ -43,7 +44,10 @@
   When true, ouptut colored text from print functions.
 
   `:color-markup`
-  :ansi for ANSI color text
+  :ansi for ANSI color text (the default),
+  :html-inline for inline-styled html,
+  :html-classes to use the names of the keys in the :color-scheme map
+  as class names for spans so styling can be specified via CSS.
 
   `:color-scheme`
   Map of syntax element keywords to ANSI color codes."

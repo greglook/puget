@@ -24,8 +24,9 @@ See [Whidbey](https://github.com/greglook/whidbey) for nREPL and Leiningen integ
 ## Syntax Coloring
 
 Puget's first main feature is colorizing the printed data using ANSI escape
-codes. This is kind of like syntax highlighting, except much easier since the
-code works directly with the data instead of parsing it from text.
+codes or HTML `span` elements for color markup. This is kind of like syntax
+highlighting, except much easier since the code works directly with the data
+instead of parsing it from text.
 
 Different syntax elements are given different colors to make reading the
 printed output much easier for humans. The `:print-color` option can be set to
@@ -33,6 +34,15 @@ enable colorization using the `with-color` macro - alternately, the `cprint`
 function always prints with colored output enabled:
 
 ![colorization example](screenshot.png)
+
+The `:color-markup` option defaults to `:ansi`, but can be set to `:html-inline`
+or `:html-classes` to use HTML `span` elements for color markup:
+
+  - `:html-inline` uses inline styles to apply style attributes directly to
+    each `span`'s content based on the `:color-scheme`;
+  - `:html-classes` sets the `class` of each `span` based on its syntax element
+    type (e.g., "delimiter", "keyword", "number") to allow the style for its
+    content be specified elsewhere via CSS.
 
 ## Canonical Representation
 
