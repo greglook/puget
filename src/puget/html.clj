@@ -47,14 +47,20 @@
          "\"")))
 
 
-(defn escape-html
+(defn escape-html-text
   "Escapes special characters into html entities"
   [text]
-  (let [escaped-text (.. ^String text
-                         (replace "&"  "&amp;")
-                         (replace "<"  "&lt;")
-                         (replace ">"  "&gt;")
-                         (replace "\"" "&quot;"))
+  (.. ^String text
+      (replace "&"  "&amp;")
+      (replace "<"  "&lt;")
+      (replace ">"  "&gt;")
+      (replace "\"" "&quot;")))
+
+
+(defn escape-html-document
+  "Escapes special characters into fipp :span/:escaped nodes"
+  [text]
+  (let [escaped-text (escape-html-text text)
         spans (.split escaped-text "(?=&)")]
     (reduce (fn [acc span]
               (case (first span)
@@ -73,25 +79,25 @@
   [element text options]
   (if-let [codes (-> options :color-scheme (get element) seq)]
     [:span [:pass "<span " (style codes) ">"]
-     (escape-html text)
+     (escape-html-document text)
      [:pass "</span>"]]
-    (escape-html text)))
+    (escape-html-document text)))
 
 
 (defmethod color/text :html-inline
   [element text options]
   (if-let [codes (-> options :color-scheme (get element) seq)]
-    (str "<span " (style codes) ">" (escape-html text) "</span>")
-    (escape-html text)))
+    (str "<span " (style codes) ">" (escape-html-text text) "</span>")
+    (escape-html-text text)))
 
 
 (defmethod color/document :html-classes
   [element text options]
   [:span [:pass "<span class=\"" (name element) "\">"]
-   (escape-html text)
+   (escape-html-document text)
    [:pass "</span>"]])
 
 
 (defmethod color/text :html-classes
   [element text options]
-  (str "<span class=\"" (name element) "\">" (escape-html text) "</span>"))
+  (str "<span class=\"" (name element) "\">" (escape-html-text text) "</span>"))
