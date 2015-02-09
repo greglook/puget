@@ -80,9 +80,11 @@
   clojure.lang.IDeref
   (deref [this] 123))
 
-(deftype APending []
+(deftype APending [is-realized]
+  clojure.lang.IDeref
+  (deref [this] 1)
   clojure.lang.IPending
-  (isRealized [this] false))
+  (isRealized [this] is-realized))
 
 (deftest clojure-types
   (testing "seq"
@@ -117,8 +119,13 @@
       (should-fail-when-strict v)
       (is (re-seq #"#<puget.printer_test.ADeref@[0-9a-f]+ 123>"
                   (pprint-str v)))))
-  (testing "custom IPending"
-    (let [v (APending.)]
+  (testing "custom IPending, realized"
+    (let [v (->APending true)]
+      (should-fail-when-strict v)
+      (is (re-seq #"#<puget.printer_test.APending@[0-9a-f]+ 1"
+                  (pprint-str v)))))
+  (testing "custom IPending, not realized"
+    (let [v (->APending false)]
       (should-fail-when-strict v)
       (is (re-seq #"#<puget.printer_test.APending@[0-9a-f]+ pending"
                   (pprint-str v))))))
