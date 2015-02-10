@@ -50,11 +50,7 @@
 (defn escape-html-text
   "Escapes special characters into html entities"
   [text]
-  (.. ^String text
-      (replace "&"  "&amp;")
-      (replace "<"  "&lt;")
-      (replace ">"  "&gt;")
-      (replace "\"" "&quot;")))
+  (str/escape text {\& "&amp;" \< "&lt;" \> "&gt;" \" "&quot;"}))
 
 
 (defn escape-html-document
