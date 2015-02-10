@@ -7,7 +7,8 @@
   "Dispatches to coloring multimethods. Element should be a key from
   the color-scheme map."
   [element text options]
-  (and (:print-color options) (:color-markup options)))
+  (when (:print-color options)
+    (:color-markup options)))
 
 
 (defmulti document
@@ -26,11 +27,11 @@
 
 ;; ## No markup when colorless
 
-(defmethod document false
+(defmethod document nil
   [element text options]
   text)
 
 
-(defmethod text false
+(defmethod text nil
   [element text options]
   text)
