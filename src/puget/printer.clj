@@ -4,9 +4,10 @@
     [clojure.string :as str]
     [fipp.printer :as fipp]
     (puget
-      [ansi :as ansi]
+      [color :as color]
       [data :as data]
-      [order :as order])))
+      [order :as order])
+    (puget.color ansi html)))
 
 
 ;; ## Control Vars
@@ -39,7 +40,13 @@
   value of *print-meta*.
 
   `:print-color`
-  When true, ouptut ANSI colored text from print functions.
+  When true, ouptut colored text from print functions.
+
+  `:color-markup`
+  :ansi for ANSI color text (the default),
+  :html-inline for inline-styled html,
+  :html-classes to use the names of the keys in the :color-scheme map
+  as class names for spans so styling can be specified via CSS.
 
   `:color-scheme`
   Map of syntax element keywords to ANSI color codes."
@@ -50,6 +57,7 @@
    :map-coll-separator " "
    :print-meta nil
    :print-color false
+   :color-markup :ansi
    :color-scheme
    {; syntax elements
     :delimiter [:bold :red]
@@ -141,10 +149,7 @@
   "Constructs a text doc, which may be colored if `:print-color` is true.
   Element should be a key from the color-scheme map."
   [element text]
-  (let [codes (-> *options* :color-scheme (get element) seq)]
-    (if (and (:print-color *options*) codes)
-      [:span [:pass (ansi/esc codes)] text [:pass (ansi/escape :none)]]
-      text)))
+  (color/document element text *options*))
 
 
 (defn color-text
@@ -153,10 +158,7 @@
   Puget, but which is not directly printed by the library. Note that this
   function still obeys the `:print-color` option."
   [element text]
-  (let [codes (-> *options* :color-scheme (get element) seq)]
-    (if (and (:print-color *options*) codes)
-      (str (ansi/esc codes) text (ansi/escape :none))
-      text)))
+  (color/text element text *options*))
 
 
 

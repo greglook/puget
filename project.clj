@@ -12,7 +12,7 @@
   :dependencies
   [[org.clojure/clojure "1.6.0"]
    [org.clojure/data.codec "0.1.0"]
-   [fipp "0.5.1"]]
+   [fipp "0.5.2"]]
 
   :cljfmt {:indents {with-options [[:block 1]]}}
 
