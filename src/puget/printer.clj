@@ -4,11 +4,10 @@
     [clojure.string :as str]
     [fipp.printer :as fipp]
     (puget
-      [ansi]
       [color :as color]
       [data :as data]
-      [html]
-      [order :as order])))
+      [order :as order])
+    (puget.color ansi html)))
 
 
 ;; ## Control Vars

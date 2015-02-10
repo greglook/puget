@@ -1,9 +1,8 @@
-(ns puget.html-test
+(ns puget.color.html-test
   (:require
     [clojure.test :refer :all]
-    (puget
-     [html :as html]
-     [printer :as printer])))
+    [puget.color.html :as html]
+    [puget.printer :as printer]))
 
 
 (def test-color-scheme

@@ -1,4 +1,4 @@
-(ns puget.html
+(ns puget.color.html
   "This namespace defines methods for the :html-inline
   and :html-classes :color-markup options."
   (:require

@@ -1,4 +1,4 @@
-(ns puget.ansi
+(ns puget.color.ansi
   "This namespace defines functions to apply ANSI color codes to text."
   (:require
     [clojure.string :as str]
