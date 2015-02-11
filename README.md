@@ -87,8 +87,8 @@ datatypes provide a 'canonical' representation of themselves as a tag symbol
 followed by some interpretation of the value.
 
 Puget extends this protocol to support the `#inst` and `#uuid` built-ins from
-the EDN standard. In addition, it supports `#bin` for base64-encoded binary
-data, and `#uri` for specifying Uniform Resource Identifiers.
+the EDN standard. In addition, it supports `#puget/bin` for base64-encoded binary
+data, and `#puget/uri` for specifying Uniform Resource Identifiers.
 
 To give your own types a tag extension, use the `extend-tagged-*` functions. For
 example, to extend `#inst` tagging to Joda `DateTime` objects:
