@@ -3,7 +3,7 @@
     [clojure.string :as str]
     [clojure.test :refer :all]
     (puget
-      [data :refer [TaggedValue]]
+      [data :as data]
       [printer :refer :all])))
 
 
@@ -24,34 +24,34 @@
     (set-color-scheme! old-scheme)))
 
 
-(deftest canonical-primitives
+(deftest formatting-primitives
   (testing "Primitive values"
     (are [v text] (= text (-> v pprint with-out-str str/trim))
-         nil     "nil"
-         true    "true"
-         false   "false"
-         0       "0"
-         1234N   "1234N"
-         2.718   "2.718"
-         3.14M   "3.14M"
-         3/10    "3/10"
-         \a      "\\a"
-         \space  "\\space"
-         "foo"   "\"foo\""
-         :key    ":key"
-         :ns/key ":ns/key"
-         'sym    "sym"
-         'ns/sym "ns/sym")))
+      nil     "nil"
+      true    "true"
+      false   "false"
+      0       "0"
+      1234N   "1234N"
+      2.718   "2.718"
+      3.14M   "3.14M"
+      3/10    "3/10"
+      \a      "\\a"
+      \space  "\\space"
+      "foo"   "\"foo\""
+      :key    ":key"
+      :ns/key ":ns/key"
+      'sym    "sym"
+      'ns/sym "ns/sym")))
 
 
-(deftest canonical-collections
+(deftest formatting-collections
   (testing "Collections"
     (are [v text] (= text (pprint-str v))
-         '(foo :bar)            "(foo :bar)"
-         '(1 2 3)               "(1 2 3)"
-         [4 "five" 6.0]         "[4 \"five\" 6.0]"
-         {:foo 8 :bar 'baz}     "{:bar baz, :foo 8}" ; gets sorted
-         #{:omega :alpha :beta} "#{:alpha :beta :omega}")) ; also sorted
+      '(foo :bar)            "(foo :bar)"
+      '(1 2 3)               "(1 2 3)"
+      [4 "five" 6.0]         "[4 \"five\" 6.0]"
+      {:foo 8 :bar 'baz}     "{:bar baz, :foo 8}" ; gets sorted
+      #{:omega :alpha :beta} "#{:alpha :beta :omega}")) ; also sorted
   (testing "Map collection separator"
     (is (= "{:bar\n [:a :b]}" (pprint-str {:bar [:a :b]} {:width 10, :map-coll-separator :line})))))
 
@@ -68,7 +68,7 @@
 
 (defrecord TestRecord [foo bar])
 
-(deftest canonical-records
+(deftest formatting-records
   (testing "Records"
     (let [r (->TestRecord \x \y)]
       (should-fail-when-strict r)
@@ -80,9 +80,11 @@
   clojure.lang.IDeref
   (deref [this] 123))
 
-(deftype APending []
+(deftype APending [is-realized]
+  clojure.lang.IDeref
+  (deref [this] 1)
   clojure.lang.IPending
-  (isRealized [this] false))
+  (isRealized [this] is-realized))
 
 (deftest clojure-types
   (testing "seq"
@@ -92,9 +94,9 @@
       (should-fail-when-strict v)
       (is (= "#\"\\d+\"" (pprint-str v)))))
   (testing "vars"
-    (let [v #'TaggedValue]
+    (let [v #'*options*]
       (should-fail-when-strict v)
-      (is (= "#'puget.data/TaggedValue"
+      (is (= "#'puget.printer/*options*"
              (pprint-str v)))))
   (testing "atom"
     (let [v (atom :foo)]
@@ -117,25 +119,26 @@
       (should-fail-when-strict v)
       (is (re-seq #"#<puget.printer_test.ADeref@[0-9a-f]+ 123>"
                   (pprint-str v)))))
-  (testing "custom IPending"
-    (let [v (APending.)]
+  (testing "custom IPending, realized"
+    (let [v (->APending true)]
+      (should-fail-when-strict v)
+      (is (re-seq #"#<puget.printer_test.APending@[0-9a-f]+ 1"
+                  (pprint-str v)))))
+  (testing "custom IPending, not realized"
+    (let [v (->APending false)]
       (should-fail-when-strict v)
       (is (re-seq #"#<puget.printer_test.APending@[0-9a-f]+ pending"
                   (pprint-str v))))))
 
 
-(deftest canonical-tagged-value
-  (let [tv (reify TaggedValue
-             (edn-tag [this] 'foo)
-             (edn-value [this] :bar/baz))]
+(deftest formatting-tagged-literals
+  (let [tv (data/tagged-literal 'foo :bar/baz)]
     (is (= "#foo :bar/baz" (pprint-str tv))))
-  (let [tv (reify TaggedValue
-             (edn-tag [this] 'frobble/biznar)
-             (edn-value [this] [:foo :bar :baz]))]
+  (let [tv (data/tagged-literal 'frobble/biznar [:foo :bar :baz])]
     (is (= "#frobble/biznar\n[:foo :bar :baz]" (pprint-str tv)))))
 
 
-(deftest default-canonize
+(deftest default-formatting
   (testing "Unknown values"
     (let [usd (java.util.Currency/getInstance "USD")]
       (should-fail-when-strict usd)

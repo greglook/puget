@@ -1,21 +1,23 @@
 (ns puget.order
-  "Total ordering comparator for Clojure values.")
+  "This namespace provides a total-ordering comparator for Clojure values.")
 
 
 (defn- type-priority
-  "Determines the 'priority' of the given value based on its type:
-  - nil
-  - Boolean
-  - Number
-  - Character
-  - String
-  - Keyword
-  - Symbol
-  - List
-  - Vector
-  - Set
-  - Map
-  - (all other types)"
+  "Determines a numeric priority for the given value based on its general type:
+
+  - `nil`
+  - `false`
+  - `true`
+  - numbers
+  - characters
+  - strings
+  - keywords
+  - symbols
+  - lists
+  - vectors
+  - sets
+  - maps
+  - all other types"
   [x]
   (let [predicates [nil? false? true? number? char? string?
                     keyword? symbol? list? vector? set? map?]
@@ -49,7 +51,8 @@
   `Comparable`, the instances of it are compared using `compare`. Otherwise, the
   values are ordered by print representation."
   [a b]
-  (if (= a b) 0
+  (if (= a b)
+    0
     (let [pri-a (type-priority a)
           pri-b (type-priority b)]
       (cond
