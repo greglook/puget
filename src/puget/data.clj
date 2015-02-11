@@ -111,26 +111,28 @@
 (extend-tagged-str UUID 'uuid)
 
 
-;; `bin` tags byte data represented as a base64-encoded string.
+;; `puget/bin` tags byte data represented as a base64-encoded string.
 (extend-tagged-value
   (class (byte-array 0))
-  'bin
+  'puget/bin
   #(->> % b64/encode (map char) (apply str)))
 
 
 (defn read-bin
-  "Reads a base64-encoded string into a byte array."
+  "Reads a base64-encoded string into a byte array. Suitable as a data-reader
+  for `puget/bin` literals."
   ^bytes
   [^String bin]
   (b64/decode (.getBytes bin)))
 
 
-;; `uri` tags a Universal Resource Identifier string.
-(extend-tagged-str URI 'uri)
+;; `puget/uri` tags a Universal Resource Identifier string.
+(extend-tagged-str URI 'puget/uri)
 
 
 (defn read-uri
-  "Constructs a URI from a string value."
+  "Constructs a URI from a string value. Suitable as a data-reader for
+  `puget/uri` literals."
   ^URI
   [^String uri]
   (URI. uri))

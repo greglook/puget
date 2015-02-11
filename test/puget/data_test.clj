@@ -30,7 +30,7 @@
 (deftest uri-tagged-literals
   (test-tagged-literal
     (java.net.URI. "http://en.wikipedia.org/wiki/Uniform_resource_identifier")
-    'uri "http://en.wikipedia.org/wiki/Uniform_resource_identifier"
+    'puget/uri "http://en.wikipedia.org/wiki/Uniform_resource_identifier"
     data/read-uri))
 
 
@@ -38,8 +38,8 @@
   (let [byte-arr (.getBytes "foobarbaz")
         {:keys [tag form]} (data/->edn byte-arr)
         string (data/edn-str byte-arr)
-        read-arr (edn/read-string {:readers {'bin data/read-bin}} string)]
-    (is (= 'bin tag))
+        read-arr (edn/read-string {:readers {'puget/bin data/read-bin}} string)]
+    (is (= 'puget/bin tag))
     (is (= "Zm9vYmFyYmF6" form))
     (is (= (count byte-arr) (count read-arr)))
     (is (= (seq byte-arr) (seq read-arr)))))
