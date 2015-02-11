@@ -3,7 +3,7 @@ Release Notes
 
 This page documents the high-level changes in each release of Puget.
 
-## 0.7.0 (...)
+## 0.7.0 (2015-02-10)
 
 - Updated documentation and clean up docstrings.
 - Refactored document formatting multimethod to dispatch on `type` metadata. #13 #14
