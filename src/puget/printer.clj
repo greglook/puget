@@ -35,6 +35,10 @@
   The text placed between a map key and a collection value. The keyword :line
   will cause line breaks if the whole map does not fit on a single line.
 
+  `:print-fallback`
+  If true, falls back to to using pr-str rather than puget's default
+  unknown-document representation
+
   `:print-meta`
   If true, metadata will be printed before values. If nil, defaults to the
   value of *print-meta*.
@@ -55,6 +59,7 @@
    :strict false
    :map-delimiter ","
    :map-coll-separator " "
+   :print-fallback false
    :print-meta nil
    :print-color false
    :color-markup :ansi
@@ -121,7 +126,7 @@
 
 
 (defn- illegal-when-strict!
-  "Throws an exception if strict mode is enabled. The error indincates that the
+  "Throws an exception if strict mode is enabled. The error indicates that the
   given value has no EDN representation."
   [value]
   (when (:strict *options*)
@@ -202,14 +207,17 @@
    (unknown-document value (.getName (class value)) repr))
   ([value tag repr]
    (illegal-when-strict! value)
-   [:span
-    (color-doc :class-delimiter "#<")
-    (color-doc :class-name tag)
-    (color-doc :class-delimiter "@")
-    (system-id value)
-    " "
-    repr
-    (color-doc :class-delimiter ">")]))
+   (if (:print-fallback *options*)
+     [:span
+      (pr-str value)]
+     [:span
+      (color-doc :class-delimiter "#<")
+      (color-doc :class-name tag)
+      (color-doc :class-delimiter "@")
+      (system-id value)
+      " "
+      repr
+      (color-doc :class-delimiter ">")])))
 
 
 
