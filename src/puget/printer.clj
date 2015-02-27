@@ -37,7 +37,7 @@
 
   `:print-fallback`
   Takes a keyword argument specifying the desired string representation of
-  uknown documents. The keyword :print will fall back to using `pr-str`
+  unknown documents. The keyword `:print` will fall back to using `pr-str`
   rather than puget's default unknown-document representation. 
 
   `:print-meta`
