@@ -36,8 +36,9 @@
   will cause line breaks if the whole map does not fit on a single line.
 
   `:print-fallback`
-  If true, falls back to to using pr-str rather than puget's default
-  unknown-document representation
+  Takes a keyword argument specifying the desired string representation of
+  uknown documents. The keyword :print will fall back to using `pr-str`
+  rather than puget's default unknown-document representation. 
 
   `:print-meta`
   If true, metadata will be printed before values. If nil, defaults to the
@@ -59,7 +60,7 @@
    :strict false
    :map-delimiter ","
    :map-coll-separator " "
-   :print-fallback false
+   :print-fallback nil
    :print-meta nil
    :print-color false
    :color-markup :ansi
@@ -207,9 +208,8 @@
    (unknown-document value (.getName (class value)) repr))
   ([value tag repr]
    (illegal-when-strict! value)
-   (if (:print-fallback *options*)
-     [:span
-      (pr-str value)]
+   (case (:print-fallback *options*)
+     :print [:span (pr-str value)]
      [:span
       (color-doc :class-delimiter "#<")
       (color-doc :class-name tag)
