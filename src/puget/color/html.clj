@@ -1,9 +1,10 @@
 (ns puget.color.html
-  "This namespace defines methods for the :html-inline
-  and :html-classes :color-markup options."
+  "This namespace defines methods for the `:html-inline` and `:html-classes`
+  otptions for `:color-markup`."
   (:require
     [clojure.string :as str]
     [puget.color :as color]))
+
 
 (def style-attribute
   "Map from keywords usable in a color-scheme value to vectors
@@ -57,11 +58,11 @@
   "Escapes special characters into fipp :span/:escaped nodes"
   [text]
   (let [escaped-text (escape-html-text text)
-        spans (.split escaped-text "(?=&)")]
+        spans (str/split escaped-text #"(?=&)")]
     (reduce (fn [acc span]
               (case (first span)
                 nil acc
-                \& (let [[escaped span] (.split span "(?<=;)" 2)
+                \& (let [[escaped span] (str/split span #"(?<=;)" 2)
                          acc (conj acc [:escaped escaped])]
                      (if (seq span)
                        (conj acc span)

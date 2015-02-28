@@ -3,7 +3,7 @@ Puget
 
 [![Build Status](https://travis-ci.org/greglook/puget.svg?branch=master)](https://travis-ci.org/greglook/puget)
 [![Coverage Status](https://coveralls.io/repos/greglook/puget/badge.png?branch=master)](https://coveralls.io/r/greglook/puget?branch=master)
-[![Dependency Status](https://www.versioneye.com/user/projects/53718bfb14c1589a89000144/badge.png)](https://www.versioneye.com/clojure/mvxcvi:puget/0.7.0)
+[![Dependency Status](https://www.versioneye.com/user/projects/53718bfb14c1589a89000144/badge.png)](https://www.versioneye.com/clojure/mvxcvi:puget/0.7.1)
 [![API codox](http://b.repl.ca/v1/doc-API-blue.png)](https://greglook.github.io/puget/api/)
 [![marginalia docs](http://b.repl.ca/v1/doc-marginalia-blue.png)](https://greglook.github.io/puget/marginalia/uberdoc.html)
 
@@ -87,8 +87,8 @@ datatypes provide a 'canonical' representation of themselves as a tag symbol
 followed by some interpretation of the value.
 
 Puget extends this protocol to support the `#inst` and `#uuid` built-ins from
-the EDN standard. In addition, it supports `#bin` for base64-encoded binary
-data, and `#uri` for specifying Uniform Resource Identifiers.
+the EDN standard. In addition, it supports `#puget/bin` for base64-encoded binary
+data, and `#puget/uri` for specifying Uniform Resource Identifiers.
 
 To give your own types a tag extension, use the `extend-tagged-*` functions. For
 example, to extend `#inst` tagging to Joda `DateTime` objects:
