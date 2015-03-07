@@ -14,6 +14,8 @@
     serialization. Returns a `TaggedLiteral` record."))
 
 
+; TODO: remove this when CLJ-1424 merges
+; http://dev.clojure.org/jira/browse/CLJ-1424
 (defrecord TaggedLiteral
   [tag form]
 
