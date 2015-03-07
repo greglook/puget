@@ -132,7 +132,10 @@
   (testing "Unknown values"
     (let [usd (java.util.Currency/getInstance "USD")]
       (should-fail-when-strict usd)
-      (is (re-seq #"#<java.util.Currency@[0-9a-f]+ USD>" (pprint-str usd))))))
+      (is (re-seq #"#<java\.util\.Currency@[0-9a-f]+ USD>" (pprint-str usd)))
+      (with-options {:print-fallback :print
+                     :escape-types #{'puget.printer_test.TestRecord}}
+        (is (= "#<Currency USD>" (pprint-str usd)))))))
 
 
 (deftest metadata-printing
