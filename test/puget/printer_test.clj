@@ -14,16 +14,6 @@
         "should not print non-EDN representation")))
 
 
-(deftest color-scheme-setting
-  (let [old-scheme (:color-scheme *options*)]
-    (set-color-scheme! {:tag [:green]})
-    (is (= [:green] (:tag (:color-scheme *options*))))
-    (set-color-scheme! :nil [:black] :number [:bold :cyan])
-    (is (= [:black] (:nil (:color-scheme *options*))))
-    (is (= [:bold :cyan] (:number (:color-scheme *options*))))
-    (set-color-scheme! old-scheme)))
-
-
 (deftest formatting-primitives
   (testing "Primitive values"
     (are [v text] (= text (-> v pprint with-out-str str/trim))
