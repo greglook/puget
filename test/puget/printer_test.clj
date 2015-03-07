@@ -128,11 +128,33 @@
     (is (= "#frobble/biznar\n[:foo :bar :baz]" (pprint-str tv)))))
 
 
+(deftype ComplexValue []
+  Object
+  (toString [_] "to-string"))
+
+(defmethod print-method ComplexValue
+  [this w]
+  (.write w "{{ complex value print }}"))
+
+(data/extend-tagged-str ComplexValue 'complex/val)
+
+
 (deftest default-formatting
   (testing "Unknown values"
     (let [usd (java.util.Currency/getInstance "USD")]
       (should-fail-when-strict usd)
-      (is (re-seq #"#<java.util.Currency@[0-9a-f]+ USD>" (pprint-str usd))))))
+      (is (re-seq #"#<java\.util\.Currency@[0-9a-f]+ USD>" (pprint-str usd)))
+      (with-options {:print-fallback :print}
+        (is (= "#<Currency USD>" (pprint-str usd))))))
+  (testing "Escaped types"
+    (let [cv (ComplexValue.)]
+      (with-options {:escape-types nil}
+        (is (= "#complex/val \"to-string\"" (pprint-str cv))))
+      (with-options {:escape-types #{'puget.printer_test.ComplexValue}}
+        (is (re-seq #"#<puget\.printer_test\.ComplexValue@[0-9a-f]+ to-string>" (pprint-str cv))))
+      (with-options {:escape-types #{'puget.printer_test.ComplexValue}
+                     :print-fallback :print}
+        (is (= "{{ complex value print }}" (pprint-str cv)))))))
 
 
 (deftest metadata-printing
