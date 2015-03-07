@@ -33,6 +33,11 @@
     (str \# tag \space (pr-str form))))
 
 
+;; Remove automatic constructor functions.
+(ns-unmap *ns* '->TaggedLiteral)
+(ns-unmap *ns* 'map->TaggedLiteral)
+
+
 (defmethod print-method TaggedLiteral
   [v ^java.io.Writer w]
   (.write w (str v)))
@@ -43,7 +48,7 @@
   suitable for use as a default-data-reader function."
   [tag value]
   {:pre [(symbol? tag)]}
-  (->TaggedLiteral tag value))
+  (TaggedLiteral. tag value))
 
 
 (defn tagged-literal?
