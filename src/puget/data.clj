@@ -1,7 +1,5 @@
 (ns puget.data
   "Code to handle custom data represented as tagged EDN values."
-  (:require
-    [clojure.data.codec.base64 :as b64])
   (:import
     (java.net URI)
     (java.util Date TimeZone UUID)))
@@ -57,14 +55,6 @@
   (instance? TaggedLiteral value))
 
 
-(defn edn-str
-  "Converts the given value to a tagged EDN string. Falls back to `pr-str` if
-  `v` does not use extended notation."
-  ^String
-  [v]
-  (pr-str (if (satisfies? ExtendedNotation v) (->edn v) v)))
-
-
 
 ;; ## Extension Functions
 
@@ -97,7 +87,7 @@
 
 
 
-;; ## Basic EDN Types
+;; ## Standard EDN Types
 
 (defn- format-utc
   "Produces an ISO-8601 formatted date-time string from the given Date."
@@ -114,30 +104,3 @@
 
 ;; `uuid` tags a universally-unique identifier string.
 (extend-tagged-str UUID 'uuid)
-
-
-;; `puget/bin` tags byte data represented as a base64-encoded string.
-(extend-tagged-value
-  (class (byte-array 0))
-  'puget/bin
-  #(->> % b64/encode (map char) (apply str)))
-
-
-(defn read-bin
-  "Reads a base64-encoded string into a byte array. Suitable as a data-reader
-  for `puget/bin` literals."
-  ^bytes
-  [^String bin]
-  (b64/decode (.getBytes bin)))
-
-
-;; `puget/uri` tags a Universal Resource Identifier string.
-(extend-tagged-str URI 'puget/uri)
-
-
-(defn read-uri
-  "Constructs a URI from a string value. Suitable as a data-reader for
-  `puget/uri` literals."
-  ^URI
-  [^String uri]
-  (URI. uri))
