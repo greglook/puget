@@ -32,6 +32,7 @@
     (is (= 'foo tag))
     (is (= :bar form))
     (is (= "#foo :bar" string))
+    (is (= "#foo :bar" (pr-str data)))
     (is (= data (edn/read-string {:default data/tagged-literal} string)))))
 
 
