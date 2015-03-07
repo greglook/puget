@@ -6,12 +6,7 @@
 
   :deploy-branches ["master"]
 
-  :aliases {"docs" ["do" ["doc"] ["marg" "--dir" "doc/marginalia"] ["hiera"]]
-            "tests" ["do" ["check"] ["test"] ["cloverage"]]}
-
-  :plugins [[codox "0.8.10"]
-            [lein-cloverage "1.0.2"]
-            [lein-marginalia "0.8.0"]]
+  :plugins [[lein-cloverage "1.0.2"]]
 
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [org.clojure/data.codec "0.1.0"]
