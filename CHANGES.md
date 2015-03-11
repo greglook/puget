@@ -3,7 +3,9 @@ Release Notes
 
 This page documents the high-level changes in each release of Puget.
 
-## 0.8.0 (...)
+## 0.9.0 (...)
+
+## 0.8.0 (2015-03-10)
 
 - Remove byte array and URI extension to Whidbey.
   [#16](//github.com/greglook/puget/issue/16)
