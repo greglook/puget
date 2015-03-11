@@ -15,51 +15,77 @@
 (def ^:dynamic *options*
   "Printer control options.
 
+  #### General Rendering
+
   `:width`
+
   Number of characters to try to wrap pretty-printed forms at.
 
+  `:print-meta`
+
+  If true, metadata will be printed before values. If nil, defaults to the
+  value of `*print-meta*`.
+
   `:sort-keys`
+
   Print maps and sets with ordered keys. Defaults to true, which will sort all
   collections. If a number, counted collections will be sorted up to the set
   size. Otherwise, collections are not sorted before printing.
 
-  `:strict`
-  If true, throw an exception if there is no canonical EDN representation for
-  a given value. This generally applies to any non-primitive value which does
-  not extend puget.data/TaggedValue and is not a built-in collection.
-
   `:map-delimiter`
+
   The text placed between key-value pairs in a map.
 
   `:map-coll-separator`
+
   The text placed between a map key and a collection value. The keyword :line
   will cause line breaks if the whole map does not fit on a single line.
 
-  `:print-fallback`
-  Takes a keyword argument specifying the desired string representation of
-  unknown documents. The keyword `:print` will fall back to using `pr-str`
-  rather than puget's default unknown-document representation. 
 
-  `:print-meta`
-  If true, metadata will be printed before values. If nil, defaults to the
-  value of *print-meta*.
+  #### Type Handling
+
+  `:print-fallback`
+
+  Keyword argument specifying how to format unknown values. The keyword
+  `:print` will fall back to using `pr-str` rather than the default
+  pretty-printed representation.
+
+  `:escape-types`
+
+  A set of symbols naming classes which should *not* be pretty-printed. Instead,
+  they will be rendered as unknown values. This can be useful for types which
+  define their own `print-method`, are extremely large nested structures, or
+  which Puget otherwise has trouble rendering.
+
+  `:strict`
+
+  If true, throw an exception if there is no canonical EDN representation for
+  a given value. This generally applies to any non-primitive value which does
+  not extend `ExtendedNotation` and is not a built-in collection.
+
+
+  #### Color Options
 
   `:print-color`
+
   When true, ouptut colored text from print functions.
 
   `:color-markup`
+
   :ansi for ANSI color text (the default),
   :html-inline for inline-styled html,
   :html-classes to use the names of the keys in the :color-scheme map
   as class names for spans so styling can be specified via CSS.
 
   `:color-scheme`
+
   Map of syntax element keywords to ANSI color codes."
   {:width 80
    :sort-keys true
    :strict false
    :map-delimiter ","
    :map-coll-separator " "
+   :escape-types nil
    :print-fallback nil
    :print-meta nil
    :print-color false
@@ -105,16 +131,6 @@
   [& body]
   `(with-options {:print-color true}
      ~@body))
-
-
-(defn set-color-scheme!
-  "Sets the color scheme for syntax elements. Pass either a map to merge into
-  the current color scheme, or a single element/colors pair. Colors should be
-  vector of ANSI style keywords."
-  ([colors]
-   (alter-var-root #'*options* update-in [:color-scheme] merge colors))
-  ([element colors & more]
-   (set-color-scheme! (apply hash-map element colors more))))
 
 
 
@@ -171,13 +187,20 @@
 ;; ## Formatting Multimethod
 
 (defn- formatter-dispatch
-  "Dispatches the method to use for value formatting. Values which use extended
+  "Dispatches the method to use for value formatting. Any types in the
+  `:escape-types` set use the default formatter; values which use extended
   notation are rendered as tagged literals; others are dispatched on their
   `type`."
   [value]
-  (if (satisfies? data/ExtendedNotation value)
-    ::tagged-literal
-    (type value)))
+  (let [class-sym (some-> value class .getName symbol)]
+    (cond
+      (contains? (:escape-types *options*) class-sym)
+        :default
+
+      (satisfies? data/ExtendedNotation value)
+        ::tagged-literal
+
+      :else (type value))))
 
 
 (defmulti format-doc
@@ -265,7 +288,6 @@
      (color-doc :delimiter "{")
      [:align (interpose [:span (:map-delimiter *options*) :line] entries)]
      (color-doc :delimiter "}")]))
-
 
 
 (defmethod format-doc clojure.lang.ISeq

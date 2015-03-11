@@ -1,9 +1,9 @@
 Puget
 =====
 
-[![Build Status](https://travis-ci.org/greglook/puget.svg?branch=master)](https://travis-ci.org/greglook/puget)
-[![Coverage Status](https://coveralls.io/repos/greglook/puget/badge.png?branch=master)](https://coveralls.io/r/greglook/puget?branch=master)
-[![Dependency Status](https://www.versioneye.com/user/projects/53718bfb14c1589a89000144/badge.png)](https://www.versioneye.com/clojure/mvxcvi:puget/0.7.1)
+[![Build Status](https://travis-ci.org/greglook/puget.svg?branch=develop)](https://travis-ci.org/greglook/puget)
+[![Coverage Status](https://coveralls.io/repos/greglook/puget/badge.png?branch=develop)](https://coveralls.io/r/greglook/puget?branch=develop)
+[![Dependency Status](https://www.versioneye.com/user/projects/53718bfb14c1589a89000144/badge.png)](https://www.versioneye.com/clojure/mvxcvi:puget/0.8.0)
 [![API codox](http://b.repl.ca/v1/doc-API-blue.png)](https://greglook.github.io/puget/api/)
 [![marginalia docs](http://b.repl.ca/v1/doc-marginalia-blue.png)](https://greglook.github.io/puget/marginalia/uberdoc.html)
 
@@ -119,25 +119,16 @@ convenience, or a map can be passed directly into Puget's print functions to
 override the defaults.
 
 Puget's colors are defined by the `:color-scheme` key, which maps syntax element
-keywords to a vector of ANSI style keywords to apply.  The `set-color-scheme!`
-function offers a convenient way to change the colors by providing either
-color/style argument pairs or a single map of colors to merge into the current
-color scheme.
+keywords to a vector of ANSI style keywords to apply. Some example elements and
+their default colors:
 
 ```clojure
-(puget/set-color-scheme! :nil [:bold :black])
-{:boolean [:green]
- :class-delimiter [:blue]
- :class-name [:bold :blue]
- :delimiter [:bold :red]
- :function-symbol [:bold :blue]
- :keyword [:bold :yellow]
- :nil [:bold :black]
- :number [:cyan]
- :string [:bold :magenta]
- :character [:bold :magenta]
- :symbol nil
- :tag [:red]}
+:boolean   [:green]
+:delimiter [:bold :red]
+:keyword   [:bold :yellow]
+:number    [:cyan]
+:string    [:bold :magenta]
+:symbol    nil
 ```
 
 ## License

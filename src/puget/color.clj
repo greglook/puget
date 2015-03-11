@@ -25,7 +25,10 @@
   #'dispatch)
 
 
-;; ## No markup when colorless
+;; ## Default Markup
+
+;; The default transformation when there's no markup specified is to return the
+;; text unaltered.
 
 (defmethod document nil
   [element text options]
