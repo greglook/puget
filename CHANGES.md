@@ -3,6 +3,14 @@ Release Notes
 
 This page documents the high-level changes in each release of Puget.
 
+## 0.8.0 (...)
+
+- Remove byte array and URI extension to Whidbey.
+  [#16](//github.com/greglook/puget/issue/16)
+- Added `:escape-types` option to avoid rendering types that Puget does not
+  handle well.
+  [#19](//github.com/greglook/puget/pull/19)
+
 ## 0.7.1 (2015-02-28)
 
 - Updated documentation and clean up docstrings.
