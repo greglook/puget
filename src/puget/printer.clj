@@ -17,40 +17,48 @@
 
   #### General Rendering
 
-  `:width`<br/>
+  `:width`
+
   Number of characters to try to wrap pretty-printed forms at.
 
-  `:print-meta`<br/>
+  `:print-meta`
+
   If true, metadata will be printed before values. If nil, defaults to the
   value of `*print-meta*`.
 
-  `:sort-keys`<br/>
+  `:sort-keys`
+
   Print maps and sets with ordered keys. Defaults to true, which will sort all
   collections. If a number, counted collections will be sorted up to the set
   size. Otherwise, collections are not sorted before printing.
 
-  `:map-delimiter`<br/>
+  `:map-delimiter`
+
   The text placed between key-value pairs in a map.
 
-  `:map-coll-separator`<br/>
+  `:map-coll-separator`
+
   The text placed between a map key and a collection value. The keyword :line
   will cause line breaks if the whole map does not fit on a single line.
 
 
   #### Type Handling
 
-  `:print-fallback`<br/>
+  `:print-fallback`
+
   Keyword argument specifying how to format unknown values. The keyword
   `:print` will fall back to using `pr-str` rather than the default
   pretty-printed representation.
 
-  `:escape-types`<br/>
+  `:escape-types`
+
   A set of symbols naming classes which should *not* be pretty-printed. Instead,
   they will be rendered as unknown values. This can be useful for types which
   define their own `print-method`, are extremely large nested structures, or
   which Puget otherwise has trouble rendering.
 
-  `:strict`<br/>
+  `:strict`
+
   If true, throw an exception if there is no canonical EDN representation for
   a given value. This generally applies to any non-primitive value which does
   not extend `ExtendedNotation` and is not a built-in collection.
@@ -58,16 +66,19 @@
 
   #### Color Options
 
-  `:print-color`<br/>
+  `:print-color`
+
   When true, ouptut colored text from print functions.
 
-  `:color-markup`<br/>
+  `:color-markup`
+
   :ansi for ANSI color text (the default),
   :html-inline for inline-styled html,
   :html-classes to use the names of the keys in the :color-scheme map
   as class names for spans so styling can be specified via CSS.
 
-  `:color-scheme`<br/>
+  `:color-scheme`
+
   Map of syntax element keywords to ANSI color codes."
   {:width 80
    :sort-keys true
