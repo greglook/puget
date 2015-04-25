@@ -11,50 +11,7 @@
   (->edn
     [value]
     "Converts the given value into a tagged value representation for EDN
-    serialization. Returns a `TaggedLiteral` record."))
-
-
-; TODO: remove this when CLJ-1424 merges
-; http://dev.clojure.org/jira/browse/CLJ-1424
-(defrecord TaggedLiteral
-  [tag form]
-
-  ExtendedNotation
-
-  (->edn
-    [this]
-    this)
-
-
-  Object
-
-  (toString
-    [this]
-    (str \# tag \space (pr-str form))))
-
-
-;; Remove automatic constructor functions.
-(ns-unmap *ns* '->TaggedLiteral)
-(ns-unmap *ns* 'map->TaggedLiteral)
-
-
-(defmethod print-method TaggedLiteral
-  [v ^java.io.Writer w]
-  (.write w (str v)))
-
-
-(defn tagged-literal
-  "Creates a generic tagged value record to represent some EDN value. This is
-  suitable for use as a default-data-reader function."
-  [tag value]
-  {:pre [(symbol? tag)]}
-  (TaggedLiteral. tag value))
-
-
-(defn tagged-literal?
-  "Returns true if the given value is a tagged-literal form."
-  [value]
-  (instance? TaggedLiteral value))
+    serialization. Should return a value with a `:tag` and a `:form`."))
 
 
 
@@ -70,7 +27,7 @@
        ExtendedNotation
        (->edn
          [this#]
-         (tagged-literal ~tag (value-fn# this#))))))
+         (array-map :tag ~tag :form (value-fn# this#))))))
 
 
 (defmacro extend-tagged-str

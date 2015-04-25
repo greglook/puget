@@ -24,18 +24,6 @@
     'uuid "96d91316-53b9-4800-81c1-97ae9f4b86b0"))
 
 
-(deftest generic-tagged-literal
-  (let [data (data/tagged-literal 'foo :bar)
-        {:keys [tag form]} (data/->edn data)
-        string (str data)]
-    (is (data/tagged-literal? data))
-    (is (= 'foo tag))
-    (is (= :bar form))
-    (is (= "#foo :bar" string))
-    (is (= "#foo :bar" (pr-str data)))
-    (is (= data (edn/read-string {:default data/tagged-literal} string)))))
-
-
 (defrecord TestRecord [x y])
 (data/extend-tagged-map TestRecord 'test/record)
 (deftest tagged-literal-extension
