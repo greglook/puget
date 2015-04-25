@@ -3,6 +3,11 @@ Release Notes
 
 This page documents the high-level changes in each release of Puget.
 
+## 0.8.1 (2015-04-25)
+
+- Remove `tagged-literal` code which conflicts with the built-in `clojure.core`
+  functions in 1.7. [#20](//github.com/greglook/puget/issues/20)
+
 ## 0.8.0 (2015-03-10)
 
 - Remove byte array and URI extension to Whidbey.
