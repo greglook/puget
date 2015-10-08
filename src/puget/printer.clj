@@ -4,10 +4,8 @@
     [arrangement.core :as order]
     [clojure.string :as str]
     [fipp.printer :as fipp]
-    (puget
-      [color :as color]
-      [data :as data]
-      [order :as order])
+    [fipp.visit :as fv]
+    [puget.color :as color]
     (puget.color ansi html)))
 
 
@@ -245,115 +243,7 @@
 
 
 
-;; ## Primitive Types
-
-(defmacro ^:private format-element
-  "Defines a canonization of a primitive value type by mapping it to an element
-  in the color scheme."
-  [dispatch element]
-  `(defmethod format-doc ~dispatch
-     [value#]
-     (color-doc ~element (pr-str value#))))
-
-
-(format-element nil                  :nil)
-(format-element java.lang.Boolean    :boolean)
-(format-element java.lang.Number     :number)
-(format-element java.lang.Character  :character)
-(format-element java.lang.String     :string)
-(format-element clojure.lang.Keyword :keyword)
-(format-element clojure.lang.Symbol  :symbol)
-
-
-
-;; ## Collection Types
-
-(defn- format-entry
-  "Formats a canonical print document for a key-value entry in a map."
-  [[k v]]
-  [:span
-   (format-doc k)
-   (cond
-     (satisfies? data/ExtendedNotation v) " "
-     (coll? v) (:map-coll-separator *options*)
-     :else " ")
-   (format-doc v)])
-
-
-(defn- format-map
-  "Formats a canonical print document for a map value."
-  [value]
-  (let [ks (order-collection value (partial sort-by first order/rank))
-        entries (map format-entry ks)]
-    [:group
-     (color-doc :delimiter "{")
-     [:align (interpose [:span (:map-delimiter *options*) :line] entries)]
-     (color-doc :delimiter "}")]))
-
-
-(defmethod format-doc clojure.lang.ISeq
-  [value]
-  (let [elements (if (symbol? (first value))
-                   (cons (color-doc :function-symbol (str (first value)))
-                         (map format-doc (rest value)))
-                   (map format-doc value))]
-    [:group
-     (color-doc :delimiter "(")
-     [:align (interpose :line elements)]
-     (color-doc :delimiter ")")]))
-
-
-(defmethod format-doc clojure.lang.IPersistentVector
-  [value]
-  [:group
-   (color-doc :delimiter "[")
-   [:align (interpose :line (map format-doc value))]
-   (color-doc :delimiter "]")])
-
-
-(defmethod format-doc clojure.lang.IPersistentSet
-  [value]
-  (let [entries (order-collection value (partial sort order/rank))]
-    [:group
-     (color-doc :delimiter "#{")
-     [:align (interpose :line (map format-doc entries))]
-     (color-doc :delimiter "}")]))
-
-
-(defmethod format-doc clojure.lang.IPersistentMap
-  [value]
-  (format-map value))
-
-
-(defmethod format-doc clojure.lang.IRecord
-  [value]
-  (illegal-when-strict! value)
-  [:span
-   (color-doc :delimiter "#")
-   (.getName (class value))
-   (format-map value)])
-
-
-(prefer-method format-doc clojure.lang.IRecord clojure.lang.IPersistentMap)
-
-
-
 ;; ## Clojure Types
-
-(defmethod format-doc java.util.regex.Pattern
-  [value]
-  (illegal-when-strict! value)
-  [:span
-   (color-doc :delimiter "#")
-   (color-doc :string (str \" value \"))])
-
-
-(defmethod format-doc clojure.lang.Var
-  [value]
-  (illegal-when-strict! value)
-  [:span
-   (color-doc :delimiter "#'")
-   (color-doc :symbol (subs (str value) 2))])
 
 
 (defmethod format-doc clojure.lang.IDeref
@@ -399,18 +289,128 @@
 
 ;; ## Special Types
 
-(defmethod format-doc ::tagged-literal
-  [value]
-  (let [{:keys [tag form]} (data/->edn value)]
-    [:span
-     (color-doc :tag (str \# tag))
-     (if (coll? form) :line " ")
-     (format-doc form)]))
-
 
 (defmethod format-doc :default
   [value]
   (unknown-document value))
+
+
+;; ## Printer Definition
+
+(defrecord PugetPrinter
+
+  fv/IVisitor
+
+  ; Primitive Types
+
+  (visit-nil
+    [this]
+    (color-doc :nil "nil"))
+
+  (visit-boolean
+    [this value]
+    (color-doc :boolean (str value)))
+
+  (visit-number
+    [this value]
+    (color-doc :number (pr-str value)))
+
+  (visit-character
+    [this value]
+    (color-doc :character (pr-str value)))
+
+  (visit-string
+    [this value]
+    (color-doc :string (pr-str value)))
+
+  (visit-keyword
+    [this value]
+    (color-doc :keyword (str value)))
+
+  (visit-symbol
+    [this value]
+    (color-doc :symbol (str value)))
+
+
+  ; Collection Types
+
+  (visit-seq
+    [this value]
+    (let [elements (if (symbol? (first value))
+                     (cons (color-doc :function-symbol (str (first value)))
+                           (map (partial fv/visit this) (rest value)))
+                     (map (partial fv/visit this) value))]
+      [:group
+       (color-doc :delimiter "(")
+       [:align (interpose :line elements)]
+       (color-doc :delimiter ")")]))
+
+  (visit-vector
+    [this value]
+    [:group
+     (color-doc :delimiter "[")
+     [:align (interpose :line (map (partial fv/visit this) value))]
+     (color-doc :delimiter "]")])
+
+  (visit-set
+    [this value]
+    (let [entries (order-collection value (partial sort order/rank))]
+      [:group
+       (color-doc :delimiter "#{")
+       [:align (interpose :line (map (partial fv/visit this) entries))]
+       (color-doc :delimiter "}")]))
+
+  (visit-map
+    [this value]
+    (let [ks (order-collection value (partial sort-by first order/rank))
+          entries (map (fn [[k v]]
+                         [:span
+                          (fv/visit this k)
+                          (if (coll? v)
+                            (:map-coll-separator *options*)
+                            " ")
+                          (fv/visit this v)])
+                       ks)]
+      [:group
+       (color-doc :delimiter "{")
+       [:align (interpose [:span (:map-delimiter *options*) :line] entries)]
+       (color-doc :delimiter "}")]))
+
+
+  ; Clojure Types
+
+  (visit-meta
+    [this m value]
+    ...)
+
+  (visit-var
+    [this value]
+    (illegal-when-strict! value)
+    [:span
+     (color-doc :delimiter "#'")
+     (color-doc :symbol (subs (str value) 2))])
+
+  (visit-pattern
+    [this value]
+    (illegal-when-strict! value)
+    [:span
+     (color-doc :delimiter "#")
+     (color-doc :string (str \" value \"))])
+
+
+  ; Special Types
+
+  (visit-tagged
+    [this value]
+    (let [{:keys [tag form]} value]
+      [:span
+       (color-doc :tag (str "#" (:tag value)))
+       " "
+       (fv/visit this (:form value))]))
+
+  (visit-unknown
+    [this value]
+    (unknown-document value)))
 
 
 
