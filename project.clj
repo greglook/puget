@@ -6,10 +6,13 @@
 
   :deploy-branches ["master"]
 
-  :plugins [[lein-cloverage "1.0.2"]]
+  :plugins
+  [[lein-cloverage "1.0.6"]]
 
-  :dependencies [[org.clojure/clojure "1.6.0"]
-                 [fipp "0.5.2"]]
+  :dependencies
+  [[fipp "0.6.2"]
+   [mvxcvi/arrangement "1.0.0"]
+   [org.clojure/clojure "1.7.0"]]
 
   :cljfmt {:indents {with-options [[:block 1]]}}
 

@@ -1,6 +1,7 @@
 (ns puget.printer
   "Functions for canonical colored printing of EDN values."
   (:require
+    [arrangement.core :as order]
     [clojure.string :as str]
     [fipp.printer :as fipp]
     (puget
