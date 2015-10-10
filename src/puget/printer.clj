@@ -3,7 +3,7 @@
   (:require
     [arrangement.core :as order]
     [clojure.string :as str]
-    [fipp.printer :as fipp]
+    [fipp.engine :as fe]
     [fipp.visit :as fv]
     [puget.color :as color]
     (puget.color ansi html)))
@@ -196,8 +196,8 @@
       (contains? (:escape-types *options*) class-sym)
         :default
 
-      (satisfies? data/ExtendedNotation value)
-        ::tagged-literal
+      ;(satisfies? data/ExtendedNotation value)
+      ;  ::tagged-literal
 
       :else (type value))))
 
@@ -418,7 +418,7 @@
      (let [printer (map->PugetPrinter (merge {:print-meta *print-meta*}
                                              *options*))]
        (binding [*print-meta* false]
-         (fipp/pprint-document
+         (fe/pprint-document
            (fv/visit printer value)
            {:width (:width *options*)}))))))
 
