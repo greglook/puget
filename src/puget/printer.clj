@@ -78,7 +78,7 @@
 
   `:color-scheme`
 
-  Map of syntax element keywords to ANSI color codes."
+  Map of syntax element keywords to color codes."
   {:width 80
    :sort-keys true
    :strict false
@@ -169,8 +169,8 @@
 (defn- color-doc
   "Constructs a text doc, which may be colored if `:print-color` is true.
   Element should be a key from the color-scheme map."
-  [element text]
-  (color/document element text *options*))
+  [options element text]
+  (color/document element text options))
 
 
 (defn color-text
@@ -207,19 +207,6 @@
   for printing with fipp. This method also supports ANSI color escapes for
   syntax highlighting if desired."
   #'formatter-dispatch)
-
-
-(defn- canonical-document
-  "Constructs a complete canonical print document for the given value."
-  [value]
-  (let [print-meta? (if (nil? (:print-meta *options*))
-                      *print-meta*
-                      (:print-meta *options*))]
-    (if-let [metadata (and print-meta? (meta value))]
-      [:align
-       [:span (color-doc :delimiter "^") (format-doc metadata)]
-       :line (format-doc value)]
-      (format-doc value))))
 
 
 (defn- unknown-document
@@ -287,17 +274,18 @@
 
 
 
-;; ## Special Types
-
-
-(defmethod format-doc :default
-  [value]
-  (unknown-document value))
-
-
 ;; ## Printer Definition
 
 (defrecord PugetPrinter
+  [sort-keys
+   map-delimiter
+   map-coll-separator
+   escape-types
+   print-fallback
+   print-meta
+   print-color
+   color-markup
+   color-scheme]
 
   fv/IVisitor
 
@@ -305,31 +293,31 @@
 
   (visit-nil
     [this]
-    (color-doc :nil "nil"))
+    (color-doc this :nil "nil"))
 
   (visit-boolean
     [this value]
-    (color-doc :boolean (str value)))
+    (color-doc this :boolean (str value)))
 
   (visit-number
     [this value]
-    (color-doc :number (pr-str value)))
+    (color-doc this :number (pr-str value)))
 
   (visit-character
     [this value]
-    (color-doc :character (pr-str value)))
+    (color-doc this :character (pr-str value)))
 
   (visit-string
     [this value]
-    (color-doc :string (pr-str value)))
+    (color-doc this :string (pr-str value)))
 
   (visit-keyword
     [this value]
-    (color-doc :keyword (str value)))
+    (color-doc this :keyword (str value)))
 
   (visit-symbol
     [this value]
-    (color-doc :symbol (str value)))
+    (color-doc this :symbol (str value)))
 
 
   ; Collection Types
@@ -337,28 +325,28 @@
   (visit-seq
     [this value]
     (let [elements (if (symbol? (first value))
-                     (cons (color-doc :function-symbol (str (first value)))
+                     (cons (color-doc this :function-symbol (str (first value)))
                            (map (partial fv/visit this) (rest value)))
                      (map (partial fv/visit this) value))]
       [:group
-       (color-doc :delimiter "(")
+       (color-doc this :delimiter "(")
        [:align (interpose :line elements)]
-       (color-doc :delimiter ")")]))
+       (color-doc this :delimiter ")")]))
 
   (visit-vector
     [this value]
     [:group
-     (color-doc :delimiter "[")
+     (color-doc this :delimiter "[")
      [:align (interpose :line (map (partial fv/visit this) value))]
-     (color-doc :delimiter "]")])
+     (color-doc this :delimiter "]")])
 
   (visit-set
     [this value]
     (let [entries (order-collection value (partial sort order/rank))]
       [:group
-       (color-doc :delimiter "#{")
+       (color-doc this :delimiter "#{")
        [:align (interpose :line (map (partial fv/visit this) entries))]
-       (color-doc :delimiter "}")]))
+       (color-doc this :delimiter "}")]))
 
   (visit-map
     [this value]
@@ -372,30 +360,34 @@
                           (fv/visit this v)])
                        ks)]
       [:group
-       (color-doc :delimiter "{")
+       (color-doc this :delimiter "{")
        [:align (interpose [:span (:map-delimiter *options*) :line] entries)]
-       (color-doc :delimiter "}")]))
+       (color-doc this :delimiter "}")]))
 
 
   ; Clojure Types
 
   (visit-meta
-    [this m value]
-    ...)
+    [this metadata value]
+    (if (:print-meta *options*)
+      [:align
+       [:span (color-doc this :delimiter "^") (fv/visit this metadata)]
+       :line (fv/visit* this value)]
+      (fv/visit* this value)))
 
   (visit-var
     [this value]
     (illegal-when-strict! value)
     [:span
-     (color-doc :delimiter "#'")
-     (color-doc :symbol (subs (str value) 2))])
+     (color-doc this :delimiter "#'")
+     (color-doc this :symbol (subs (str value) 2))])
 
   (visit-pattern
     [this value]
     (illegal-when-strict! value)
     [:span
-     (color-doc :delimiter "#")
-     (color-doc :string (str \" value \"))])
+     (color-doc this :delimiter "#")
+     (color-doc this :string (str \" value \"))])
 
 
   ; Special Types
@@ -404,7 +396,7 @@
     [this value]
     (let [{:keys [tag form]} value]
       [:span
-       (color-doc :tag (str "#" (:tag value)))
+       (color-doc this :tag (str "#" (:tag value)))
        " "
        (fv/visit this (:form value))]))
 
@@ -423,9 +415,12 @@
    (pprint value nil))
   ([value opts]
    (with-options opts
-     (fipp/pprint-document
-       (canonical-document value)
-       {:width (:width *options*)}))))
+     (let [printer (map->PugetPrinter (merge {:print-meta *print-meta*}
+                                             *options*))]
+       (binding [*print-meta* false]
+         (fipp/pprint-document
+           (fv/visit printer value)
+           {:width (:width *options*)}))))))
 
 
 (defn pprint-str
