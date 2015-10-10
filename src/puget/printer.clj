@@ -1,18 +1,6 @@
 (ns puget.printer
-  "Functions for canonical colored printing of EDN values."
-  (:require
-    [arrangement.core :as order]
-    [clojure.string :as str]
-    [fipp.engine :as fe]
-    [fipp.visit :as fv]
-    [puget.color :as color]
-    (puget.color ansi html)))
-
-
-;; ## Control Vars
-
-(def ^:dynamic *options*
-  "Printer control options.
+  "Functions for canonical colored printing of EDN values. The following options
+  are available to control the printer rendering:
 
   #### General Rendering
 
@@ -78,7 +66,21 @@
 
   `:color-scheme`
 
-  Map of syntax element keywords to color codes."
+  Map of syntax element keywords to color codes. 
+  "
+  (:require
+    [arrangement.core :as order]
+    [clojure.string :as str]
+    [fipp.engine :as fe]
+    [fipp.visit :as fv]
+    [puget.color :as color]
+    (puget.color ansi html)))
+
+
+;; ## Control Vars
+
+(def ^:dynamic *options*
+  "Default options to use when constructing new printers."
   {:width 80
    :sort-keys true
    :strict false
@@ -86,7 +88,6 @@
    :map-coll-separator " "
    :escape-types nil
    :print-fallback nil
-   :print-meta nil
    :print-color false
    :color-markup :ansi
    :color-scheme
@@ -114,7 +115,7 @@
   correctly."
   [a b]
   (let [colors (merge (:color-scheme a) (:color-scheme b))]
-    (-> a (merge b) (assoc :color-scheme colors))))
+    (assoc (merge a b) :color-scheme colors)))
 
 
 (defmacro with-options
@@ -220,13 +221,13 @@
    (case (:print-fallback *options*)
      :print [:span (pr-str value)]
      [:span
-      (color-doc :class-delimiter "#<")
-      (color-doc :class-name tag)
-      (color-doc :class-delimiter "@")
+      (color-doc *options* :class-delimiter "#<")
+      (color-doc *options* :class-name tag)
+      (color-doc *options* :class-delimiter "@")
       (system-id value)
       " "
       repr
-      (color-doc :class-delimiter ">")])))
+      (color-doc *options* :class-delimiter ">")])))
 
 
 
@@ -247,7 +248,7 @@
   [value]
   (let [doc (if (realized? value)
               (format-doc @value)
-              (color-doc :nil "pending"))]
+              (color-doc *options* :nil "pending"))]
     (unknown-document value doc)))
 
 
@@ -255,7 +256,7 @@
   [value]
   (let [doc (if (realized? value)
               (format-doc @value)
-              (color-doc :nil "pending"))]
+              (color-doc *options* :nil "pending"))]
     (unknown-document value "Delay" doc)))
 
 
@@ -263,7 +264,7 @@
   [value]
   (let [doc (if (future-done? value)
               (format-doc @value)
-              (color-doc :nil "pending"))]
+              (color-doc *options* :nil "pending"))]
     (unknown-document value "Future" doc)))
 
 
@@ -369,7 +370,7 @@
 
   (visit-meta
     [this metadata value]
-    (if (:print-meta *options*)
+    (if print-meta
       [:align
        [:span (color-doc this :delimiter "^") (fv/visit this metadata)]
        :line (fv/visit* this value)]
@@ -408,19 +409,30 @@
 
 ;; ## Printing Functions
 
+(defn ->printer
+  "Constructs a new printer from the given configuration."
+  [opts]
+  (->> [{:print-meta *print-meta*} *options* opts]
+       (reduce merge-options)
+       (map->PugetPrinter)))
+
+
+(defn render
+  "Prints a value using the given printer."
+  [printer value]
+  (binding [*print-meta* false]
+    (fe/pprint-document
+      (fv/visit printer value)
+      {:width (:width printer)})))
+
+
 (defn pprint
   "Pretty-prints a value to *out*. Options may be passed to override the
   default *options* map."
   ([value]
    (pprint value nil))
   ([value opts]
-   (with-options opts
-     (let [printer (map->PugetPrinter (merge {:print-meta *print-meta*}
-                                             *options*))]
-       (binding [*print-meta* false]
-         (fe/pprint-document
-           (fv/visit printer value)
-           {:width (:width *options*)}))))))
+   (render (->printer opts) value)))
 
 
 (defn pprint-str

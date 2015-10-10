@@ -16,7 +16,7 @@
 
 (deftest formatting-primitives
   (testing "Primitive values"
-    (are [v text] (= text (-> v pprint with-out-str str/trim))
+    (are [v text] (= text (pprint-str v))
       nil     "nil"
       true    "true"
       false   "false"
@@ -62,7 +62,7 @@
   (testing "Records"
     (let [r (->TestRecord \x \y)]
       (should-fail-when-strict r)
-      (is (= "#puget.printer_test.TestRecord{:bar \\y, :foo \\x}\n"
+      (is (= "#puget.printer_test.TestRecord {:bar \\y, :foo \\x}\n"
              (with-out-str (pprint r)))))))
 
 
@@ -154,7 +154,9 @@
   (let [value ^:foo [:bar]]
     (binding [*print-meta* true]
       (is (= "^{:foo true}\n[:bar]" (pprint-str value)))
-      (is (= "[:bar]" (pprint-str value {:print-meta false}))))))
+      (is (= "[:bar]" (pprint-str value {:print-meta false}))))
+    (binding [*print-meta* false]
+      (is (= "^{:foo true}\n[:bar]" (pprint-str value {:print-meta true}))))))
 
 
 (deftest colored-printing
