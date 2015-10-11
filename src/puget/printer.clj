@@ -356,13 +356,13 @@
                          [:span
                           (fv/visit this k)
                           (if (coll? v)
-                            (:map-coll-separator *options*)
+                            map-coll-separator
                             " ")
                           (fv/visit this v)])
                        ks)]
       [:group
        (color-doc this :delimiter "{")
-       [:align (interpose [:span (:map-delimiter *options*) :line] entries)]
+       [:align (interpose [:span map-delimiter :line] entries)]
        (color-doc this :delimiter "}")]))
 
 
