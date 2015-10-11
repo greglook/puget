@@ -11,7 +11,7 @@
     [clojure.string :as str]))
 
 
-(defn fallback-lookup
+(defn chained-lookup
   "Builds a dispatcher which looks up a type by checking multiple dispatchers
   in order until a matching entry is found."
   ([a] a)
@@ -28,10 +28,37 @@
   [dispatch]
   (let [cache (atom {})]
     (fn lookup [t]
-      (or (get @cache t)
-          (when-let [v (dispatch t)]
+      (let [memory @cache]
+        (if (contains? memory t)
+          (get memory t)
+          (let [v (dispatch t)]
             (swap! cache assoc t v)
-            v)))))
+            v))))))
+
+
+(defn- lineage
+  "Returns the ancestry of the given class, starting with the class and
+  excluding the `java.lang.Object` base class."
+  [cls]
+  (take-while (partial not= Object)
+              (iterate #(.getSuperclass ^Class %) cls)))
+
+
+(defn- find-interfaces
+  "Resolves all of the interfaces implemented by a class, both direct (through
+  class ancestors) and indirect (through other interfaces)."
+  [cls]
+  (let [get-interfaces (fn [^Class c] (.getInterfaces c))
+        direct-interfaces (mapcat get-interfaces (lineage cls))]
+    (loop [queue (vec direct-interfaces)
+           interfaces #{}]
+      (if (empty? queue)
+        interfaces
+        (let [^Class iface (first queue)
+              implemented (get-interfaces iface)]
+          (recur (into (rest queue)
+                       (remove interfaces implemented))
+                 (conj interfaces iface)))))))
 
 
 (defn inheritance-lookup
@@ -40,26 +67,20 @@
   finally `java.lang.Object`."
   [dispatch]
   (fn lookup [t]
-    (let [superclasses (take-while (partial not= Object)
-                                   (iterate #(.getSuperclass ^Class %) t))]
-      (or
-        ; Look up base type.
-        (dispatch t)
+    (or
+      ; Look up base class and ancestors up to the base class.
+      (some dispatch (lineage t))
 
-        ; Look up base classes up to Object.
-        (some dispatch superclasses)
+      ; Look up interfaces and collect candidates.
+      (let [candidates (remove (comp nil? first)
+                               (map (juxt dispatch identity)
+                                    (find-interfaces t)))]
+        (case (count candidates)
+          0 nil
+          1 (ffirst candidates)
+          (throw (RuntimeException.
+                   (format "%d candidates found for interfaces on dispatch type %s: %s"
+                           (count candidates) t (str/join ", " (map second candidates)))))))
 
-        ; Look up interfaces and collect candidates.
-        (let [interfaces (mapcat #(.getInterfaces ^Class %) superclasses)
-              candidates (remove (comp nil? second)
-                                 (map (juxt identity dispatch)
-                                      interfaces))]
-          (case (count candidates)
-            0 nil
-            1 (second (first candidates))
-            (throw (RuntimeException.
-                     (format "%d candidates found for interfaces on dispatch type %s: %s"
-                             (count candidates) t (str/join ", " (map first candidates)))))))
-
-        ; Look up Object base class.
-        (dispatch Object)))))
+      ; Look up Object base class.
+      (dispatch Object))))
