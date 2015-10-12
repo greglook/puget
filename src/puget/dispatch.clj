@@ -36,6 +36,16 @@
             v))))))
 
 
+(defn symbolic-lookup
+  "Builds a dispatcher which looks up a type by checking the underlying lookup
+  using the type's _symbolic_ name, rather than the class value itself. This is
+  useful for checking configuration that must be created in situations where the
+  classes themselves may not be loaded yet."
+  [dispatch]
+  (fn lookup [^Class t]
+    (dispatch (symbol (.getName t)))))
+
+
 (defn- lineage
   "Returns the ancestry of the given class, starting with the class and
   excluding the `java.lang.Object` base class."

@@ -4,6 +4,15 @@
     [puget.dispatch :as dispatch]))
 
 
+(deftest symbolic-dispatch
+  (let [dispatch (dispatch/symbolic-lookup
+                   {'java.lang.String :string
+                    'java.io.FileInputStream :file-input-stream})]
+    (is (= :string (dispatch java.lang.String)))
+    (is (= :file-input-stream (dispatch java.io.FileInputStream)))
+    (is (nil? (dispatch java.lang.Boolean)))))
+
+
 (deftest chained-dispatch
   (testing "Single chained dispatch"
     (let [dispatch (dispatch/chained-lookup {:foo :bar})]
