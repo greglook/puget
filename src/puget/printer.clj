@@ -90,7 +90,6 @@
    :sort-mode true
    :map-delimiter ","
    :map-coll-separator " "
-   :print-handlers nil
    :print-fallback :pretty
    :print-color false
    :color-markup :ansi
@@ -425,21 +424,16 @@
     (dispatch/inheritance-lookup clojure-handlers)))
 
 
-(comment
-  "Need to add a dispatch helper to do an in-order lookup?"
-  (prefer-method format-doc clojure.lang.ISeq clojure.lang.IPending)
-  (prefer-method format-doc clojure.lang.IPending clojure.lang.IDeref)
-  (prefer-method format-doc java.util.concurrent.Future clojure.lang.IDeref)
-  (prefer-method format-doc java.util.concurrent.Future clojure.lang.IPending))
-
-
 
 ;; ## Printing Functions
 
 (defn ->printer
   "Constructs a new printer from the given configuration."
   [opts]
-  (->> [{:print-meta *print-meta*} *options* opts]
+  (->> [{:print-meta *print-meta*
+         :print-handlers common-handlers}
+        *options*
+        opts]
        (reduce merge-options)
        (map->PugetPrinter)))
 

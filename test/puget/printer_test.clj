@@ -71,44 +71,43 @@
   (isRealized [this] is-realized))
 
 (deftest clojure-types
-  (with-options {:print-handlers common-handlers}
-    (testing "seq"
-      (is (= "()" (pprint-str (list)))))
-    (testing "regex"
-      (let [v #"\d+"]
-        (should-fail-when-strict v)
-        (is (= "#\"\\d+\"" (pprint-str v)))))
-    (testing "vars"
-      (let [v #'*options*]
-        (should-fail-when-strict v)
-        (is (= "#'puget.printer/*options*"
-               (pprint-str v)))))
-    (testing "atom"
-      (let [v (atom :foo)]
-        (should-fail-when-strict v)
-        (is (re-seq #"#<Atom@[0-9a-f]+ :foo>" (pprint-str v)))))
-    (testing "delay"
-      (let [v (delay (+ 8 14))]
-        (should-fail-when-strict v)
-        (is (re-seq #"#<Delay@[0-9a-f]+ pending>" (pprint-str v)))
-        (is (= 22 @v))
-        (is (re-seq #"#<Delay@[0-9a-f]+ 22>" (pprint-str v)))))
-    (testing "future"
-      (let [v (future (do (Thread/sleep 100) :done))]
-        (should-fail-when-strict v)
-        (is (re-seq #"#<Future@[0-9a-f]+ pending>" (pprint-str v)))
-        (is (= :done @v))
-        (is (re-seq #"#<Future@[0-9a-f]+ :done>" (pprint-str v)))))
-    (testing "custom IPending, realized"
-      (let [v (->APending true)]
-        (should-fail-when-strict v)
-        (is (re-seq #"#<puget.printer_test.APending@[0-9a-f]+ 1"
-                    (pprint-str v)))))
-    (testing "custom IPending, not realized"
-      (let [v (->APending false)]
-        (should-fail-when-strict v)
-        (is (re-seq #"#<puget.printer_test.APending@[0-9a-f]+ pending"
-                    (pprint-str v)))))))
+  (testing "seq"
+    (is (= "()" (pprint-str (list)))))
+  (testing "regex"
+    (let [v #"\d+"]
+      (should-fail-when-strict v)
+      (is (= "#\"\\d+\"" (pprint-str v)))))
+  (testing "vars"
+    (let [v #'*options*]
+      (should-fail-when-strict v)
+      (is (= "#'puget.printer/*options*"
+             (pprint-str v)))))
+  (testing "atom"
+    (let [v (atom :foo)]
+      (should-fail-when-strict v)
+      (is (re-seq #"#<Atom@[0-9a-f]+ :foo>" (pprint-str v)))))
+  (testing "delay"
+    (let [v (delay (+ 8 14))]
+      (should-fail-when-strict v)
+      (is (re-seq #"#<Delay@[0-9a-f]+ pending>" (pprint-str v)))
+      (is (= 22 @v))
+      (is (re-seq #"#<Delay@[0-9a-f]+ 22>" (pprint-str v)))))
+  (testing "future"
+    (let [v (future (do (Thread/sleep 100) :done))]
+      (should-fail-when-strict v)
+      (is (re-seq #"#<Future@[0-9a-f]+ pending>" (pprint-str v)))
+      (is (= :done @v))
+      (is (re-seq #"#<Future@[0-9a-f]+ :done>" (pprint-str v)))))
+  (testing "custom IPending, realized"
+    (let [v (->APending true)]
+      (should-fail-when-strict v)
+      (is (re-seq #"#<puget.printer_test.APending@[0-9a-f]+ 1"
+                  (pprint-str v)))))
+  (testing "custom IPending, not realized"
+    (let [v (->APending false)]
+      (should-fail-when-strict v)
+      (is (re-seq #"#<puget.printer_test.APending@[0-9a-f]+ pending"
+                  (pprint-str v))))))
 
 
 (deftype ComplexValue []
