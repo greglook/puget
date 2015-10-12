@@ -330,21 +330,20 @@
 
   (visit-unknown
     [this value]
-    (cond
-      (= :pretty print-fallback)
+    (case print-fallback
+      :pretty
         (format-unknown this value)
-      (= :print print-fallback)
+      :print
         [:span (pr-str value)]
-      (= :error print-fallback)
+      :error
         (throw (IllegalArgumentException.
                  (str "No defined representation for " (class value) ": "
                       (pr-str value))))
-      (ifn? print-fallback)
+      (if (ifn? print-fallback)
         (print-fallback this value)
-      :else
         (throw (IllegalStateException.
                  (str "Unsupported value for print-fallback: "
-                      (pr-str value)))))))
+                      (pr-str print-fallback))))))))
 
 
 
