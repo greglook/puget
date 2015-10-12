@@ -10,10 +10,10 @@
 
   `:print-meta`
 
-  If true, metadata will be printed before values. If nil, defaults to the
-  value of `*print-meta*`.
+  If true, metadata will be printed before values. Defaults to the value of
+  `*print-meta*` if unset.
 
-  `:sort-keys`
+  `:sort-mode`
 
   Print maps and sets with ordered keys. Defaults to true, which will sort all
   collections. If a number, counted collections will be sorted up to the set
@@ -82,7 +82,7 @@
 (def ^:dynamic *options*
   "Default options to use when constructing new printers."
   {:width 80
-   :sort-keys true
+   :sort-mode true
    :strict false
    :map-delimiter ","
    :map-coll-separator " "
@@ -154,14 +154,13 @@
 (defn- order-collection
   "Takes a sequence of entries and checks the `:sort-keys` option to determine
   whether to sort them. Returns an appropriately ordered sequence."
-  [value sort-fn]
-  (let [mode (:sort-keys *options*)]
-    (if (or (true? mode)
-            (and (number? mode)
-                 (counted? value)
-                 (>= mode (count value))))
-      (sort-fn value)
-      (seq value))))
+  [mode value sort-fn]
+  (if (or (true? mode)
+          (and (number? mode)
+               (counted? value)
+               (>= mode (count value))))
+    (sort-fn value)
+    (seq value)))
 
 
 
@@ -278,7 +277,7 @@
 ;; ## Printer Definition
 
 (defrecord PugetPrinter
-  [sort-keys
+  [sort-mode
    map-delimiter
    map-coll-separator
    escape-types
@@ -343,7 +342,7 @@
 
   (visit-set
     [this value]
-    (let [entries (order-collection value (partial sort order/rank))]
+    (let [entries (order-collection sort-mode value (partial sort order/rank))]
       [:group
        (color-doc this :delimiter "#{")
        [:align (interpose :line (map (partial fv/visit this) entries))]
@@ -351,7 +350,7 @@
 
   (visit-map
     [this value]
-    (let [ks (order-collection value (partial sort-by first order/rank))
+    (let [ks (order-collection sort-mode value (partial sort-by first order/rank))
           entries (map (fn [[k v]]
                          [:span
                           (fv/visit this k)
