@@ -31,24 +31,28 @@
 
   #### Type Handling
 
+  `:print-handlers`
+
+  A lookup function which will return a rendering function for a given class
+  type. This will be tried for unknown (non-builtin) types. See the
+  `puget.dispatch` namespace for some helpful constructors. The returned
+  function should accept the current printer and the value to be rendered,
+  returning a format document.
+
   `:print-fallback`
 
-  Keyword argument specifying how to format unknown values. The keyword
-  `:print` will fall back to using `pr-str` rather than the default
-  pretty-printed representation.
+  Keyword argument specifying how to format unknown values. Puget supports a few
+  different options:
 
-  `:escape-types`
-
-  A set of symbols naming classes which should *not* be pretty-printed. Instead,
-  they will be rendered as unknown values. This can be useful for types which
-  define their own `print-method`, are extremely large nested structures, or
-  which Puget otherwise has trouble rendering.
-
-  `:strict`
-
-  If true, throw an exception if there is no canonical EDN representation for
-  a given value. This generally applies to any non-primitive value which does
-  not extend `ExtendedNotation` and is not a built-in collection.
+  - `:pretty` renders values with the default colored representation. Common
+    Clojure types are supported.
+  - `:print` defers to the standard print method by rendering unknown values
+    using `pr-str`.
+  - `:error` will throw an exception when types with no defined handler are
+    encountered.
+  - A function value will be called with the current printer options and the
+    unknown value and is expected to return a formatting document representing
+    it.
 
 
   #### Color Options
@@ -83,11 +87,10 @@
   "Default options to use when constructing new printers."
   {:width 80
    :sort-mode true
-   :strict false
    :map-delimiter ","
    :map-coll-separator " "
-   :escape-types nil
-   :print-fallback nil
+   :print-handlers nil
+   :print-fallback :pretty
    :print-color false
    :color-markup :ansi
    :color-scheme
@@ -142,15 +145,6 @@
   (Integer/toHexString (System/identityHashCode obj)))
 
 
-(defn- illegal-when-strict!
-  "Throws an exception if strict mode is enabled. The error indicates that the
-  given value has no EDN representation."
-  [value]
-  (when (:strict *options*)
-    (throw (IllegalArgumentException.
-             (str "No canonical EDN representation for " (class value) ": " value)))))
-
-
 (defn- order-collection
   "Takes a sequence of entries and checks the `:sort-keys` option to determine
   whether to sort them. Returns an appropriately ordered sequence."
@@ -185,48 +179,33 @@
 
 ;; ## Formatting Multimethod
 
-(defn- formatter-dispatch
-  "Dispatches the method to use for value formatting. Any types in the
-  `:escape-types` set use the default formatter; values which use extended
-  notation are rendered as tagged literals; others are dispatched on their
-  `type`."
-  [value]
-  (let [class-sym (some-> value class .getName symbol)]
-    (cond
-      (contains? (:escape-types *options*) class-sym)
-        :default
-
-      ;(satisfies? data/ExtendedNotation value)
-      ;  ::tagged-literal
-
-      :else (type value))))
-
-
-(defmulti format-doc
-  "Converts the given value into a 'canonical' structured document, suitable
-  for printing with fipp. This method also supports ANSI color escapes for
-  syntax highlighting if desired."
-  #'formatter-dispatch)
-
-
-(defn- unknown-document
+(defn format-unknown
   "Renders common syntax doc for an unknown representation of a value."
-  ([value]
-   (unknown-document value (str value)))
-  ([value repr]
-   (unknown-document value (.getName (class value)) repr))
-  ([value tag repr]
-   (illegal-when-strict! value)
-   (case (:print-fallback *options*)
-     :print [:span (pr-str value)]
-     [:span
-      (color-doc *options* :class-delimiter "#<")
-      (color-doc *options* :class-name tag)
-      (color-doc *options* :class-delimiter "@")
-      (system-id value)
-      " "
-      repr
-      (color-doc *options* :class-delimiter ">")])))
+  ([printer value]
+   (format-unknown printer value (str value)))
+  ([printer value repr]
+   (format-unknown printer value (.getName (class value)) repr))
+  ([printer value tag repr]
+   [:span
+    (color-doc printer :class-delimiter "#<")
+    (color-doc printer :class-name tag)
+    (color-doc printer :class-delimiter "@")
+    (system-id value)
+    " "
+    repr
+    (color-doc printer :class-delimiter ">")]))
+
+
+(defn format-doc
+  "Recursively renders a print document for the given value."
+  [printer value]
+  (if-let [metadata (meta value)]
+    (fv/visit-meta printer metadata value)
+    (let [lookup (:print-handlers printer)
+          handler (and lookup (lookup (class value)))]
+      (if handler
+        (handler printer value)
+        (fv/visit* printer value)))))
 
 
 
@@ -326,8 +305,8 @@
     [this value]
     (let [elements (if (symbol? (first value))
                      (cons (color-doc this :function-symbol (str (first value)))
-                           (map (partial fv/visit this) (rest value)))
-                     (map (partial fv/visit this) value))]
+                           (map (partial format-doc this) (rest value)))
+                     (map (partial format-doc this) value))]
       [:group
        (color-doc this :delimiter "(")
        [:align (interpose :line elements)]
@@ -337,7 +316,7 @@
     [this value]
     [:group
      (color-doc this :delimiter "[")
-     [:align (interpose :line (map (partial fv/visit this) value))]
+     [:align (interpose :line (map (partial format-doc this) value))]
      (color-doc this :delimiter "]")])
 
   (visit-set
@@ -345,7 +324,7 @@
     (let [entries (order-collection sort-mode value (partial sort order/rank))]
       [:group
        (color-doc this :delimiter "#{")
-       [:align (interpose :line (map (partial fv/visit this) entries))]
+       [:align (interpose :line (map (partial format-doc this) entries))]
        (color-doc this :delimiter "}")]))
 
   (visit-map
@@ -353,11 +332,11 @@
     (let [ks (order-collection sort-mode value (partial sort-by first order/rank))
           entries (map (fn [[k v]]
                          [:span
-                          (fv/visit this k)
+                          (format-doc this k)
                           (if (coll? v)
                             map-coll-separator
                             " ")
-                          (fv/visit this v)])
+                          (format-doc this v)])
                        ks)]
       [:group
        (color-doc this :delimiter "{")
@@ -371,23 +350,19 @@
     [this metadata value]
     (if print-meta
       [:align
-       [:span (color-doc this :delimiter "^") (fv/visit this metadata)]
-       :line (fv/visit* this value)]
-      (fv/visit* this value)))
+       [:span (color-doc this :delimiter "^") (format-doc this metadata)]
+       :line (format-doc this (with-meta value nil))]
+      (format-doc this (with-meta value nil))))
 
   (visit-var
     [this value]
-    (illegal-when-strict! value)
-    [:span
-     (color-doc this :delimiter "#'")
-     (color-doc this :symbol (subs (str value) 2))])
+    ; Defer to unknown, cover with handler.
+    (fv/visit-unknown this value))
 
   (visit-pattern
     [this value]
-    (illegal-when-strict! value)
-    [:span
-     (color-doc this :delimiter "#")
-     (color-doc this :string (str \" value \"))])
+    ; Defer to unknown, cover with handler.
+    (fv/visit-unknown this value))
 
 
   ; Special Types
@@ -398,11 +373,25 @@
       [:span
        (color-doc this :tag (str "#" (:tag value)))
        " "
-       (fv/visit this (:form value))]))
+       (format-doc this (:form value))]))
 
   (visit-unknown
     [this value]
-    (unknown-document value)))
+    (cond
+      (= :pretty print-fallback)
+        (format-unknown this value)
+      (= :print print-fallback)
+        [:span (pr-str value)]
+      (= :error print-fallback)
+        (throw (IllegalArgumentException.
+                 (str "No defined representation for " (class value) ": "
+                      (pr-str value))))
+      (ifn? print-fallback)
+        (print-fallback this value)
+      :else
+        (throw (IllegalStateException.
+                 (str "Unsupported value for print-fallback: "
+                      (pr-str value))))))
 
 
 
@@ -421,7 +410,7 @@
   [printer value]
   (binding [*print-meta* false]
     (fe/pprint-document
-      (fv/visit printer value)
+      (format-doc printer value)
       {:width (:width printer)})))
 
 
