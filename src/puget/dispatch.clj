@@ -50,8 +50,8 @@
   "Returns the ancestry of the given class, starting with the class and
   excluding the `java.lang.Object` base class."
   [cls]
-  (take-while (partial not= Object)
-              (iterate #(.getSuperclass ^Class %) cls)))
+  (take-while #(and (some? %) (not= Object %))
+              (iterate #(when (class? %) (.getSuperclass ^Class %)) cls)))
 
 
 (defn- find-interfaces
