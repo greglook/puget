@@ -200,50 +200,6 @@
 
 
 
-;; ## Clojure Types
-
-
-(defmethod format-doc clojure.lang.IDeref
-  [value]
-  (unknown-document value (format-doc @value)))
-
-
-(defmethod format-doc clojure.lang.Atom
-  [value]
-  (unknown-document value "Atom" (format-doc @value)))
-
-
-(defmethod format-doc clojure.lang.IPending
-  [value]
-  (let [doc (if (realized? value)
-              (format-doc @value)
-              (color-doc *options* :nil "pending"))]
-    (unknown-document value doc)))
-
-
-(defmethod format-doc clojure.lang.Delay
-  [value]
-  (let [doc (if (realized? value)
-              (format-doc @value)
-              (color-doc *options* :nil "pending"))]
-    (unknown-document value "Delay" doc)))
-
-
-(defmethod format-doc java.util.concurrent.Future
-  [value]
-  (let [doc (if (future-done? value)
-              (format-doc @value)
-              (color-doc *options* :nil "pending"))]
-    (unknown-document value "Future" doc)))
-
-
-(prefer-method format-doc clojure.lang.ISeq clojure.lang.IPending)
-(prefer-method format-doc clojure.lang.IPending clojure.lang.IDeref)
-(prefer-method format-doc java.util.concurrent.Future clojure.lang.IDeref)
-(prefer-method format-doc java.util.concurrent.Future clojure.lang.IPending)
-
-
-
 ;; ## Printer Definition
 
 (defrecord PugetPrinter
@@ -383,6 +339,88 @@
         (throw (IllegalStateException.
                  (str "Unsupported value for print-fallback: "
                       (pr-str value))))))
+
+
+
+;; ## Clojure Type Handlers
+
+(fn tagged-handler
+  "Generates a handler function which renders a tagged-literal with the given
+  tag and a value produced by calling the function."
+  [tag value-fn]
+  (fn handler
+    [printer value]
+    (format-doc printer (tagged-literal tag (value-fn value)))))
+
+
+(def clojure-handlers
+  "Map of common handlers for enhanced Clojure syntax."
+  {clojure.lang.Var
+   (fn var-handler
+     [printer value]
+     [:span
+      (color-doc printer :delimiter "#'")
+      (color-doc printer :symbol (subs (str value) 2))])
+
+   java.util.regex.Pattern
+   (fn pattern-handler
+     [printer value]
+     [:span
+      (color-doc printer :delimiter "#")
+      (color-doc printer :string (str \" value \"))])
+
+   clojure.lang.IDeref
+   (fn deref-handler
+     [printer value]
+     (format-unknown printer value (format-doc printer @value)))
+
+   clojure.lang.Atom
+   (fn atom-handler
+     [printer value]
+     (format-unknown printer value "Atom" (format-doc printer @value)))
+
+   clojure.lang.IPending
+   (fn pending-handler
+     [printer value]
+     (let [doc (if (realized? value)
+                 (format-doc printer @value)
+                 (color-doc printer :nil "pending"))]
+    (format-unknown printer value doc)))
+
+   clojure.lang.Delay
+   (fn delay-handler
+     [printer value]
+     (let [doc (if (realized? value)
+                 (format-doc printer @value)
+                 (color-doc printer :nil "pending"))]
+       (format-unknown printer value "Delay" doc)))
+
+   java.util.concurrent.Future
+   (fn future-handler
+     [printer value]
+     (let [doc (if (future-done? value)
+                 (format-doc printer @value)
+                 (color-doc printer :nil "pending"))]
+    (format-unknown printer value "Future" doc)))
+
+   java.util.Date
+   (tagged-handler 'inst
+     #(-> "yyyy-MM-dd'T'HH:mm:ss.SSS-00:00"
+          java.text.SimpleDateFormat.
+          (doto (.setTimeZone (java.util.TimeZone/getTimeZone "GMT")))
+          (.format ^java.util.Date %)))
+
+   java.util.UUID
+   (tagged-handler 'uuid str)
+   })
+
+
+(comment
+  "Need to add a dispatch helper to do an in-order lookup?"
+  (prefer-method format-doc clojure.lang.ISeq clojure.lang.IPending)
+  (prefer-method format-doc clojure.lang.IPending clojure.lang.IDeref)
+  (prefer-method format-doc java.util.concurrent.Future clojure.lang.IDeref)
+  (prefer-method format-doc java.util.concurrent.Future clojure.lang.IPending))
 
 
 
