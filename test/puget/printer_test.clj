@@ -127,12 +127,16 @@
       (is (re-seq #"#<java\.util\.Currency@[0-9a-f]+ USD>" (pprint-str usd)))
       (with-options {:print-fallback :print}
         (is (re-seq #"#object\[java\.util\.Currency 0x[0-9a-f]+ \"USD\"\]" (pprint-str usd))))))
-  (testing "Escaped types"
+  (testing "Handled types"
     (let [cv (ComplexValue.)]
       (with-options {:print-handlers {ComplexValue (tagged-handler 'complex/val str)}}
         (is (= "#complex/val \"to-string\"" (pprint-str cv))))
       (with-options {:print-fallback :print}
-        (is (= "{{ complex value print }}" (pprint-str cv)))))))
+        (is (= "{{ complex value print }}" (pprint-str cv))))
+      (with-options {:print-fallback (constantly [:span "custom-fn"])}
+        (is (= "custom-fn" (pprint-str cv))))
+      (with-options {:print-fallback "some other type"}
+        (is (thrown? IllegalStateException (pprint-str cv)))))))
 
 
 (deftest metadata-printing
