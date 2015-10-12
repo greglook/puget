@@ -417,7 +417,7 @@
        (map->PugetPrinter)))
 
 
-(defn render
+(defn render-to-out
   "Prints a value using the given printer."
   [printer value]
   (binding [*print-meta* false]
@@ -432,7 +432,7 @@
   ([value]
    (pprint value nil))
   ([value opts]
-   (render (->printer opts) value)))
+   (render-to-out (->printer opts) value)))
 
 
 (defn pprint-str
