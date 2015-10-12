@@ -137,27 +137,6 @@
 
 
 
-;; ## Utility Functions
-
-(defn- system-id
-  "Returns the system id for the object as a hex string."
-  [obj]
-  (Integer/toHexString (System/identityHashCode obj)))
-
-
-(defn- order-collection
-  "Takes a sequence of entries and checks the `:sort-keys` option to determine
-  whether to sort them. Returns an appropriately ordered sequence."
-  [mode value sort-fn]
-  (if (or (true? mode)
-          (and (number? mode)
-               (counted? value)
-               (>= mode (count value))))
-    (sort-fn value)
-    (seq value)))
-
-
-
 ;; ## Coloring Functions
 
 (defn- color-doc
@@ -177,7 +156,19 @@
 
 
 
-;; ## Formatting Multimethod
+;; ## Formatting Methods
+
+(defn order-collection
+  "Takes a sequence of entries and checks the `:sort-keys` option to determine
+  whether to sort them. Returns an appropriately ordered sequence."
+  [mode value sort-fn]
+  (if (or (true? mode)
+          (and (number? mode)
+               (counted? value)
+               (>= mode (count value))))
+    (sort-fn value)
+    (seq value)))
+
 
 (defn format-unknown
   "Renders common syntax doc for an unknown representation of a value."
@@ -190,7 +181,7 @@
     (color-doc printer :class-delimiter "#<")
     (color-doc printer :class-name tag)
     (color-doc printer :class-delimiter "@")
-    (system-id value)
+    (Integer/toHexString (System/identityHashCode value))
     " "
     repr
     (color-doc printer :class-delimiter ">")]))
