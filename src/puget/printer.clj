@@ -436,7 +436,7 @@
        (map->PugetPrinter)))
 
 
-(defn render-to-out
+(defn render-out
   "Prints a value using the given printer."
   [printer value]
   (binding [*print-meta* false]
@@ -445,13 +445,21 @@
       {:width (:width printer)})))
 
 
+(defn render-str
+  "Renders a value to a string using the given printer."
+  [printer value]
+  (-> (render-out printer value)
+      (with-out-str)
+      (str/trim-newline)))
+
+
 (defn pprint
   "Pretty-prints a value to *out*. Options may be passed to override the
   default *options* map."
   ([value]
    (pprint value nil))
   ([value opts]
-   (render-to-out (->printer opts) value)))
+   (render-out (->printer opts) value)))
 
 
 (defn pprint-str
@@ -459,10 +467,7 @@
   ([value]
    (pprint-str value nil))
   ([value opts]
-   (-> value
-       (pprint opts)
-       with-out-str
-       str/trim-newline)))
+   (render-str (->printer opts) value)))
 
 
 (defn cprint
