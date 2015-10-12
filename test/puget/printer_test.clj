@@ -2,9 +2,7 @@
   (:require
     [clojure.string :as str]
     [clojure.test :refer :all]
-    (puget
-      [data :as data]
-      [printer :refer :all])))
+    [puget.printer :refer :all]))
 
 
 (defn- should-fail-when-strict
@@ -48,10 +46,10 @@
 
 (deftest unsorted-keys
   (testing "Unsorted collection keys"
-    (with-options {:sort-keys false}
+    (with-options {:sort-mode false}
       (is (= "#{:zeta :book}" (pprint-str (set [:zeta :book]))))
       (is (= "{:9 x, :2 y}" (pprint-str (array-map :9 'x, :2 'y)))))
-    (with-options {:sort-keys 2}
+    (with-options {:sort-mode 2}
       (is (= "{:a 1, :b 0}" (pprint-str (array-map :b 0 :a 1))))
       (is (= "{:z 2, :a 5, :m 8}" (pprint-str (array-map :z 2 :a 5 :m 8)))))))
 
@@ -128,8 +126,6 @@
 (defmethod print-method ComplexValue
   [this w]
   (.write w "{{ complex value print }}"))
-
-(data/extend-tagged-str ComplexValue 'complex/val)
 
 
 (deftest default-formatting

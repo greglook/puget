@@ -338,13 +338,13 @@
       :else
         (throw (IllegalStateException.
                  (str "Unsupported value for print-fallback: "
-                      (pr-str value))))))
+                      (pr-str value)))))))
 
 
 
 ;; ## Clojure Type Handlers
 
-(fn tagged-handler
+(defn tagged-handler
   "Generates a handler function which renders a tagged-literal with the given
   tag and a value produced by calling the function."
   [tag value-fn]
