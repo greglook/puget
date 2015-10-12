@@ -2,12 +2,13 @@
   (:require
     [clojure.string :as str]
     [clojure.test :refer :all]
+    [puget.dispatch :as dispatch]
     [puget.printer :refer :all]))
 
 
 (defn- should-fail-when-strict
   [value]
-  (with-options {:strict true}
+  (with-options {:print-handlers nil, :print-fallback :error}
     (is (thrown? IllegalArgumentException (pprint value))
         "should not print non-EDN representation")))
 
@@ -59,14 +60,9 @@
 (deftest formatting-records
   (testing "Records"
     (let [r (->TestRecord \x \y)]
-      (should-fail-when-strict r)
       (is (= "#puget.printer_test.TestRecord {:bar \\y, :foo \\x}\n"
              (with-out-str (pprint r)))))))
 
-
-(deftype ADeref []
-  clojure.lang.IDeref
-  (deref [this] 123))
 
 (deftype APending [is-realized]
   clojure.lang.IDeref
@@ -75,48 +71,44 @@
   (isRealized [this] is-realized))
 
 (deftest clojure-types
-  (testing "seq"
-    (is (= "()" (pprint-str (lazy-seq)))))
-  (testing "regex"
-    (let [v #"\d+"]
-      (should-fail-when-strict v)
-      (is (= "#\"\\d+\"" (pprint-str v)))))
-  (testing "vars"
-    (let [v #'*options*]
-      (should-fail-when-strict v)
-      (is (= "#'puget.printer/*options*"
-             (pprint-str v)))))
-  (testing "atom"
-    (let [v (atom :foo)]
-      (should-fail-when-strict v)
-      (is (re-seq #"#<Atom@[0-9a-f]+ :foo>" (pprint-str v)))))
-  (testing "delay"
-    (let [v (delay (+ 8 14))]
-      (should-fail-when-strict v)
-      (is (re-seq #"#<Delay@[0-9a-f]+ pending>" (pprint-str v)))
-      (is (= 22 @v))
-      (is (re-seq #"#<Delay@[0-9a-f]+ 22>" (pprint-str v)))))
-  (testing "future"
-    (let [v (future (do (Thread/sleep 100) :done))]
-      (should-fail-when-strict v)
-      (is (re-seq #"#<Future@[0-9a-f]+ pending>" (pprint-str v)))
-      (is (= :done @v))
-      (is (re-seq #"#<Future@[0-9a-f]+ :done>" (pprint-str v)))))
-  (testing "custom IDeref"
-    (let [v (ADeref.)]
-      (should-fail-when-strict v)
-      (is (re-seq #"#<puget.printer_test.ADeref@[0-9a-f]+ 123>"
-                  (pprint-str v)))))
-  (testing "custom IPending, realized"
-    (let [v (->APending true)]
-      (should-fail-when-strict v)
-      (is (re-seq #"#<puget.printer_test.APending@[0-9a-f]+ 1"
-                  (pprint-str v)))))
-  (testing "custom IPending, not realized"
-    (let [v (->APending false)]
-      (should-fail-when-strict v)
-      (is (re-seq #"#<puget.printer_test.APending@[0-9a-f]+ pending"
-                  (pprint-str v))))))
+  (with-options {:print-handlers common-handlers}
+    (testing "seq"
+      (is (= "()" (pprint-str (list)))))
+    (testing "regex"
+      (let [v #"\d+"]
+        (should-fail-when-strict v)
+        (is (= "#\"\\d+\"" (pprint-str v)))))
+    (testing "vars"
+      (let [v #'*options*]
+        (should-fail-when-strict v)
+        (is (= "#'puget.printer/*options*"
+               (pprint-str v)))))
+    (testing "atom"
+      (let [v (atom :foo)]
+        (should-fail-when-strict v)
+        (is (re-seq #"#<Atom@[0-9a-f]+ :foo>" (pprint-str v)))))
+    (testing "delay"
+      (let [v (delay (+ 8 14))]
+        (should-fail-when-strict v)
+        (is (re-seq #"#<Delay@[0-9a-f]+ pending>" (pprint-str v)))
+        (is (= 22 @v))
+        (is (re-seq #"#<Delay@[0-9a-f]+ 22>" (pprint-str v)))))
+    (testing "future"
+      (let [v (future (do (Thread/sleep 100) :done))]
+        (should-fail-when-strict v)
+        (is (re-seq #"#<Future@[0-9a-f]+ pending>" (pprint-str v)))
+        (is (= :done @v))
+        (is (re-seq #"#<Future@[0-9a-f]+ :done>" (pprint-str v)))))
+    (testing "custom IPending, realized"
+      (let [v (->APending true)]
+        (should-fail-when-strict v)
+        (is (re-seq #"#<puget.printer_test.APending@[0-9a-f]+ 1"
+                    (pprint-str v)))))
+    (testing "custom IPending, not realized"
+      (let [v (->APending false)]
+        (should-fail-when-strict v)
+        (is (re-seq #"#<puget.printer_test.APending@[0-9a-f]+ pending"
+                    (pprint-str v)))))))
 
 
 (deftype ComplexValue []
@@ -134,15 +126,12 @@
       (should-fail-when-strict usd)
       (is (re-seq #"#<java\.util\.Currency@[0-9a-f]+ USD>" (pprint-str usd)))
       (with-options {:print-fallback :print}
-        (is (= "#<Currency USD>" (pprint-str usd))))))
+        (is (re-seq #"#object\[java\.util\.Currency 0x[0-9a-f]+ \"USD\"\]" (pprint-str usd))))))
   (testing "Escaped types"
     (let [cv (ComplexValue.)]
-      (with-options {:escape-types nil}
+      (with-options {:print-handlers {ComplexValue (tagged-handler 'complex/val str)}}
         (is (= "#complex/val \"to-string\"" (pprint-str cv))))
-      (with-options {:escape-types #{'puget.printer_test.ComplexValue}}
-        (is (re-seq #"#<puget\.printer_test\.ComplexValue@[0-9a-f]+ to-string>" (pprint-str cv))))
-      (with-options {:escape-types #{'puget.printer_test.ComplexValue}
-                     :print-fallback :print}
+      (with-options {:print-fallback :print}
         (is (= "{{ complex value print }}" (pprint-str cv)))))))
 
 

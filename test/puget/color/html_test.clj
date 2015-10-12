@@ -77,9 +77,11 @@
          "<span class=\"delimiter\">}</span>")]
     (is (= inline-ref
            (printer/cprint-str test-data {:color-markup :html-inline
-                                          :color-scheme test-color-scheme})))
+                                          :color-scheme test-color-scheme
+                                          :print-handlers printer/java-handlers})))
     (is (= classes-ref
-           (printer/cprint-str test-data {:color-markup :html-classes}))))
+           (printer/cprint-str test-data {:color-markup :html-classes
+                                          :print-handlers printer/java-handlers}))))
   (testing "color-text"
     (testing "no color markup"
       (is (= ":inline>"
