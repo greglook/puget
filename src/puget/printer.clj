@@ -187,16 +187,22 @@
     (color-doc printer :class-delimiter ">")]))
 
 
+(defn format-doc*
+  "Formats a document without considering metadata."
+  [printer value]
+  (let [lookup (:print-handlers printer)
+        handler (and lookup (lookup (class value)))]
+    (if handler
+      (handler printer value)
+      (fv/visit* printer value))))
+
+
 (defn format-doc
   "Recursively renders a print document for the given value."
   [printer value]
   (if-let [metadata (meta value)]
     (fv/visit-meta printer metadata value)
-    (let [lookup (:print-handlers printer)
-          handler (and lookup (lookup (class value)))]
-      (if handler
-        (handler printer value)
-        (fv/visit* printer value)))))
+    (format-doc* printer value)))
 
 
 
@@ -298,8 +304,8 @@
     (if print-meta
       [:align
        [:span (color-doc this :delimiter "^") (format-doc this metadata)]
-       :line (format-doc this (with-meta value nil))]
-      (format-doc this (with-meta value nil))))
+       :line (format-doc* this value)]
+      (format-doc* this value)))
 
   (visit-var
     [this value]
