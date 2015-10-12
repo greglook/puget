@@ -77,6 +77,7 @@
     [clojure.string :as str]
     [fipp.engine :as fe]
     [fipp.visit :as fv]
+    [puget.dispatch :as dispatch]
     [puget.color :as color]
     (puget.color ansi html)))
 
@@ -359,6 +360,34 @@
     (format-doc printer (tagged-literal tag (value-fn value)))))
 
 
+(def java-handlers
+  "Map of common handlers for Java types."
+  {java.util.regex.Pattern
+   (fn pattern-handler
+     [printer value]
+     [:span
+      (color-doc printer :delimiter "#")
+      (color-doc printer :string (str \" value \"))])
+
+   java.util.concurrent.Future
+   (fn future-handler
+     [printer value]
+     (let [doc (if (future-done? value)
+                 (format-doc printer @value)
+                 (color-doc printer :nil "pending"))]
+    (format-unknown printer value "Future" doc)))
+
+   java.util.Date
+   (tagged-handler 'inst
+     #(-> "yyyy-MM-dd'T'HH:mm:ss.SSS-00:00"
+          java.text.SimpleDateFormat.
+          (doto (.setTimeZone (java.util.TimeZone/getTimeZone "GMT")))
+          (.format ^java.util.Date %)))
+
+   java.util.UUID
+   (tagged-handler 'uuid str)})
+
+
 (def clojure-handlers
   "Map of common handlers for enhanced Clojure syntax."
   {clojure.lang.Var
@@ -367,18 +396,6 @@
      [:span
       (color-doc printer :delimiter "#'")
       (color-doc printer :symbol (subs (str value) 2))])
-
-   java.util.regex.Pattern
-   (fn pattern-handler
-     [printer value]
-     [:span
-      (color-doc printer :delimiter "#")
-      (color-doc printer :string (str \" value \"))])
-
-   clojure.lang.IDeref
-   (fn deref-handler
-     [printer value]
-     (format-unknown printer value (format-doc printer @value)))
 
    clojure.lang.Atom
    (fn atom-handler
@@ -399,26 +416,13 @@
      (let [doc (if (realized? value)
                  (format-doc printer @value)
                  (color-doc printer :nil "pending"))]
-       (format-unknown printer value "Delay" doc)))
+       (format-unknown printer value "Delay" doc)))})
 
-   java.util.concurrent.Future
-   (fn future-handler
-     [printer value]
-     (let [doc (if (future-done? value)
-                 (format-doc printer @value)
-                 (color-doc printer :nil "pending"))]
-    (format-unknown printer value "Future" doc)))
 
-   java.util.Date
-   (tagged-handler 'inst
-     #(-> "yyyy-MM-dd'T'HH:mm:ss.SSS-00:00"
-          java.text.SimpleDateFormat.
-          (doto (.setTimeZone (java.util.TimeZone/getTimeZone "GMT")))
-          (.format ^java.util.Date %)))
-
-   java.util.UUID
-   (tagged-handler 'uuid str)
-   })
+(def common-handlers
+  (dispatch/chained-lookup
+    (dispatch/inheritance-lookup java-handlers)
+    (dispatch/inheritance-lookup clojure-handlers)))
 
 
 (comment
