@@ -1,6 +1,6 @@
 (ns puget.printer
-  "Functions for canonical colored printing of EDN values. The following options
-  are available to control the printer rendering:
+  "Enhanced printing functions for rendering Clojure values. The following
+  options are available to control the printer:
 
   #### General Rendering
 
@@ -34,7 +34,7 @@
   `:print-handlers`
 
   A lookup function which will return a rendering function for a given class
-  type. This will be tried for unknown (non-builtin) types. See the
+  type. This will be tried before the built-in type logic. See the
   `puget.dispatch` namespace for some helpful constructors. The returned
   function should accept the current printer and the value to be rendered,
   returning a format document.
@@ -44,8 +44,7 @@
   Keyword argument specifying how to format unknown values. Puget supports a few
   different options:
 
-  - `:pretty` renders values with the default colored representation. Common
-    Clojure types are supported.
+  - `:pretty` renders values with the default colored representation.
   - `:print` defers to the standard print method by rendering unknown values
     using `pr-str`.
   - `:error` will throw an exception when types with no defined handler are
