@@ -43,8 +43,9 @@ function always prints with colored output enabled:
 The `:color-markup` option defaults to `:ansi`, but can be set to `:html-inline`
 or `:html-classes` to use HTML `span` elements for color markup:
 
+- `:ansi` uses ANSI escape codes to color text in a terminal.
 - `:html-inline` uses inline styles to apply style attributes directly to
-  each `span`'s content based on the `:color-scheme`;
+  each `span`'s content based on the `:color-scheme`.
 - `:html-classes` sets the `class` of each `span` based on its syntax element
   type (e.g., "delimiter", "keyword", "number") to allow the style for its
   content be specified elsewhere via CSS.
@@ -82,7 +83,7 @@ library also offers the `CanonicalPrinter` for serializing data in a stricter
 #<java.util.Currency@4cc4ee24 USD>
 
 => (puget/render-out (puget/canonical-printer) usd)
-;; IllegalArgumentException: No defined representation for class java.util.Currency: USD
+; IllegalArgumentException: No defined representation for class java.util.Currency: USD
 ```
 
 ## Type Extensions
@@ -104,14 +105,16 @@ As an example, extending `#inst` formatting to clj-time's `DateTime`:
 
 ```clojure
 => (require '[clj-time.core :as t]
-            '[clj-time.format :as f]
-            '[puget.dispatch :as dispatch])
+            '[clj-time.format :as f])
 
 => (puget/pprint (t/now))
 #<org.joda.time.DateTime 2014-05-14T00:58:40.922Z>
 
 => (def time-handlers
-     {org.joda.time.DateTime (puget/tagged-handler 'inst (partial f/unparse (f/formatters :date-time)))}})
+     {org.joda.time.DateTime
+      (puget/tagged-handler
+        'inst
+        (partial f/unparse (f/formatters :date-time)))}})
 #'user/time-handlers
 
 => (puget/pprint (t/now) {:print-handlers time-handlers})
