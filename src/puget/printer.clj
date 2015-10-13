@@ -205,13 +205,109 @@
 
 
 
-;; ## Printer Definition
+;; ## Canonical Printer Definition
 
-(defrecord PugetPrinter
+(defrecord CanonicalPrinter
+  [print-handlers]
+
+  fv/IVisitor
+
+  ; Primitive Types
+
+  (visit-nil
+    [this]
+    "nil")
+
+  (visit-boolean
+    [this value]
+    (str value))
+
+  (visit-number
+    [this value]
+    (pr-str value))
+
+  (visit-character
+    [this value]
+    (pr-str value))
+
+  (visit-string
+    [this value]
+    (pr-str value))
+
+  (visit-keyword
+    [this value]
+    (str value))
+
+  (visit-symbol
+    [this value]
+    (str value))
+
+
+  ; Collection Types
+
+  (visit-seq
+    [this value]
+    (let [entries (map (partial format-doc this) value)]
+      [:group "(" [:align (interpose " " entries)] ")"]))
+
+  (visit-vector
+    [this value]
+    (let [entries (map (partial format-doc this) value)]
+      [:group "[" [:align (interpose " " entries)] "]"]))
+
+  (visit-set
+    [this value]
+    (let [entries (map (partial format-doc this)
+                       (sort order/rank value))]
+      [:group "#{" [:align (interpose " " entries)] "}"]))
+
+  (visit-map
+    [this value]
+    (let [entries (map #(vector :span (format-doc this (key %))
+                                " "   (format-doc this (val %)))
+                       (sort-by first order/rank value))]
+      [:group "{" [:align (interpose " " entries)] "}"]))
+
+
+  ; Clojure Types
+
+  (visit-meta
+    [this metadata value]
+    ; Metadata is not printed for canonical rendering.
+    (format-doc* this value))
+
+  (visit-var
+    [this value]
+    ; Defer to unknown, cover with handler.
+    (fv/visit-unknown this value))
+
+  (visit-pattern
+    [this value]
+    ; Defer to unknown, cover with handler.
+    (fv/visit-unknown this value))
+
+
+  ; Special Types
+
+  (visit-tagged
+    [this value]
+    [:span (str "#" (:tag value)) " " (format-doc this (:form value))])
+
+  (visit-unknown
+    [this value]
+    (throw (IllegalArgumentException.
+             (str "No defined representation for " (class value) ": "
+                  (pr-str value))))))
+
+
+
+;; ## Pretty Printer Definition
+
+(defrecord PrettyPrinter
   [sort-mode
    map-delimiter
    map-coll-separator
-   escape-types
+   print-handlers
    print-fallback
    print-meta
    print-color
@@ -346,7 +442,7 @@
 
 
 
-;; ## Clojure Type Handlers
+;; ## Type Handlers
 
 (defn tagged-handler
   "Generates a handler function which renders a tagged-literal with the given
@@ -425,7 +521,17 @@
 
 ;; ## Printing Functions
 
-(defn ->printer
+(defn canonical-printer
+  "Constructs a new canonical printer with the given handler dispatch."
+  ([]
+   (canonical-printer nil))
+  ([handlers]
+   (map->CanonicalPrinter
+     {:width 0
+      :print-handlers handlers})))
+
+
+(defn pretty-printer
   "Constructs a new printer from the given configuration."
   [opts]
   (->> [{:print-meta *print-meta*
@@ -433,7 +539,7 @@
         *options*
         opts]
        (reduce merge-options)
-       (map->PugetPrinter)))
+       (map->PrettyPrinter)))
 
 
 (defn render-out
@@ -448,9 +554,9 @@
 (defn render-str
   "Renders a value to a string using the given printer."
   [printer value]
-  (-> (render-out printer value)
-      (with-out-str)
-      (str/trim-newline)))
+  (str/trim-newline
+    (with-out-str
+      (render-out printer value))))
 
 
 (defn pprint
@@ -459,7 +565,7 @@
   ([value]
    (pprint value nil))
   ([value opts]
-   (render-out (->printer opts) value)))
+   (render-out (pretty-printer opts) value)))
 
 
 (defn pprint-str
@@ -467,7 +573,7 @@
   ([value]
    (pprint-str value nil))
   ([value opts]
-   (render-str (->printer opts) value)))
+   (render-str (pretty-printer opts) value)))
 
 
 (defn cprint

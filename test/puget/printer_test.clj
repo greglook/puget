@@ -2,8 +2,11 @@
   (:require
     [clojure.string :as str]
     [clojure.test :refer :all]
-    [puget.dispatch :as dispatch]
     [puget.printer :refer :all]))
+
+
+(def canonical
+  (canonical-printer))
 
 
 (defn- should-fail-when-strict
@@ -15,7 +18,7 @@
 
 (deftest formatting-primitives
   (testing "Primitive values"
-    (are [v text] (= text (pprint-str v))
+    (are [v text] (= text (pprint-str v) (render-str canonical v))
       nil     "nil"
       true    "true"
       false   "false"
@@ -35,6 +38,12 @@
 
 (deftest formatting-collections
   (testing "Collections"
+    (are [v text] (= text (render-str canonical v))
+      '(foo :bar)           "(foo :bar)"
+      '(1 2 3)               "(1 2 3)"
+      [4 "five" 6.0]         "[4 \"five\" 6.0]"
+      {:foo 8 :bar 'baz}     "{:bar baz :foo 8}"
+      #{:omega :alpha :beta} "#{:alpha :beta :omega}")
     (are [v text] (= text (pprint-str v))
       '(foo :bar)            "(foo :bar)"
       '(1 2 3)               "(1 2 3)"
@@ -76,12 +85,16 @@
   (testing "regex"
     (let [v #"\d+"]
       (should-fail-when-strict v)
-      (is (= "#\"\\d+\"" (pprint-str v)))))
+      (is (= "#\"\\d+\"" (pprint-str v)))
+      (is (thrown? IllegalArgumentException
+                   (render-str canonical v)))))
   (testing "vars"
     (let [v #'*options*]
       (should-fail-when-strict v)
       (is (= "#'puget.printer/*options*"
-             (pprint-str v)))))
+             (pprint-str v)))
+      (is (thrown? IllegalArgumentException
+                   (render-str canonical v)))))
   (testing "atom"
     (let [v (atom :foo)]
       (should-fail-when-strict v)
@@ -138,11 +151,18 @@
         (is (thrown? IllegalStateException (pprint-str cv)))))))
 
 
+(deftest handled-types
+  (is (= "#inst \"2015-10-12T05:23:08.000-00:00\""
+         (render-str (canonical-printer java-handlers)
+                     (java.util.Date. 1444627388000)))))
+
+
 (deftest metadata-printing
   (let [value ^:foo [:bar]]
     (binding [*print-meta* true]
       (is (= "^{:foo true}\n[:bar]" (pprint-str value)))
-      (is (= "[:bar]" (pprint-str value {:print-meta false}))))
+      (is (= "[:bar]" (pprint-str value {:print-meta false})))
+      (is (= "[:bar]" (render-str canonical value))))
     (binding [*print-meta* false]
       (is (= "^{:foo true}\n[:bar]" (pprint-str value {:print-meta true}))))))
 
