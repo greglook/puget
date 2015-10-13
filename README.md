@@ -26,6 +26,25 @@ Leiningen, add the following dependency to your project definition:
 
 See [Whidbey](https://github.com/greglook/whidbey) for nREPL and Leiningen integration.
 
+## Usage
+
+Puget's printing is controlled by a map of options which include print width,
+sorting mode, color scheme and style, whether to print metadata, and so on. The
+default options are held in the dynamic var `puget.printer/*options*`. This can
+be bound with the `with-options` macro for convenience.
+
+These options are used to construct a _printer_ object to render values with.
+You can create these manually with `pretty-printer` or `canonical-printer`, then
+use them with `render-out` or `render-str` for maximum control.
+
+These options are used to construct a printer record, which is either the
+`PrettyPrinter` or `CanonicalPrinter`. The printers can be used directly to
+render values with `render-out` or `render-str` if maximal repeatability is
+desired.
+
+Otherwise, the `pprint` and `pprint-str` functions will automatically create a
+`PrettyPrinter` using the dynamic options and any provided configuration.
+
 ## Syntax Coloring
 
 Puget's first main feature is colorizing the printed data using ANSI escape
@@ -119,19 +138,6 @@ while `:print` will fall back to the standard `pr-str`. Alternately, `:error`
 will throw an exception for types with no defined representation. Finally, a
 function may be provided which will be passed the current printer and the
 unknown value to render.
-
-## Further Customization
-
-Puget's printing is controlled by a map of options which include print width,
-sorting mode, color scheme and style, whether to print metadata, etc. The
-default options are held in the dynamic var `puget.printer/*options*`. This can
-be bound with the `with-options` macro for convenience, or a map can be passed
-directly into Puget's print functions to override the defaults.
-
-These options are used to construct a printer record, which is either the
-`PrettyPrinter` or `CanonicalPrinter`. The printers can be used directly to
-render values with `render-out` or `render-str` if maximal repeatability is
-desired.
 
 ## License
 
