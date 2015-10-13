@@ -1,12 +1,29 @@
 (ns puget.color
-  "This namespace defines multimethods to add color markup to text.")
+  "Coloring multimethods to format text by adding markup.
+
+  #### Color Options
+
+  `:print-color`
+
+  When true, ouptut colored text from print functions.
+
+  `:color-markup`
+
+  - `:ansi` for color terminal text (default)
+  - `:html-inline` for inline-styled html
+  - `:html-classes` for html with semantic classes
+
+  `:color-scheme`
+
+  Map of syntax element keywords to color codes.
+  ")
 
 ;; ## Coloring Multimethods
 
 (defn dispatch
   "Dispatches to coloring multimethods. Element should be a key from
   the color-scheme map."
-  [element text options]
+  [options element text]
   (when (:print-color options)
     (:color-markup options)))
 
@@ -31,10 +48,9 @@
 ;; text unaltered.
 
 (defmethod document nil
-  [element text options]
+  [options element text]
   text)
 
-
 (defmethod text nil
-  [element text options]
+  [options element text]
   text)

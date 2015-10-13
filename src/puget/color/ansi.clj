@@ -1,5 +1,8 @@
 (ns puget.color.ansi
-  "This namespace defines functions to apply ANSI color codes to text."
+  "Coloring implementation that applies ANSI color codes to text designed to be
+  output to a terminal.
+
+  Use with a `:color-markup` of `:ansi`."
   (:require
     [clojure.string :as str]
     [puget.color :as color]))
@@ -65,14 +68,14 @@
 
 
 (defmethod color/document :ansi
-  [element text options]
+  [options element text]
   (if-let [codes (-> options :color-scheme (get element) seq)]
     [:span [:pass (esc codes)] text [:pass (escape :none)]]
     text))
 
 
 (defmethod color/text :ansi
-  [element text options]
+  [options element text]
   (if-let [codes (-> options :color-scheme (get element) seq)]
     (str (esc codes) text (escape :none))
     text))

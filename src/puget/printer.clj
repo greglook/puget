@@ -69,7 +69,7 @@
 
   `:color-scheme`
 
-  Map of syntax element keywords to color codes. 
+  Map of syntax element keywords to color codes.
   "
   (:require
     [arrangement.core :as order]
@@ -135,23 +135,15 @@
      ~@body))
 
 
-
-;; ## Coloring Functions
-
-(defn- color-doc
-  "Constructs a text doc, which may be colored if `:print-color` is true.
-  Element should be a key from the color-scheme map."
-  [options element text]
-  (color/document element text options))
-
-
 (defn color-text
   "Produces text colored according to the active color scheme. This is mostly
   useful to clients which want to produce output which matches data printed by
   Puget, but which is not directly printed by the library. Note that this
   function still obeys the `:print-color` option."
-  [element text]
-  (color/text element text *options*))
+  ([element text]
+   (color-text *options* element text))
+  ([options element text]
+   (color/text options element text)))
 
 
 
@@ -177,13 +169,13 @@
    (format-unknown printer value (.getName (class value)) repr))
   ([printer value tag repr]
    [:span
-    (color-doc printer :class-delimiter "#<")
-    (color-doc printer :class-name tag)
-    (color-doc printer :class-delimiter "@")
+    (color/document printer :class-delimiter "#<")
+    (color/document printer :class-name tag)
+    (color/document printer :class-delimiter "@")
     (Integer/toHexString (System/identityHashCode value))
     " "
     repr
-    (color-doc printer :class-delimiter ">")]))
+    (color/document printer :class-delimiter ">")]))
 
 
 (defn format-doc*
@@ -320,31 +312,31 @@
 
   (visit-nil
     [this]
-    (color-doc this :nil "nil"))
+    (color/document this :nil "nil"))
 
   (visit-boolean
     [this value]
-    (color-doc this :boolean (str value)))
+    (color/document this :boolean (str value)))
 
   (visit-number
     [this value]
-    (color-doc this :number (pr-str value)))
+    (color/document this :number (pr-str value)))
 
   (visit-character
     [this value]
-    (color-doc this :character (pr-str value)))
+    (color/document this :character (pr-str value)))
 
   (visit-string
     [this value]
-    (color-doc this :string (pr-str value)))
+    (color/document this :string (pr-str value)))
 
   (visit-keyword
     [this value]
-    (color-doc this :keyword (str value)))
+    (color/document this :keyword (str value)))
 
   (visit-symbol
     [this value]
-    (color-doc this :symbol (str value)))
+    (color/document this :symbol (str value)))
 
 
   ; Collection Types
@@ -352,28 +344,28 @@
   (visit-seq
     [this value]
     (let [elements (if (symbol? (first value))
-                     (cons (color-doc this :function-symbol (str (first value)))
+                     (cons (color/document this :function-symbol (str (first value)))
                            (map (partial format-doc this) (rest value)))
                      (map (partial format-doc this) value))]
       [:group
-       (color-doc this :delimiter "(")
+       (color/document this :delimiter "(")
        [:align (interpose :line elements)]
-       (color-doc this :delimiter ")")]))
+       (color/document this :delimiter ")")]))
 
   (visit-vector
     [this value]
     [:group
-     (color-doc this :delimiter "[")
+     (color/document this :delimiter "[")
      [:align (interpose :line (map (partial format-doc this) value))]
-     (color-doc this :delimiter "]")])
+     (color/document this :delimiter "]")])
 
   (visit-set
     [this value]
     (let [entries (order-collection sort-mode value (partial sort order/rank))]
       [:group
-       (color-doc this :delimiter "#{")
+       (color/document this :delimiter "#{")
        [:align (interpose :line (map (partial format-doc this) entries))]
-       (color-doc this :delimiter "}")]))
+       (color/document this :delimiter "}")]))
 
   (visit-map
     [this value]
@@ -387,9 +379,9 @@
                           (format-doc this v)])
                        ks)]
       [:group
-       (color-doc this :delimiter "{")
+       (color/document this :delimiter "{")
        [:align (interpose [:span map-delimiter :line] entries)]
-       (color-doc this :delimiter "}")]))
+       (color/document this :delimiter "}")]))
 
 
   ; Clojure Types
@@ -398,7 +390,7 @@
     [this metadata value]
     (if print-meta
       [:align
-       [:span (color-doc this :delimiter "^") (format-doc this metadata)]
+       [:span (color/document this :delimiter "^") (format-doc this metadata)]
        :line (format-doc* this value)]
       (format-doc* this value)))
 
@@ -419,7 +411,7 @@
     [this value]
     (let [{:keys [tag form]} value]
       [:span
-       (color-doc this :tag (str "#" (:tag value)))
+       (color/document this :tag (str "#" (:tag value)))
        " "
        (format-doc this (:form value))]))
 
@@ -459,15 +451,15 @@
    (fn pattern-handler
      [printer value]
      [:span
-      (color-doc printer :delimiter "#")
-      (color-doc printer :string (str \" value \"))])
+      (color/document printer :delimiter "#")
+      (color/document printer :string (str \" value \"))])
 
    java.util.concurrent.Future
    (fn future-handler
      [printer value]
      (let [doc (if (future-done? value)
                  (format-doc printer @value)
-                 (color-doc printer :nil "pending"))]
+                 (color/document printer :nil "pending"))]
     (format-unknown printer value "Future" doc)))
 
    java.util.Date
@@ -487,8 +479,8 @@
    (fn var-handler
      [printer value]
      [:span
-      (color-doc printer :delimiter "#'")
-      (color-doc printer :symbol (subs (str value) 2))])
+      (color/document printer :delimiter "#'")
+      (color/document printer :symbol (subs (str value) 2))])
 
    clojure.lang.Atom
    (fn atom-handler
@@ -500,7 +492,7 @@
      [printer value]
      (let [doc (if (realized? value)
                  (format-doc printer @value)
-                 (color-doc printer :nil "pending"))]
+                 (color/document printer :nil "pending"))]
     (format-unknown printer value doc)))
 
    clojure.lang.Delay
@@ -508,7 +500,7 @@
      [printer value]
      (let [doc (if (realized? value)
                  (format-doc printer @value)
-                 (color-doc printer :nil "pending"))]
+                 (color/document printer :nil "pending"))]
        (format-unknown printer value "Delay" doc)))})
 
 
@@ -581,7 +573,7 @@
   ([value]
    (cprint value nil))
   ([value opts]
-   (with-color (pprint value opts))))
+   (pprint value (assoc opts :print-color true))))
 
 
 (defn cprint-str
@@ -589,4 +581,4 @@
   ([value]
    (cprint-str value nil))
   ([value opts]
-   (with-color (pprint-str value opts))))
+   (pprint-str value (assoc opts :print-color true))))
