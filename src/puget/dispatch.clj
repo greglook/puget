@@ -1,12 +1,10 @@
 (ns puget.dispatch
-  "This namespace contains functions for building _dispatch functions_ over
-  value types. This affords similar functionality as Clojure's protocols, but
-  operates over locally-constructed data structures rather than modifying a
-  global dispatch table.
+  "Dispatch functions take a `Class` argument and return the looked-up value.
+  This provides similar functionality to Clojure's protocols, but operates over
+  locally-constructed logic rather than using a global dispatch table.
 
-  A dispatch function takes a single argument of type `Class` and should return
-  the looked-up value. A simple example is a map from classes to values, which
-  can be used directly as a lookup function."
+  A simple example is a map from classes to values, which can be used directly
+  as a lookup function."
   (:require
     [clojure.string :as str]))
 
