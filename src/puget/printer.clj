@@ -1,19 +1,6 @@
 (ns puget.printer
-  "Functions for canonical colored printing of EDN values."
-  (:require
-    [clojure.string :as str]
-    [fipp.printer :as fipp]
-    (puget
-      [color :as color]
-      [data :as data]
-      [order :as order])
-    (puget.color ansi html)))
-
-
-;; ## Control Vars
-
-(def ^:dynamic *options*
-  "Printer control options.
+  "Enhanced printing functions for rendering Clojure values. The following
+  options are available to control the printer:
 
   #### General Rendering
 
@@ -23,10 +10,10 @@
 
   `:print-meta`
 
-  If true, metadata will be printed before values. If nil, defaults to the
-  value of `*print-meta*`.
+  If true, metadata will be printed before values. Defaults to the value of
+  `*print-meta*` if unset.
 
-  `:sort-keys`
+  `:sort-mode`
 
   Print maps and sets with ordered keys. Defaults to true, which will sort all
   collections. If a number, counted collections will be sorted up to the set
@@ -44,24 +31,27 @@
 
   #### Type Handling
 
+  `:print-handlers`
+
+  A lookup function which will return a rendering function for a given class
+  type. This will be tried before the built-in type logic. See the
+  `puget.dispatch` namespace for some helpful constructors. The returned
+  function should accept the current printer and the value to be rendered,
+  returning a format document.
+
   `:print-fallback`
 
-  Keyword argument specifying how to format unknown values. The keyword
-  `:print` will fall back to using `pr-str` rather than the default
-  pretty-printed representation.
+  Keyword argument specifying how to format unknown values. Puget supports a few
+  different options:
 
-  `:escape-types`
-
-  A set of symbols naming classes which should *not* be pretty-printed. Instead,
-  they will be rendered as unknown values. This can be useful for types which
-  define their own `print-method`, are extremely large nested structures, or
-  which Puget otherwise has trouble rendering.
-
-  `:strict`
-
-  If true, throw an exception if there is no canonical EDN representation for
-  a given value. This generally applies to any non-primitive value which does
-  not extend `ExtendedNotation` and is not a built-in collection.
+  - `:pretty` renders values with the default colored representation.
+  - `:print` defers to the standard print method by rendering unknown values
+    using `pr-str`.
+  - `:error` will throw an exception when types with no defined handler are
+    encountered.
+  - A function value will be called with the current printer options and the
+    unknown value and is expected to return a formatting document representing
+    it.
 
 
   #### Color Options
@@ -79,15 +69,27 @@
 
   `:color-scheme`
 
-  Map of syntax element keywords to ANSI color codes."
+  Map of syntax element keywords to color codes. 
+  "
+  (:require
+    [arrangement.core :as order]
+    [clojure.string :as str]
+    [fipp.engine :as fe]
+    [fipp.visit :as fv]
+    [puget.dispatch :as dispatch]
+    [puget.color :as color]
+    (puget.color ansi html)))
+
+
+;; ## Control Vars
+
+(def ^:dynamic *options*
+  "Default options to use when constructing new printers."
   {:width 80
-   :sort-keys true
-   :strict false
+   :sort-mode true
    :map-delimiter ","
    :map-coll-separator " "
-   :escape-types nil
-   :print-fallback nil
-   :print-meta nil
+   :print-fallback :pretty
    :print-color false
    :color-markup :ansi
    :color-scheme
@@ -115,7 +117,7 @@
   correctly."
   [a b]
   (let [colors (merge (:color-scheme a) (:color-scheme b))]
-    (-> a (merge b) (assoc :color-scheme colors))))
+    (assoc (merge a b) :color-scheme colors)))
 
 
 (defmacro with-options
@@ -134,44 +136,13 @@
 
 
 
-;; ## Utility Functions
-
-(defn- system-id
-  "Returns the system id for the object as a hex string."
-  [obj]
-  (Integer/toHexString (System/identityHashCode obj)))
-
-
-(defn- illegal-when-strict!
-  "Throws an exception if strict mode is enabled. The error indicates that the
-  given value has no EDN representation."
-  [value]
-  (when (:strict *options*)
-    (throw (IllegalArgumentException.
-             (str "No canonical EDN representation for " (class value) ": " value)))))
-
-
-(defn- order-collection
-  "Takes a sequence of entries and checks the `:sort-keys` option to determine
-  whether to sort them. Returns an appropriately ordered sequence."
-  [value sort-fn]
-  (let [mode (:sort-keys *options*)]
-    (if (or (true? mode)
-            (and (number? mode)
-                 (counted? value)
-                 (>= mode (count value))))
-      (sort-fn value)
-      (seq value))))
-
-
-
 ;; ## Coloring Functions
 
 (defn- color-doc
   "Constructs a text doc, which may be colored if `:print-color` is true.
   Element should be a key from the color-scheme map."
-  [element text]
-  (color/document element text *options*))
+  [options element text]
+  (color/document element text options))
 
 
 (defn color-text
@@ -184,236 +155,303 @@
 
 
 
-;; ## Formatting Multimethod
+;; ## Formatting Methods
 
-(defn- formatter-dispatch
-  "Dispatches the method to use for value formatting. Any types in the
-  `:escape-types` set use the default formatter; values which use extended
-  notation are rendered as tagged literals; others are dispatched on their
-  `type`."
-  [value]
-  (let [class-sym (some-> value class .getName symbol)]
-    (cond
-      (contains? (:escape-types *options*) class-sym)
-        :default
-
-      (satisfies? data/ExtendedNotation value)
-        ::tagged-literal
-
-      :else (type value))))
+(defn order-collection
+  "Takes a sequence of entries and checks the `:sort-keys` option to determine
+  whether to sort them. Returns an appropriately ordered sequence."
+  [mode value sort-fn]
+  (if (or (true? mode)
+          (and (number? mode)
+               (counted? value)
+               (>= mode (count value))))
+    (sort-fn value)
+    (seq value)))
 
 
-(defmulti format-doc
-  "Converts the given value into a 'canonical' structured document, suitable
-  for printing with fipp. This method also supports ANSI color escapes for
-  syntax highlighting if desired."
-  #'formatter-dispatch)
-
-
-(defn- canonical-document
-  "Constructs a complete canonical print document for the given value."
-  [value]
-  (let [print-meta? (if (nil? (:print-meta *options*))
-                      *print-meta*
-                      (:print-meta *options*))]
-    (if-let [metadata (and print-meta? (meta value))]
-      [:align
-       [:span (color-doc :delimiter "^") (format-doc metadata)]
-       :line (format-doc value)]
-      (format-doc value))))
-
-
-(defn- unknown-document
+(defn format-unknown
   "Renders common syntax doc for an unknown representation of a value."
-  ([value]
-   (unknown-document value (str value)))
-  ([value repr]
-   (unknown-document value (.getName (class value)) repr))
-  ([value tag repr]
-   (illegal-when-strict! value)
-   (case (:print-fallback *options*)
-     :print [:span (pr-str value)]
+  ([printer value]
+   (format-unknown printer value (str value)))
+  ([printer value repr]
+   (format-unknown printer value (.getName (class value)) repr))
+  ([printer value tag repr]
+   [:span
+    (color-doc printer :class-delimiter "#<")
+    (color-doc printer :class-name tag)
+    (color-doc printer :class-delimiter "@")
+    (Integer/toHexString (System/identityHashCode value))
+    " "
+    repr
+    (color-doc printer :class-delimiter ">")]))
+
+
+(defn format-doc*
+  "Formats a document without considering metadata."
+  [printer value]
+  (let [lookup (:print-handlers printer)
+        handler (and lookup (lookup (class value)))]
+    (if handler
+      (handler printer value)
+      (fv/visit* printer value))))
+
+
+(defn format-doc
+  "Recursively renders a print document for the given value."
+  [printer value]
+  (if-let [metadata (meta value)]
+    (fv/visit-meta printer metadata value)
+    (format-doc* printer value)))
+
+
+
+;; ## Printer Definition
+
+(defrecord PugetPrinter
+  [sort-mode
+   map-delimiter
+   map-coll-separator
+   escape-types
+   print-fallback
+   print-meta
+   print-color
+   color-markup
+   color-scheme]
+
+  fv/IVisitor
+
+  ; Primitive Types
+
+  (visit-nil
+    [this]
+    (color-doc this :nil "nil"))
+
+  (visit-boolean
+    [this value]
+    (color-doc this :boolean (str value)))
+
+  (visit-number
+    [this value]
+    (color-doc this :number (pr-str value)))
+
+  (visit-character
+    [this value]
+    (color-doc this :character (pr-str value)))
+
+  (visit-string
+    [this value]
+    (color-doc this :string (pr-str value)))
+
+  (visit-keyword
+    [this value]
+    (color-doc this :keyword (str value)))
+
+  (visit-symbol
+    [this value]
+    (color-doc this :symbol (str value)))
+
+
+  ; Collection Types
+
+  (visit-seq
+    [this value]
+    (let [elements (if (symbol? (first value))
+                     (cons (color-doc this :function-symbol (str (first value)))
+                           (map (partial format-doc this) (rest value)))
+                     (map (partial format-doc this) value))]
+      [:group
+       (color-doc this :delimiter "(")
+       [:align (interpose :line elements)]
+       (color-doc this :delimiter ")")]))
+
+  (visit-vector
+    [this value]
+    [:group
+     (color-doc this :delimiter "[")
+     [:align (interpose :line (map (partial format-doc this) value))]
+     (color-doc this :delimiter "]")])
+
+  (visit-set
+    [this value]
+    (let [entries (order-collection sort-mode value (partial sort order/rank))]
+      [:group
+       (color-doc this :delimiter "#{")
+       [:align (interpose :line (map (partial format-doc this) entries))]
+       (color-doc this :delimiter "}")]))
+
+  (visit-map
+    [this value]
+    (let [ks (order-collection sort-mode value (partial sort-by first order/rank))
+          entries (map (fn [[k v]]
+                         [:span
+                          (format-doc this k)
+                          (if (coll? v)
+                            map-coll-separator
+                            " ")
+                          (format-doc this v)])
+                       ks)]
+      [:group
+       (color-doc this :delimiter "{")
+       [:align (interpose [:span map-delimiter :line] entries)]
+       (color-doc this :delimiter "}")]))
+
+
+  ; Clojure Types
+
+  (visit-meta
+    [this metadata value]
+    (if print-meta
+      [:align
+       [:span (color-doc this :delimiter "^") (format-doc this metadata)]
+       :line (format-doc* this value)]
+      (format-doc* this value)))
+
+  (visit-var
+    [this value]
+    ; Defer to unknown, cover with handler.
+    (fv/visit-unknown this value))
+
+  (visit-pattern
+    [this value]
+    ; Defer to unknown, cover with handler.
+    (fv/visit-unknown this value))
+
+
+  ; Special Types
+
+  (visit-tagged
+    [this value]
+    (let [{:keys [tag form]} value]
+      [:span
+       (color-doc this :tag (str "#" (:tag value)))
+       " "
+       (format-doc this (:form value))]))
+
+  (visit-unknown
+    [this value]
+    (case print-fallback
+      :pretty
+        (format-unknown this value)
+      :print
+        [:span (pr-str value)]
+      :error
+        (throw (IllegalArgumentException.
+                 (str "No defined representation for " (class value) ": "
+                      (pr-str value))))
+      (if (ifn? print-fallback)
+        (print-fallback this value)
+        (throw (IllegalStateException.
+                 (str "Unsupported value for print-fallback: "
+                      (pr-str print-fallback))))))))
+
+
+
+;; ## Clojure Type Handlers
+
+(defn tagged-handler
+  "Generates a handler function which renders a tagged-literal with the given
+  tag and a value produced by calling the function."
+  [tag value-fn]
+  (fn handler
+    [printer value]
+    (format-doc printer (tagged-literal tag (value-fn value)))))
+
+
+(def java-handlers
+  "Map of common handlers for Java types."
+  {java.util.regex.Pattern
+   (fn pattern-handler
+     [printer value]
      [:span
-      (color-doc :class-delimiter "#<")
-      (color-doc :class-name tag)
-      (color-doc :class-delimiter "@")
-      (system-id value)
-      " "
-      repr
-      (color-doc :class-delimiter ">")])))
+      (color-doc printer :delimiter "#")
+      (color-doc printer :string (str \" value \"))])
+
+   java.util.concurrent.Future
+   (fn future-handler
+     [printer value]
+     (let [doc (if (future-done? value)
+                 (format-doc printer @value)
+                 (color-doc printer :nil "pending"))]
+    (format-unknown printer value "Future" doc)))
+
+   java.util.Date
+   (tagged-handler 'inst
+     #(-> "yyyy-MM-dd'T'HH:mm:ss.SSS-00:00"
+          java.text.SimpleDateFormat.
+          (doto (.setTimeZone (java.util.TimeZone/getTimeZone "GMT")))
+          (.format ^java.util.Date %)))
+
+   java.util.UUID
+   (tagged-handler 'uuid str)})
 
 
+(def clojure-handlers
+  "Map of common handlers for enhanced Clojure syntax."
+  {clojure.lang.Var
+   (fn var-handler
+     [printer value]
+     [:span
+      (color-doc printer :delimiter "#'")
+      (color-doc printer :symbol (subs (str value) 2))])
 
-;; ## Primitive Types
+   clojure.lang.Atom
+   (fn atom-handler
+     [printer value]
+     (format-unknown printer value "Atom" (format-doc printer @value)))
 
-(defmacro ^:private format-element
-  "Defines a canonization of a primitive value type by mapping it to an element
-  in the color scheme."
-  [dispatch element]
-  `(defmethod format-doc ~dispatch
-     [value#]
-     (color-doc ~element (pr-str value#))))
+   clojure.lang.IPending
+   (fn pending-handler
+     [printer value]
+     (let [doc (if (realized? value)
+                 (format-doc printer @value)
+                 (color-doc printer :nil "pending"))]
+    (format-unknown printer value doc)))
 
-
-(format-element nil                  :nil)
-(format-element java.lang.Boolean    :boolean)
-(format-element java.lang.Number     :number)
-(format-element java.lang.Character  :character)
-(format-element java.lang.String     :string)
-(format-element clojure.lang.Keyword :keyword)
-(format-element clojure.lang.Symbol  :symbol)
-
-
-
-;; ## Collection Types
-
-(defn- format-entry
-  "Formats a canonical print document for a key-value entry in a map."
-  [[k v]]
-  [:span
-   (format-doc k)
-   (cond
-     (satisfies? data/ExtendedNotation v) " "
-     (coll? v) (:map-coll-separator *options*)
-     :else " ")
-   (format-doc v)])
+   clojure.lang.Delay
+   (fn delay-handler
+     [printer value]
+     (let [doc (if (realized? value)
+                 (format-doc printer @value)
+                 (color-doc printer :nil "pending"))]
+       (format-unknown printer value "Delay" doc)))})
 
 
-(defn- format-map
-  "Formats a canonical print document for a map value."
-  [value]
-  (let [ks (order-collection value (partial sort-by first order/rank))
-        entries (map format-entry ks)]
-    [:group
-     (color-doc :delimiter "{")
-     [:align (interpose [:span (:map-delimiter *options*) :line] entries)]
-     (color-doc :delimiter "}")]))
-
-
-(defmethod format-doc clojure.lang.ISeq
-  [value]
-  (let [elements (if (symbol? (first value))
-                   (cons (color-doc :function-symbol (str (first value)))
-                         (map format-doc (rest value)))
-                   (map format-doc value))]
-    [:group
-     (color-doc :delimiter "(")
-     [:align (interpose :line elements)]
-     (color-doc :delimiter ")")]))
-
-
-(defmethod format-doc clojure.lang.IPersistentVector
-  [value]
-  [:group
-   (color-doc :delimiter "[")
-   [:align (interpose :line (map format-doc value))]
-   (color-doc :delimiter "]")])
-
-
-(defmethod format-doc clojure.lang.IPersistentSet
-  [value]
-  (let [entries (order-collection value (partial sort order/rank))]
-    [:group
-     (color-doc :delimiter "#{")
-     [:align (interpose :line (map format-doc entries))]
-     (color-doc :delimiter "}")]))
-
-
-(defmethod format-doc clojure.lang.IPersistentMap
-  [value]
-  (format-map value))
-
-
-(defmethod format-doc clojure.lang.IRecord
-  [value]
-  (illegal-when-strict! value)
-  [:span
-   (color-doc :delimiter "#")
-   (.getName (class value))
-   (format-map value)])
-
-
-(prefer-method format-doc clojure.lang.IRecord clojure.lang.IPersistentMap)
-
-
-
-;; ## Clojure Types
-
-(defmethod format-doc java.util.regex.Pattern
-  [value]
-  (illegal-when-strict! value)
-  [:span
-   (color-doc :delimiter "#")
-   (color-doc :string (str \" value \"))])
-
-
-(defmethod format-doc clojure.lang.Var
-  [value]
-  (illegal-when-strict! value)
-  [:span
-   (color-doc :delimiter "#'")
-   (color-doc :symbol (subs (str value) 2))])
-
-
-(defmethod format-doc clojure.lang.IDeref
-  [value]
-  (unknown-document value (format-doc @value)))
-
-
-(defmethod format-doc clojure.lang.Atom
-  [value]
-  (unknown-document value "Atom" (format-doc @value)))
-
-
-(defmethod format-doc clojure.lang.IPending
-  [value]
-  (let [doc (if (realized? value)
-              (format-doc @value)
-              (color-doc :nil "pending"))]
-    (unknown-document value doc)))
-
-
-(defmethod format-doc clojure.lang.Delay
-  [value]
-  (let [doc (if (realized? value)
-              (format-doc @value)
-              (color-doc :nil "pending"))]
-    (unknown-document value "Delay" doc)))
-
-
-(defmethod format-doc java.util.concurrent.Future
-  [value]
-  (let [doc (if (future-done? value)
-              (format-doc @value)
-              (color-doc :nil "pending"))]
-    (unknown-document value "Future" doc)))
-
-
-(prefer-method format-doc clojure.lang.ISeq clojure.lang.IPending)
-(prefer-method format-doc clojure.lang.IPending clojure.lang.IDeref)
-(prefer-method format-doc java.util.concurrent.Future clojure.lang.IDeref)
-(prefer-method format-doc java.util.concurrent.Future clojure.lang.IPending)
-
-
-
-;; ## Special Types
-
-(defmethod format-doc ::tagged-literal
-  [value]
-  (let [{:keys [tag form]} (data/->edn value)]
-    [:span
-     (color-doc :tag (str \# tag))
-     (if (coll? form) :line " ")
-     (format-doc form)]))
-
-
-(defmethod format-doc :default
-  [value]
-  (unknown-document value))
+(def common-handlers
+  (dispatch/chained-lookup
+    (dispatch/inheritance-lookup java-handlers)
+    (dispatch/inheritance-lookup clojure-handlers)))
 
 
 
 ;; ## Printing Functions
+
+(defn ->printer
+  "Constructs a new printer from the given configuration."
+  [opts]
+  (->> [{:print-meta *print-meta*
+         :print-handlers common-handlers}
+        *options*
+        opts]
+       (reduce merge-options)
+       (map->PugetPrinter)))
+
+
+(defn render-out
+  "Prints a value using the given printer."
+  [printer value]
+  (binding [*print-meta* false]
+    (fe/pprint-document
+      (format-doc printer value)
+      {:width (:width printer)})))
+
+
+(defn render-str
+  "Renders a value to a string using the given printer."
+  [printer value]
+  (-> (render-out printer value)
+      (with-out-str)
+      (str/trim-newline)))
+
 
 (defn pprint
   "Pretty-prints a value to *out*. Options may be passed to override the
@@ -421,10 +459,7 @@
   ([value]
    (pprint value nil))
   ([value opts]
-   (with-options opts
-     (fipp/pprint-document
-       (canonical-document value)
-       {:width (:width *options*)}))))
+   (render-out (->printer opts) value)))
 
 
 (defn pprint-str
@@ -432,10 +467,7 @@
   ([value]
    (pprint-str value nil))
   ([value opts]
-   (-> value
-       (pprint opts)
-       with-out-str
-       str/trim-newline)))
+   (render-str (->printer opts) value)))
 
 
 (defn cprint
