@@ -41,17 +41,8 @@ function always prints with colored output enabled:
 ![colorization example](screenshot.png)
 
 The `:color-markup` option defaults to `:ansi`, but can be set to `:html-inline`
-or `:html-classes` to use HTML `span` elements for color markup:
-
-- `:ansi` uses ANSI escape codes to color text in a terminal.
-- `:html-inline` uses inline styles to apply style attributes directly to
-  each `span`'s content based on the `:color-scheme`.
-- `:html-classes` sets the `class` of each `span` based on its syntax element
-  type (e.g., "delimiter", "keyword", "number") to allow the style for its
-  content be specified elsewhere via CSS.
-
-Finally, the `:color-scheme` option controls how various elements are
-highlighted.
+or `:html-classes` to use HTML `span` elements for color markup. Finally, the
+`:color-scheme` map controls how various elements are highlighted.
 
 ## Canonical Representation
 
@@ -121,8 +112,13 @@ As an example, extending `#inst` formatting to clj-time's `DateTime`:
 #inst "2014-05-14T01:05:53.885Z"
 ```
 
-If you want to retain the builtin logic, use `puget.dispatch/chained-lookup` to fall
-back to checking `puget.printer/common-handlers`.
+If no handler is specified for a given type and it's not a built-in EDN type,
+Puget refers to the `:print-fallback` option. The default `:pretty` prints a
+colored representation of the unknown value (note this is not valid EDN!),
+while `:print` will fall back to the standard `pr-str`. Alternately, `:error`
+will throw an exception for types with no defined representation. Finally, a
+function may be provided which will be passed the current printer and the
+unknown value to render.
 
 ## Further Customization
 
