@@ -149,9 +149,9 @@
 
 ;; ## Formatting Methods
 
-(defn order-collection
-  "Takes a sequence of entries and checks the `:sort-keys` option to determine
-  whether to sort them. Returns an appropriately ordered sequence."
+(defn- order-collection
+  "Takes a sequence of entries and checks the mode to determine whether to sort
+  them. Returns an appropriately ordered sequence."
   [mode value sort-fn]
   (if (or (true? mode)
           (and (number? mode)
@@ -197,7 +197,89 @@
 
 
 
-;; ## Canonical Printer Definition
+;; ## Type Handlers
+
+(defn tagged-handler
+  "Generates a handler function which renders a tagged-literal with the given
+  tag and a value produced by calling the function."
+  [tag value-fn]
+  (fn handler
+    [printer value]
+    (format-doc printer (tagged-literal tag (value-fn value)))))
+
+
+(def java-handlers
+  "Map of print handlers for Java types. This supports syntax for regular
+  expressions, dates, UUIDs, and futures."
+  {java.util.regex.Pattern
+   (fn pattern-handler
+     [printer value]
+     [:span
+      (color/document printer :delimiter "#")
+      (color/document printer :string (str \" value \"))])
+
+   java.util.concurrent.Future
+   (fn future-handler
+     [printer value]
+     (let [doc (if (future-done? value)
+                 (format-doc printer @value)
+                 (color/document printer :nil "pending"))]
+    (format-unknown printer value "Future" doc)))
+
+   java.util.Date
+   (tagged-handler 'inst
+     #(-> "yyyy-MM-dd'T'HH:mm:ss.SSS-00:00"
+          java.text.SimpleDateFormat.
+          (doto (.setTimeZone (java.util.TimeZone/getTimeZone "GMT")))
+          (.format ^java.util.Date %)))
+
+   java.util.UUID
+   (tagged-handler 'uuid str)})
+
+
+(def clojure-handlers
+  "Map of print handlers for Clojure types. This supports syntax for vars,
+  atoms, pending values, and delays."
+  {clojure.lang.Var
+   (fn var-handler
+     [printer value]
+     [:span
+      (color/document printer :delimiter "#'")
+      (color/document printer :symbol (subs (str value) 2))])
+
+   clojure.lang.Atom
+   (fn atom-handler
+     [printer value]
+     (format-unknown printer value "Atom" (format-doc printer @value)))
+
+   clojure.lang.IPending
+   (fn pending-handler
+     [printer value]
+     (let [doc (if (realized? value)
+                 (format-doc printer @value)
+                 (color/document printer :nil "pending"))]
+    (format-unknown printer value doc)))
+
+   clojure.lang.Delay
+   (fn delay-handler
+     [printer value]
+     (let [doc (if (realized? value)
+                 (format-doc printer @value)
+                 (color/document printer :nil "pending"))]
+       (format-unknown printer value "Delay" doc)))})
+
+
+(def common-handlers
+  "Print handler dispatch combining Java and Clojure handlers with inheritance
+  lookups. Provides a similar experience as the standard Clojure
+  pretty-printer."
+  (dispatch/chained-lookup
+    (dispatch/inheritance-lookup java-handlers)
+    (dispatch/inheritance-lookup clojure-handlers)))
+
+
+
+;; ## Canonical Printer Implementation
 
 (defrecord CanonicalPrinter
   [print-handlers]
@@ -292,8 +374,22 @@
                   (pr-str value))))))
 
 
+(defn canonical-printer
+  "Constructs a new canonical printer with the given handler dispatch."
+  ([]
+   (canonical-printer nil))
+  ([handlers]
+   (assoc (CanonicalPrinter. handlers)
+          :width 0)))
 
-;; ## Pretty Printer Definition
+
+;; Remove automatic constructor functions.
+(ns-unmap *ns* '->CanonicalPrinter)
+(ns-unmap *ns* 'map->CanonicalPrinter)
+
+
+
+;; ## Pretty Printer Implementation
 
 (defrecord PrettyPrinter
   [sort-mode
@@ -433,96 +529,6 @@
                       (pr-str print-fallback))))))))
 
 
-
-;; ## Type Handlers
-
-(defn tagged-handler
-  "Generates a handler function which renders a tagged-literal with the given
-  tag and a value produced by calling the function."
-  [tag value-fn]
-  (fn handler
-    [printer value]
-    (format-doc printer (tagged-literal tag (value-fn value)))))
-
-
-(def java-handlers
-  "Map of common handlers for Java types."
-  {java.util.regex.Pattern
-   (fn pattern-handler
-     [printer value]
-     [:span
-      (color/document printer :delimiter "#")
-      (color/document printer :string (str \" value \"))])
-
-   java.util.concurrent.Future
-   (fn future-handler
-     [printer value]
-     (let [doc (if (future-done? value)
-                 (format-doc printer @value)
-                 (color/document printer :nil "pending"))]
-    (format-unknown printer value "Future" doc)))
-
-   java.util.Date
-   (tagged-handler 'inst
-     #(-> "yyyy-MM-dd'T'HH:mm:ss.SSS-00:00"
-          java.text.SimpleDateFormat.
-          (doto (.setTimeZone (java.util.TimeZone/getTimeZone "GMT")))
-          (.format ^java.util.Date %)))
-
-   java.util.UUID
-   (tagged-handler 'uuid str)})
-
-
-(def clojure-handlers
-  "Map of common handlers for enhanced Clojure syntax."
-  {clojure.lang.Var
-   (fn var-handler
-     [printer value]
-     [:span
-      (color/document printer :delimiter "#'")
-      (color/document printer :symbol (subs (str value) 2))])
-
-   clojure.lang.Atom
-   (fn atom-handler
-     [printer value]
-     (format-unknown printer value "Atom" (format-doc printer @value)))
-
-   clojure.lang.IPending
-   (fn pending-handler
-     [printer value]
-     (let [doc (if (realized? value)
-                 (format-doc printer @value)
-                 (color/document printer :nil "pending"))]
-    (format-unknown printer value doc)))
-
-   clojure.lang.Delay
-   (fn delay-handler
-     [printer value]
-     (let [doc (if (realized? value)
-                 (format-doc printer @value)
-                 (color/document printer :nil "pending"))]
-       (format-unknown printer value "Delay" doc)))})
-
-
-(def common-handlers
-  (dispatch/chained-lookup
-    (dispatch/inheritance-lookup java-handlers)
-    (dispatch/inheritance-lookup clojure-handlers)))
-
-
-
-;; ## Printing Functions
-
-(defn canonical-printer
-  "Constructs a new canonical printer with the given handler dispatch."
-  ([]
-   (canonical-printer nil))
-  ([handlers]
-   (map->CanonicalPrinter
-     {:width 0
-      :print-handlers handlers})))
-
-
 (defn pretty-printer
   "Constructs a new printer from the given configuration."
   [opts]
@@ -533,6 +539,14 @@
        (reduce merge-options)
        (map->PrettyPrinter)))
 
+
+;; Remove automatic constructor functions.
+(ns-unmap *ns* '->PrettyPrinter)
+(ns-unmap *ns* 'map->PrettyPrinter)
+
+
+
+;; ## Printing Functions
 
 (defn render-out
   "Prints a value using the given printer."
