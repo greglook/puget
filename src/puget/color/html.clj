@@ -1,6 +1,10 @@
 (ns puget.color.html
-  "This namespace defines methods for the `:html-inline` and `:html-classes`
-  otptions for `:color-markup`."
+  "Coloring implementation that wraps text in HTML tags to apply color.
+
+  Supports the following modes for `:color-markup`:
+
+  - `:html-inline` applies inline `style` attributes to the tags.
+  - `:html-classes` adds semantic `class` attributes to the tags."
   (:require
     [clojure.string :as str]
     [puget.color :as color]))
@@ -73,7 +77,7 @@
 
 
 (defmethod color/document :html-inline
-  [element text options]
+  [options element text]
   (if-let [codes (-> options :color-scheme (get element) seq)]
     [:span [:pass "<span " (style codes) ">"]
      (escape-html-document text)
@@ -82,19 +86,19 @@
 
 
 (defmethod color/text :html-inline
-  [element text options]
+  [options element text]
   (if-let [codes (-> options :color-scheme (get element) seq)]
     (str "<span " (style codes) ">" (escape-html-text text) "</span>")
     (escape-html-text text)))
 
 
 (defmethod color/document :html-classes
-  [element text options]
+  [options element text]
   [:span [:pass "<span class=\"" (name element) "\">"]
    (escape-html-document text)
    [:pass "</span>"]])
 
 
 (defmethod color/text :html-classes
-  [element text options]
+  [options element text]
   (str "<span class=\"" (name element) "\">" (escape-html-text text) "</span>"))
