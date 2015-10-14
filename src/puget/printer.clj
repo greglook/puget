@@ -383,9 +383,8 @@
           :width 0)))
 
 
-;; Remove automatic constructor functions.
+; Remove automatic constructor function.
 (ns-unmap *ns* '->CanonicalPrinter)
-(ns-unmap *ns* 'map->CanonicalPrinter)
 
 
 
@@ -540,9 +539,8 @@
        (map->PrettyPrinter)))
 
 
-;; Remove automatic constructor functions.
+; Remove automatic constructor function.
 (ns-unmap *ns* '->PrettyPrinter)
-(ns-unmap *ns* 'map->PrettyPrinter)
 
 
 
