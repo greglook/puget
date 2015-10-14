@@ -21,8 +21,10 @@
      (when (empty? candidates)
        (throw (IllegalArgumentException.
                 "chained-lookup must be provided at least one dispatch function to try.")))
-     (fn lookup [t]
-       (some #(% t) candidates))))
+     (if (= 1 (count candidates))
+       (first candidates)
+       (fn lookup [t]
+         (some #(% t) candidates)))))
   ([a b & more]
    (chained-lookup (list* a b more))))
 
