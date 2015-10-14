@@ -152,6 +152,7 @@
 
 
 (deftest handled-types
+  (is (= "\"foo\"" (pr-handler {} "foo")))
   (is (= "#inst \"2015-10-12T05:23:08.000-00:00\""
          (render-str (canonical-printer java-handlers)
                      (java.util.Date. 1444627388000)))))
