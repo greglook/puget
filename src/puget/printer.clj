@@ -199,6 +199,12 @@
 
 ;; ## Type Handlers
 
+(defn pr-handler
+  "Print handler which renders the value with `pr-str`."
+  [printer value]
+  (pr-str value))
+
+
 (defn tagged-handler
   "Generates a handler function which renders a tagged-literal with the given
   tag and a value produced by calling the function."
