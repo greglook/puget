@@ -5,7 +5,11 @@ This page documents the high-level changes in each release of Puget.
 
 ## 0.9.1 (...)
 
-- Rename `:sort-mode` option back to `:sort-keys`.
+- Improve `chained-lookup` logic to remove nil dispatch entries.
+- Add `printer/pr-handler` as a useful default for dispatching.
+- Rename `:sort-mode` option back to `:sort-keys`. (#25)
+- Fix rendering of lazy sequences. (#26)
+- Add `:seq-limit` option, to cap realization of lazy sequences.
 
 ## 0.9.0 (2015-10-13)
 
