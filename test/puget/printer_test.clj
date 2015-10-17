@@ -56,10 +56,10 @@
 
 (deftest unsorted-keys
   (testing "Unsorted collection keys"
-    (with-options {:sort-mode false}
+    (with-options {:sort-keys false}
       (is (= "#{:zeta :book}" (pprint-str (set [:zeta :book]))))
       (is (= "{:9 x, :2 y}" (pprint-str (array-map :9 'x, :2 'y)))))
-    (with-options {:sort-mode 2}
+    (with-options {:sort-keys 2}
       (is (= "{:a 1, :b 0}" (pprint-str (array-map :b 0 :a 1))))
       (is (= "{:z 2, :a 5, :m 8}" (pprint-str (array-map :z 2 :a 5 :m 8)))))))
 

@@ -13,7 +13,7 @@
   If true, metadata will be printed before values. Defaults to the value of
   `*print-meta*` if unset.
 
-  `:sort-mode`
+  `:sort-keys`
 
   Print maps and sets with ordered keys. Defaults to true, which will sort all
   collections. If a number, counted collections will be sorted up to the set
@@ -86,7 +86,7 @@
 (def ^:dynamic *options*
   "Default options to use when constructing new printers."
   {:width 80
-   :sort-mode true
+   :sort-keys 80
    :map-delimiter ","
    :map-coll-separator " "
    :print-fallback :pretty
@@ -397,7 +397,7 @@
 ;; ## Pretty Printer Implementation
 
 (defrecord PrettyPrinter
-  [sort-mode
+  [sort-keys
    map-delimiter
    map-coll-separator
    print-handlers
@@ -462,7 +462,7 @@
 
   (visit-set
     [this value]
-    (let [entries (order-collection sort-mode value (partial sort order/rank))]
+    (let [entries (order-collection sort-keys value (partial sort order/rank))]
       [:group
        (color/document this :delimiter "#{")
        [:align (interpose :line (map (partial format-doc this) entries))]
@@ -470,7 +470,7 @@
 
   (visit-map
     [this value]
-    (let [ks (order-collection sort-mode value (partial sort-by first order/rank))
+    (let [ks (order-collection sort-keys value (partial sort-by first order/rank))
           entries (map (fn [[k v]]
                          [:span
                           (format-doc this k)
