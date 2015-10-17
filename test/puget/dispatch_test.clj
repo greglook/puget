@@ -14,8 +14,11 @@
 
 
 (deftest chained-dispatch
+  (testing "Empty chained dispatch"
+    (is (thrown? IllegalArgumentException
+                 (dispatch/chained-lookup [nil nil]))))
   (testing "Single chained dispatch"
-    (let [dispatch (dispatch/chained-lookup {:foo :bar})]
+    (let [dispatch (dispatch/chained-lookup [{:foo :bar}])]
       (is (= :bar (dispatch :foo)))
       (is (nil? (dispatch :baz)))))
   (testing "Multiple chained dispatch"

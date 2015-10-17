@@ -56,12 +56,15 @@
 
 (deftest unsorted-keys
   (testing "Unsorted collection keys"
-    (with-options {:sort-mode false}
+    (with-options {:sort-keys false}
       (is (= "#{:zeta :book}" (pprint-str (set [:zeta :book]))))
       (is (= "{:9 x, :2 y}" (pprint-str (array-map :9 'x, :2 'y)))))
-    (with-options {:sort-mode 2}
+    (with-options {:sort-keys 2}
       (is (= "{:a 1, :b 0}" (pprint-str (array-map :b 0 :a 1))))
-      (is (= "{:z 2, :a 5, :m 8}" (pprint-str (array-map :z 2 :a 5 :m 8)))))))
+      (is (= "{:z 2, :a 5, :m 8}" (pprint-str (array-map :z 2 :a 5 :m 8)))))
+    (with-options {:sort-keys true}
+      (is (= "{:a 1, :b 0}" (pprint-str (array-map :b 0 :a 1))))
+      (is (= "{:a 5, :m 8, :z 2}" (pprint-str (array-map :z 2 :a 5 :m 8)))))))
 
 
 (defrecord TestRecord [foo bar])
@@ -82,6 +85,12 @@
 (deftest clojure-types
   (testing "seq"
     (is (= "()" (pprint-str (list)))))
+  (testing "lazy seq"
+    (is (= "()" (pprint-str (lazy-seq)))))
+  (testing "limited lazy seq"
+    (with-options {:seq-limit 4}
+      (is (= "(1 2 3)" (pprint-str (map inc [0 1 2]))))
+      (is (= "(0 1 2 3 ...)" (pprint-str (range))))))
   (testing "regex"
     (let [v #"\d+"]
       (should-fail-when-strict v)
@@ -152,6 +161,7 @@
 
 
 (deftest handled-types
+  (is (= "\"foo\"" (pr-handler {} "foo")))
   (is (= "#inst \"2015-10-12T05:23:08.000-00:00\""
          (render-str (canonical-printer java-handlers)
                      (java.util.Date. 1444627388000)))))

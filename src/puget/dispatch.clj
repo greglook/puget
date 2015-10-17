@@ -8,15 +8,25 @@
   (:require
     [clojure.string :as str]))
 
+;; ## Logical Dispatch
 
 (defn chained-lookup
   "Builds a dispatcher which looks up a type by checking multiple dispatchers
-  in order until a matching entry is found."
-  ([a] a)
+  in order until a matching entry is found. Takes either a single collection of
+  dispatchers or a variable list of dispatcher arguments. Ignores nil
+  dispatchers in the sequence."
+  ([dispatchers]
+   {:pre [(sequential? dispatchers)]}
+   (let [candidates (remove nil? dispatchers)]
+     (when (empty? candidates)
+       (throw (IllegalArgumentException.
+                "chained-lookup must be provided at least one dispatch function to try.")))
+     (if (= 1 (count candidates))
+       (first candidates)
+       (fn lookup [t]
+         (some #(% t) candidates)))))
   ([a b & more]
-   (let [candidates (list* a b more)]
-     (fn lookup [t]
-       (some #(% t) candidates)))))
+   (chained-lookup (list* a b more))))
 
 
 (defn caching-lookup
@@ -33,6 +43,8 @@
             (swap! cache assoc t v)
             v))))))
 
+
+;; ## Type Dispatch
 
 (defn symbolic-lookup
   "Builds a dispatcher which looks up a type by checking the underlying lookup
