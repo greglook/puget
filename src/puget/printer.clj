@@ -13,7 +13,7 @@
   If true, metadata will be printed before values. Defaults to the value of
   `*print-meta*` if unset.
 
-  `:sort-mode`
+  `:sort-keys`
 
   Print maps and sets with ordered keys. Defaults to true, which will sort all
   collections. If a number, counted collections will be sorted up to the set
@@ -28,6 +28,11 @@
   The text placed between a map key and a collection value. The keyword :line
   will cause line breaks if the whole map does not fit on a single line.
 
+  `:seq-limit`
+
+  If set to a positive number, then lists will only render at most the first n
+  elements. This can help prevent unintentional realization of infinite lazy
+  sequences.
 
   #### Type Handling
 
@@ -86,7 +91,7 @@
 (def ^:dynamic *options*
   "Default options to use when constructing new printers."
   {:width 80
-   :sort-mode true
+   :sort-keys 80
    :map-delimiter ","
    :map-coll-separator " "
    :print-fallback :pretty
@@ -258,21 +263,29 @@
      [printer value]
      (format-unknown printer value "Atom" (format-doc printer @value)))
 
-   clojure.lang.IPending
-   (fn pending-handler
-     [printer value]
-     (let [doc (if (realized? value)
-                 (format-doc printer @value)
-                 (color/document printer :nil "pending"))]
-    (format-unknown printer value doc)))
-
    clojure.lang.Delay
    (fn delay-handler
      [printer value]
      (let [doc (if (realized? value)
                  (format-doc printer @value)
                  (color/document printer :nil "pending"))]
-       (format-unknown printer value "Delay" doc)))})
+       (format-unknown printer value "Delay" doc)))
+
+   clojure.lang.ISeq
+   (fn iseq-handler
+     [printer value]
+     (fv/visit-seq printer value))})
+
+
+(def clojure-interface-handlers
+  "Fallback handlers for other Clojure interfaces."
+  {clojure.lang.IPending
+   (fn pending-handler
+     [printer value]
+     (let [doc (if (realized? value)
+                 (format-doc printer @value)
+                 (color/document printer :nil "pending"))]
+    (format-unknown printer value doc)))})
 
 
 (def common-handlers
@@ -281,7 +294,8 @@
   pretty-printer."
   (dispatch/chained-lookup
     (dispatch/inheritance-lookup java-handlers)
-    (dispatch/inheritance-lookup clojure-handlers)))
+    (dispatch/inheritance-lookup clojure-handlers)
+    (dispatch/inheritance-lookup clojure-interface-handlers)))
 
 
 
@@ -397,9 +411,10 @@
 ;; ## Pretty Printer Implementation
 
 (defrecord PrettyPrinter
-  [sort-mode
+  [sort-keys
    map-delimiter
    map-coll-separator
+   seq-limit
    print-handlers
    print-fallback
    print-meta
@@ -444,10 +459,17 @@
 
   (visit-seq
     [this value]
-    (let [elements (if (symbol? (first value))
-                     (cons (color/document this :function-symbol (str (first value)))
-                           (map (partial format-doc this) (rest value)))
-                     (map (partial format-doc this) value))]
+    (let [[values trimmed?]
+          (if (and seq-limit (pos? seq-limit))
+            (let [head (take seq-limit value)]
+              [head (<= seq-limit (count head))])
+            [(seq value) false])
+          elements
+          (cond-> (if (symbol? (first values))
+                    (cons (color/document this :function-symbol (str (first values)))
+                          (map (partial format-doc this) (rest values)))
+                    (map (partial format-doc this) values))
+            trimmed? (concat [(color/document this :nil "...")]))]
       [:group
        (color/document this :delimiter "(")
        [:align (interpose :line elements)]
@@ -462,7 +484,7 @@
 
   (visit-set
     [this value]
-    (let [entries (order-collection sort-mode value (partial sort order/rank))]
+    (let [entries (order-collection sort-keys value (partial sort order/rank))]
       [:group
        (color/document this :delimiter "#{")
        [:align (interpose :line (map (partial format-doc this) entries))]
@@ -470,7 +492,7 @@
 
   (visit-map
     [this value]
-    (let [ks (order-collection sort-mode value (partial sort-by first order/rank))
+    (let [ks (order-collection sort-keys value (partial sort-by first order/rank))
           entries (map (fn [[k v]]
                          [:span
                           (format-doc this k)

@@ -3,6 +3,14 @@ Release Notes
 
 This page documents the high-level changes in each release of Puget.
 
+## 0.9.1 (...)
+
+- Improve `chained-lookup` logic to remove nil dispatch entries.
+- Add `printer/pr-handler` as a useful default for dispatching.
+- Rename `:sort-mode` option back to `:sort-keys`. (#25)
+- Fix rendering of lazy sequences. (#26)
+- Add `:seq-limit` option, to cap realization of lazy sequences.
+
 ## 0.9.0 (2015-10-13)
 
 - Upgrade to Clojure 1.7 and fipp 0.6.2.
@@ -11,7 +19,7 @@ This page documents the high-level changes in each release of Puget.
 - Reordered args to `color/document` and `color/text`.
 - Drop `puget.data/ExtendedNotation` protocol and switched to type-dispatched
   print-handler approach.
-- Rename `:sort-key` option to `:sort-mode`.
+- Rename `:sort-keys` option to `:sort-mode`.
 - Remove `:escape-types` functionality in favor of `:print-handlers`.
 - Add more `:print-fallback` possibilities.
 - Add `CanonicalPrinter` as a minimalist alternative to `PrettyPrinter`.
