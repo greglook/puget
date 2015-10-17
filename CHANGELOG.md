@@ -3,7 +3,9 @@ Release Notes
 
 This page documents the high-level changes in each release of Puget.
 
-## 0.9.1 (...)
+## 0.10.0 (...)
+
+## 0.9.1 (2015-10-17)
 
 - Improve `chained-lookup` logic to remove nil dispatch entries.
 - Add `printer/pr-handler` as a useful default for dispatching.
