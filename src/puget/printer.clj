@@ -28,6 +28,11 @@
   The text placed between a map key and a collection value. The keyword :line
   will cause line breaks if the whole map does not fit on a single line.
 
+  `:seq-limit`
+
+  If set to a positive number, then lists will only render at most the first n
+  elements. This can help prevent unintentional realization of infinite lazy
+  sequences.
 
   #### Type Handling
 
@@ -409,6 +414,7 @@
   [sort-keys
    map-delimiter
    map-coll-separator
+   seq-limit
    print-handlers
    print-fallback
    print-meta
@@ -453,10 +459,17 @@
 
   (visit-seq
     [this value]
-    (let [elements (if (symbol? (first value))
-                     (cons (color/document this :function-symbol (str (first value)))
-                           (map (partial format-doc this) (rest value)))
-                     (map (partial format-doc this) value))]
+    (let [[values trimmed?]
+          (if (and seq-limit (pos? seq-limit))
+            (let [head (take seq-limit value)]
+              [head (<= seq-limit (count head))])
+            [(seq value) false])
+          elements
+          (cond-> (if (symbol? (first values))
+                    (cons (color/document this :function-symbol (str (first values)))
+                          (map (partial format-doc this) (rest values)))
+                    (map (partial format-doc this) values))
+            trimmed? (concat [(color/document this :nil "...")]))]
       [:group
        (color/document this :delimiter "(")
        [:align (interpose :line elements)]
