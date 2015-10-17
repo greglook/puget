@@ -258,21 +258,29 @@
      [printer value]
      (format-unknown printer value "Atom" (format-doc printer @value)))
 
-   clojure.lang.IPending
-   (fn pending-handler
-     [printer value]
-     (let [doc (if (realized? value)
-                 (format-doc printer @value)
-                 (color/document printer :nil "pending"))]
-    (format-unknown printer value doc)))
-
    clojure.lang.Delay
    (fn delay-handler
      [printer value]
      (let [doc (if (realized? value)
                  (format-doc printer @value)
                  (color/document printer :nil "pending"))]
-       (format-unknown printer value "Delay" doc)))})
+       (format-unknown printer value "Delay" doc)))
+
+   clojure.lang.ISeq
+   (fn iseq-handler
+     [printer value]
+     (fv/visit-seq printer value))})
+
+
+(def clojure-interface-handlers
+  "Fallback handlers for other Clojure interfaces."
+  {clojure.lang.IPending
+   (fn pending-handler
+     [printer value]
+     (let [doc (if (realized? value)
+                 (format-doc printer @value)
+                 (color/document printer :nil "pending"))]
+    (format-unknown printer value doc)))})
 
 
 (def common-handlers
@@ -281,7 +289,8 @@
   pretty-printer."
   (dispatch/chained-lookup
     (dispatch/inheritance-lookup java-handlers)
-    (dispatch/inheritance-lookup clojure-handlers)))
+    (dispatch/inheritance-lookup clojure-handlers)
+    (dispatch/inheritance-lookup clojure-interface-handlers)))
 
 
 
