@@ -72,8 +72,10 @@
 (deftest formatting-records
   (testing "Records"
     (let [r (->TestRecord \x \y)]
-      (is (= "#puget.printer_test.TestRecord\n{:bar \\y, :foo \\x}\n"
-             (with-out-str (pprint r)))))))
+      (is (= "#puget.printer_test.TestRecord\n{:bar \\y, :foo \\x}"
+             (pprint-str r {:width 30})))
+      (is (= "#puget.printer_test.TestRecord {:bar \\y, :foo \\x}"
+             (pprint-str r {:width 200}))))))
 
 
 (deftype APending [is-realized]

@@ -545,7 +545,7 @@
   (visit-tagged
     [this value]
     (let [{:keys [tag form]} value]
-      [:span
+      [:group
        (color/document this :tag (str "#" (:tag value)))
        (if (coll? form) :line " ")
        (format-doc this (:form value))]))
