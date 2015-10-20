@@ -228,7 +228,12 @@
 (def java-handlers
   "Map of print handlers for Java types. This supports syntax for regular
   expressions, dates, UUIDs, and futures."
-  {java.util.regex.Pattern
+  {java.lang.Class
+   (fn class-handler
+     [printer value]
+     (format-unknown printer value "Class" (.getName ^Class value)))
+
+   java.util.regex.Pattern
    (fn pattern-handler
      [printer value]
      [:span
@@ -241,7 +246,7 @@
      (let [doc (if (future-done? value)
                  (format-doc printer @value)
                  (color/document printer :nil "pending"))]
-    (format-unknown printer value "Future" doc)))
+       (format-unknown printer value "Future" doc)))
 
    java.util.Date
    (tagged-handler 'inst
