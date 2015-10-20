@@ -106,6 +106,9 @@
              (pprint-str v)))
       (is (thrown? IllegalArgumentException
                    (render-str canonical v)))))
+  (testing "functions"
+    (is (re-seq #"#<Fn@[0-9a-z]+ puget\.printer/pretty_printer>"
+                (pprint-str pretty-printer))))
   (testing "atom"
     (let [v (atom :foo)]
       (should-fail-when-strict v)

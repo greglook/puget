@@ -297,7 +297,14 @@
      (let [doc (if (realized? value)
                  (format-doc printer @value)
                  (color/document printer :nil "pending"))]
-    (format-unknown printer value doc)))})
+    (format-unknown printer value doc)))
+
+   clojure.lang.Fn
+   (fn fn-handler
+     [printer value]
+     (format-unknown printer value "Fn"
+                     (str/replace-first (.getName (class value))
+                                        "$" "/")))})
 
 
 (def common-handlers
