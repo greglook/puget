@@ -210,9 +210,15 @@
   (pr-str value))
 
 
+(defn unknown-handler
+  "Print handler which renders the value using the printer's unknown type logic."
+  [printer value]
+  (fv/visit-unknown printer value))
+
+
 (defn tagged-handler
-  "Generates a handler function which renders a tagged-literal with the given
-  tag and a value produced by calling the function."
+  "Generates a print handler function which renders a tagged-literal with the
+  given tag and a value produced by calling the function."
   [tag value-fn]
   (fn handler
     [printer value]
