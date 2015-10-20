@@ -173,14 +173,15 @@
   ([printer value repr]
    (format-unknown printer value (.getName (class value)) repr))
   ([printer value tag repr]
-   [:span
-    (color/document printer :class-delimiter "#<")
-    (color/document printer :class-name tag)
-    (color/document printer :class-delimiter "@")
-    (Integer/toHexString (System/identityHashCode value))
-    " "
-    repr
-    (color/document printer :class-delimiter ">")]))
+   (let [sys-id (Integer/toHexString (System/identityHashCode value))]
+     [:span
+      (color/document printer :class-delimiter "#<")
+      (color/document printer :class-name tag)
+      (color/document printer :class-delimiter "@")
+      sys-id
+      (when (not= repr (str tag "@" sys-id))
+        (list " " repr))
+      (color/document printer :class-delimiter ">")])))
 
 
 (defn format-doc*
