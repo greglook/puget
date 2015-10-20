@@ -3,6 +3,12 @@ Release Notes
 
 This page documents the high-level changes in each release of Puget.
 
+## 0.9.2 (2015-10-20)
+
+- Add `printer/unknown-handler` and improve rendering of unknown types.
+- Add print handlers for class and function values.
+- Line-break tagged literals when the form is a collection.
+
 ## 0.9.1 (2015-10-17)
 
 - Improve `chained-lookup` logic to remove nil dispatch entries.
