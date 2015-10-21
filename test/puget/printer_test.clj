@@ -72,8 +72,10 @@
 (deftest formatting-records
   (testing "Records"
     (let [r (->TestRecord \x \y)]
-      (is (= "#puget.printer_test.TestRecord {:bar \\y, :foo \\x}\n"
-             (with-out-str (pprint r)))))))
+      (is (= "#puget.printer_test.TestRecord\n{:bar \\y, :foo \\x}"
+             (pprint-str r {:width 30})))
+      (is (= "#puget.printer_test.TestRecord {:bar \\y, :foo \\x}"
+             (pprint-str r {:width 200}))))))
 
 
 (deftype APending [is-realized]
@@ -104,6 +106,9 @@
              (pprint-str v)))
       (is (thrown? IllegalArgumentException
                    (render-str canonical v)))))
+  (testing "functions"
+    (is (re-seq #"#<Fn@[0-9a-z]+ puget\.printer/pretty_printer>"
+                (pprint-str pretty-printer))))
   (testing "atom"
     (let [v (atom :foo)]
       (should-fail-when-strict v)
@@ -123,12 +128,12 @@
   (testing "custom IPending, realized"
     (let [v (->APending true)]
       (should-fail-when-strict v)
-      (is (re-seq #"#<puget.printer_test.APending@[0-9a-f]+ 1"
+      (is (re-seq #"#<puget\.printer_test\.APending@[0-9a-f]+ 1"
                   (pprint-str v)))))
   (testing "custom IPending, not realized"
     (let [v (->APending false)]
       (should-fail-when-strict v)
-      (is (re-seq #"#<puget.printer_test.APending@[0-9a-f]+ pending"
+      (is (re-seq #"#<puget\.printer_test\.APending@[0-9a-f]+ pending"
                   (pprint-str v))))))
 
 
@@ -162,6 +167,12 @@
 
 (deftest handled-types
   (is (= "\"foo\"" (pr-handler {} "foo")))
+  (is (= "{{ complex value print }}"
+         (pprint-str (ComplexValue.)
+                     {:print-handlers {ComplexValue unknown-handler}
+                      :print-fallback :print})))
+  (is (re-seq #"#<Class@[0-9a-f]+ java\.util\.Date>"
+              (pprint-str java.util.Date)))
   (is (= "#inst \"2015-10-12T05:23:08.000-00:00\""
          (render-str (canonical-printer java-handlers)
                      (java.util.Date. 1444627388000)))))
