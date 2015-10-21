@@ -173,14 +173,15 @@
   ([printer value repr]
    (format-unknown printer value (.getName (class value)) repr))
   ([printer value tag repr]
-   [:span
-    (color/document printer :class-delimiter "#<")
-    (color/document printer :class-name tag)
-    (color/document printer :class-delimiter "@")
-    (Integer/toHexString (System/identityHashCode value))
-    " "
-    repr
-    (color/document printer :class-delimiter ">")]))
+   (let [sys-id (Integer/toHexString (System/identityHashCode value))]
+     [:span
+      (color/document printer :class-delimiter "#<")
+      (color/document printer :class-name tag)
+      (color/document printer :class-delimiter "@")
+      sys-id
+      (when (not= repr (str tag "@" sys-id))
+        (list " " repr))
+      (color/document printer :class-delimiter ">")])))
 
 
 (defn format-doc*
@@ -210,9 +211,15 @@
   (pr-str value))
 
 
+(defn unknown-handler
+  "Print handler which renders the value using the printer's unknown type logic."
+  [printer value]
+  (fv/visit-unknown printer value))
+
+
 (defn tagged-handler
-  "Generates a handler function which renders a tagged-literal with the given
-  tag and a value produced by calling the function."
+  "Generates a print handler function which renders a tagged-literal with the
+  given tag and a value produced by calling the function."
   [tag value-fn]
   (fn handler
     [printer value]
@@ -222,7 +229,12 @@
 (def java-handlers
   "Map of print handlers for Java types. This supports syntax for regular
   expressions, dates, UUIDs, and futures."
-  {java.util.regex.Pattern
+  {java.lang.Class
+   (fn class-handler
+     [printer value]
+     (format-unknown printer value "Class" (.getName ^Class value)))
+
+   java.util.regex.Pattern
    (fn pattern-handler
      [printer value]
      [:span
@@ -235,7 +247,7 @@
      (let [doc (if (future-done? value)
                  (format-doc printer @value)
                  (color/document printer :nil "pending"))]
-    (format-unknown printer value "Future" doc)))
+       (format-unknown printer value "Future" doc)))
 
    java.util.Date
    (tagged-handler 'inst
@@ -285,7 +297,14 @@
      (let [doc (if (realized? value)
                  (format-doc printer @value)
                  (color/document printer :nil "pending"))]
-    (format-unknown printer value doc)))})
+    (format-unknown printer value doc)))
+
+   clojure.lang.Fn
+   (fn fn-handler
+     [printer value]
+     (format-unknown printer value "Fn"
+                     (str/replace-first (.getName (class value))
+                                        "$" "/")))})
 
 
 (def common-handlers
@@ -533,9 +552,9 @@
   (visit-tagged
     [this value]
     (let [{:keys [tag form]} value]
-      [:span
+      [:group
        (color/document this :tag (str "#" (:tag value)))
-       " "
+       (if (coll? form) :line " ")
        (format-doc this (:form value))]))
 
   (visit-unknown

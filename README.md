@@ -3,7 +3,7 @@ Puget
 
 [![Build Status](https://travis-ci.org/greglook/puget.svg?branch=master)](https://travis-ci.org/greglook/puget)
 [![Coverage Status](https://coveralls.io/repos/greglook/puget/badge.png?branch=master)](https://coveralls.io/r/greglook/puget?branch=master)
-[![Dependency Status](https://www.versioneye.com/user/projects/53718bfb14c1589a89000144/badge.png?style=flat)](https://www.versioneye.com/clojure/mvxcvi:puget)
+[![Dependency Status](https://www.versioneye.com/clojure/mvxcvi:puget/badge.svg)](https://www.versioneye.com/clojure/mvxcvi:puget)
 [![API codox](http://b.repl.ca/v1/doc-API-blue.png)](https://greglook.github.io/puget/api/)
 [![marginalia docs](http://b.repl.ca/v1/doc-marginalia-blue.png)](https://greglook.github.io/puget/marginalia/uberdoc.html)
 
