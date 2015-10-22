@@ -12,10 +12,11 @@ Puget is a Clojure library for printing Clojure and
 data into a _print document_ and uses the [Fast Idiomatic
 Pretty-Printer](https://github.com/brandonbloom/fipp) library to render it.
 
-Puget offers two main features which set it apart from FIPP and Clojure's native
-pretty-printing functions: [syntax coloring](#syntax-coloring) and [canonical
-printing](#canonical-representation). Custom rendering is supported using type
-dispatch to select [print handlers](#type-extensions).
+Puget offers several features which set it apart from FIPP and Clojure's native
+pretty-printing functions. [Syntax coloring](#syntax-coloring) is the most
+widely used, followed by [canonical printing](#canonical-representation). Custom
+value rendering is supported using type dispatch to select [print
+handlers](#type-extensions).
 
 ## Installation
 
@@ -28,57 +29,55 @@ See [Whidbey](https://github.com/greglook/whidbey) for nREPL and Leiningen integ
 
 ## Usage
 
-Puget's printing is controlled by a map of options which include print width,
-sorting mode, color scheme and style, whether to print metadata, and so on. The
-default options are held in the dynamic var `puget.printer/*options*`. This can
-be bound with the `with-options` macro for convenience.
+Puget's printing is controlled by a map of options which configure things like
+print width, sorting mode, color scheme and style, whether to print metadata,
+and so on. The default options are held in the dynamic var
+`puget.printer/*options*`, which can be bound using `with-options`. See the
+[`puget.printer`](https://greglook.github.io/puget/api/puget.printer.html)
+namespace documentation for the full set of options.
 
-These options are used to construct a _printer_ object to render values with.
-You can create these manually with `pretty-printer` or `canonical-printer`, then
-use them with `render-out` or `render-str` for maximum control.
-
-These options are used to construct a printer record, which is either the
-`PrettyPrinter` or `CanonicalPrinter`. The printers can be used directly to
-render values with `render-out` or `render-str` if maximal repeatability is
-desired.
-
-Otherwise, the `pprint` and `pprint-str` functions will automatically create a
-`PrettyPrinter` using the dynamic options and any provided configuration.
+These options are used to construct a _printer_ to render values with. `pprint`
+and `pprint-str` will automatically create a `PrettyPrinter` record from the
+current and passed options, or you can use `pretty-printer` or
+`canonical-printer` to construct one manually. `render-out` and `render-str`
+take a printer and a value if you need maximum control over the printing.
 
 ## Syntax Coloring
 
-Puget's first main feature is colorizing the printed data using ANSI escape
-codes or HTML `span` elements for color markup. This is kind of like syntax
-highlighting, except much easier since the code works directly with the data
-instead of parsing it from text.
+Puget's first major feature is colorizing the printed data by rendering it with
+embedded markup. Different syntax elements are given different colors to make
+the printed output much easier for humans to parse. This is similar to syntax
+highlighting, but much easier since the code works directly with the data
+instead of parsing it from text!
 
-Different syntax elements are given different colors to make reading the
-printed output much easier for humans. The `:print-color` option can be set to
-enable colorization using the `with-color` macro - alternately, the `cprint`
-function always prints with colored output enabled:
+Elements are mapped to color codes by the `:color-scheme` option. The
+`:print-color` option can be set to enable colorization using the `with-color`
+macro - alternately, the `cprint` function always prints with colored output
+enabled:
 
 ![colorization example](screenshot.png)
 
-The `:color-markup` option defaults to `:ansi`, but can be set to `:html-inline`
-or `:html-classes` to use HTML `span` elements for color markup. Finally, the
-`:color-scheme` map controls how various elements are highlighted.
+Puget supports three different kinds of color markup:
+- `:ansi` (the default) adds ANSI color escapes for terminal outputs.
+- `:html-inline` adds HTML `span` elements with inline `style` attributes.
+- `:html-classes` adds `span` elements with semantic `class` attributes.
 
 ## Canonical Representation
 
-Puget's other main goal is to provide _canonical serialization_ of data. In
-short, if two data values are equal, they should be printed identically. This is
-important for data deduplication and in situations where the printed data is
-hashed.
+Puget also provides _canonical serialization_ of data. In most cases, if two
+data values are equal, they should be printed identically. This is important for
+when the printed data is hashed, but it also makes it easier to process maps and
+other structures with similar contents.
 
 By default, Puget uses the
 [arrangement](https://github.com/greglook/clj-arrangement) library to sort the
 values in sets and the keys in maps so they are always printed the same way.
-This can be disabled with the `:sort-mode` option, or enabled only for
+This can be disabled with the `:sort-keys` option, or enabled only for
 collections under a certain size.
 
-Most printing is done with the `puget.printer.PrettyPrinter` class, but the
-library also offers the `CanonicalPrinter` for serializing data in a stricter
-(and more compact) fashion.
+Most printing is done with the `PrettyPrinter` class, but the library also
+offers the `CanonicalPrinter` for serializing data in a stricter (and more
+compact) fashion.
 
 ```clojure
 => (require '[puget.printer :as puget])
@@ -98,18 +97,24 @@ library also offers the `CanonicalPrinter` for serializing data in a stricter
 
 ## Type Extensions
 
-All of Clojure's primitive types are given their standard canonical print
-representations. To handle non-standard data types, Puget supports a mechanism
-to dispatch to custom _print handlers_. These take precedence over the standard
-rendering mechanisms.
+All of Clojure's primitive types are given their standard print representations.
+To handle non-standard data types, Puget supports a mechanism to dispatch to
+custom _print handlers_. These take precedence over the normal rendering
+mechanisms.
 
 This can be used to provide an EDN tagged-literal representation for certain
 types, or just avoid trying to pretty-print types which the engine struggles
-with (such as attempting to render a Datomic database).
+with (such as Datomic database values).
 
-The `puget.dispatch` namespace has functions to help build handler lookup
-functions; most commonly, a chained inheritance-based lookup provides semantics
-similar to Clojure's multimethod dispatch.
+Before rendering a value, the printer checks for a `:print-handlers` function.
+If available, it is called with the type of the value to be printed. If the
+lookup returns a handler, that function is called with the value and the result
+is used as the rendered format of the value.
+
+The [`puget.dispatch`](https://greglook.github.io/puget/api/puget.dispatch.html)
+namespace has functions to help build handler lookup functions. The
+`inheritance-lookup` constructor provides semantics similar to Clojure's
+multimethod dispatch.
 
 As an example, extending `#inst` formatting to clj-time's `DateTime`:
 
@@ -132,12 +137,13 @@ As an example, extending `#inst` formatting to clj-time's `DateTime`:
 ```
 
 If no handler is specified for a given type and it's not a built-in EDN type,
-Puget refers to the `:print-fallback` option. The default `:pretty` prints a
-colored representation of the unknown value (note this is not valid EDN!),
-while `:print` will fall back to the standard `pr-str`. Alternately, `:error`
-will throw an exception for types with no defined representation. Finally, a
-function may be provided which will be passed the current printer and the
-unknown value to render.
+Puget refers to the `:print-fallback` option, which must be one of:
+- `:pretty` (the default) prints a colored representation of the unknown value
+  (not valid EDN!).
+- `:print` falls back to the standard `pr-str` representation.
+- `:error` throws an exception for types with no defined representation.
+- A function which will be called with the printer and the unknown value to
+  render, returning the formatted value.
 
 ## License
 
