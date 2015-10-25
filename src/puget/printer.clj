@@ -399,6 +399,11 @@
     ; Defer to unknown, cover with handler.
     (fv/visit-unknown this value))
 
+  (visit-record
+    [this value]
+    ; Defer to unknown, cover with handler.
+    (fv/visit-unknown this value))
+
 
   ; Special Types
 
@@ -545,6 +550,13 @@
     [this value]
     ; Defer to unknown, cover with handler.
     (fv/visit-unknown this value))
+
+  (visit-record
+    [this value]
+    (fv/visit-tagged
+      this
+      (tagged-literal (symbol (.getName (class value)))
+                      (into {} value))))
 
 
   ; Special Types

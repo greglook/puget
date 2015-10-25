@@ -75,7 +75,9 @@
       (is (= "#puget.printer_test.TestRecord\n{:bar \\y, :foo \\x}"
              (pprint-str r {:width 30})))
       (is (= "#puget.printer_test.TestRecord {:bar \\y, :foo \\x}"
-             (pprint-str r {:width 200}))))))
+             (pprint-str r {:width 200})))
+      (is (thrown? IllegalArgumentException
+                   (render-str (canonical-printer) r))))))
 
 
 (deftype APending [is-realized]
