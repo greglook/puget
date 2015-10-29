@@ -616,6 +616,7 @@
 
 (defn render-str
   "Renders a value to a string using the given printer."
+  ^String
   [printer value]
   (str/trim-newline
     (with-out-str
