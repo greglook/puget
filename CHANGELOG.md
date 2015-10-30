@@ -13,8 +13,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 - Move pattern and var printing back into `PrettyPrinter` visitor protocol.
-- Improve function class name parsing of inner function names.
-- Refactored test suite into a much more structured layout.
+- Improve class name parsing of inner function names.
 
 ## [0.9.2] - 2015-10-20
 
