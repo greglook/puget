@@ -289,9 +289,17 @@
    clojure.lang.Fn
    (fn fn-handler
      [printer value]
-     (format-unknown printer value "Fn"
-                     (str/replace-first (.getName (class value))
-                                        "$" "/")))})
+     (let [doc (let [[vname & tail] (-> (.getName (class value))
+                                        (str/replace-first "$" "/")
+                                        (str/split #"\$"))]
+                 (if (seq tail)
+                   (str vname "["
+                        (->> tail
+                             (map #(first (str/split % #"__")))
+                             (str/join "/"))
+                        "]")
+                   vname))]
+       (format-unknown printer value "Fn" doc)))})
 
 
 (def common-handlers
