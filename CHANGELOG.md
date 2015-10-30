@@ -7,7 +7,14 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
-...
+### Added
+- Adopt `visit-record` logic from upgrade to fipp 0.6.3.
+  [brandonbloom/fipp#29](//github.com/brandonbloom/fipp/pull/29)
+
+### Changed
+- Move pattern and var printing back into `PrettyPrinter` visitor protocol.
+- Improve function class name parsing of inner function names.
+- Refactored test suite into a much more structured layout.
 
 ## [0.9.2] - 2015-10-20
 
