@@ -246,7 +246,7 @@
    java.util.Date
    (tagged-handler 'inst
      #(-> "yyyy-MM-dd'T'HH:mm:ss.SSS-00:00"
-          java.text.SimpleDateFormat.
+          (java.text.SimpleDateFormat.)
           (doto (.setTimeZone (java.util.TimeZone/getTimeZone "GMT")))
           (.format ^java.util.Date %)))
 
@@ -277,14 +277,14 @@
 
 
 (def clojure-interface-handlers
-  "Fallback handlers for other Clojure interfaces."
+  "Fallback print handlers for other Clojure interfaces."
   {clojure.lang.IPending
    (fn pending-handler
      [printer value]
      (let [doc (if (realized? value)
                  (format-doc printer @value)
                  (color/document printer :nil "pending"))]
-    (format-unknown printer value doc)))
+       (format-unknown printer value doc)))
 
    clojure.lang.Fn
    (fn fn-handler
