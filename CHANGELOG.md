@@ -7,6 +7,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+...
+
+## [1.0.0] - 2015-10-29
+
 ### Added
 - Adopt `visit-record` logic from upgrade to fipp 0.6.3.
   [brandonbloom/fipp#29](//github.com/brandonbloom/fipp/pull/29)
@@ -113,7 +117,8 @@ to fipp and Clojure 1.7.
 - Maps default to using commas between entries.
 - Gave characters a separate syntax element than strings.
 
-[Unreleased]: https://github.com/greglook/puget/compare/0.9.2...HEAD
+[Unreleased]: https://github.com/greglook/puget/compare/1.0.0...HEAD
+[1.0.0]: https://github.com/greglook/puget/compare/0.9.2...1.0.0
 [0.9.2]: https://github.com/greglook/puget/compare/0.9.1...0.9.2
 [0.9.1]: https://github.com/greglook/puget/compare/0.9.0...0.9.1
 [0.9.0]: https://github.com/greglook/puget/compare/0.8.1...0.9.0
