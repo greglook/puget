@@ -235,13 +235,6 @@
      [printer value]
      (format-unknown printer value "Class" (.getName ^Class value)))
 
-   java.util.regex.Pattern
-   (fn pattern-handler
-     [printer value]
-     [:span
-      (color/document printer :delimiter "#")
-      (color/document printer :string (str \" value \"))])
-
    java.util.concurrent.Future
    (fn future-handler
      [printer value]
@@ -262,16 +255,9 @@
 
 
 (def clojure-handlers
-  "Map of print handlers for Clojure types. This supports syntax for vars,
-  atoms, pending values, and delays."
-  {clojure.lang.Var
-   (fn var-handler
-     [printer value]
-     [:span
-      (color/document printer :delimiter "#'")
-      (color/document printer :symbol (subs (str value) 2))])
-
-   clojure.lang.Atom
+  "Map of print handlers for 'primary' Clojure types. These should take
+  precedence over the handlers in `clojure-interface-handlers`."
+  {clojure.lang.Atom
    (fn atom-handler
      [printer value]
      (format-unknown printer value "Atom" (format-doc printer @value)))
@@ -544,13 +530,15 @@
 
   (visit-var
     [this value]
-    ; Defer to unknown, cover with handler.
-    (fv/visit-unknown this value))
+    [:span
+     (color/document this :delimiter "#'")
+     (color/document this :symbol (subs (str value) 2))])
 
   (visit-pattern
     [this value]
-    ; Defer to unknown, cover with handler.
-    (fv/visit-unknown this value))
+    [:span
+     (color/document this :delimiter "#")
+     (color/document this :string (str \" value \"))])
 
   (visit-record
     [this value]
