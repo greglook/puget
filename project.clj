@@ -1,4 +1,4 @@
-(defproject mvxcvi/puget "0.9.2"
+(defproject mvxcvi/puget "1.0.0"
   :description "Colorizing canonical Clojure printer for EDN values."
   :url "https://github.com/greglook/puget"
   :license {:name "Public Domain"
@@ -10,11 +10,9 @@
   [[lein-cloverage "1.0.6"]]
 
   :dependencies
-  [[fipp "0.6.2"]
+  [[fipp "0.6.3"]
    [mvxcvi/arrangement "1.0.0"]
    [org.clojure/clojure "1.7.0"]]
-
-  :cljfmt {:indents {with-options [[:block 1]]}}
 
   :codox {:defaults {:doc/format :markdown}
           :output-dir "doc/api"

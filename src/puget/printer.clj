@@ -13,6 +13,8 @@
   If true, metadata will be printed before values. Defaults to the value of
   `*print-meta*` if unset.
 
+  #### Collection Options
+
   `:sort-keys`
 
   Print maps and sets with ordered keys. Defaults to true, which will sort all
@@ -33,6 +35,23 @@
   If set to a positive number, then lists will only render at most the first n
   elements. This can help prevent unintentional realization of infinite lazy
   sequences.
+
+  #### Color Options
+
+  `:print-color`
+
+  When true, ouptut colored text from print functions.
+
+  `:color-markup`
+
+  :ansi for ANSI color text (the default),
+  :html-inline for inline-styled html,
+  :html-classes to use the names of the keys in the :color-scheme map
+  as class names for spans so styling can be specified via CSS.
+
+  `:color-scheme`
+
+  Map of syntax element keywords to color codes.
 
   #### Type Handling
 
@@ -57,24 +76,6 @@
   - A function value will be called with the current printer options and the
     unknown value and is expected to return a formatting document representing
     it.
-
-
-  #### Color Options
-
-  `:print-color`
-
-  When true, ouptut colored text from print functions.
-
-  `:color-markup`
-
-  :ansi for ANSI color text (the default),
-  :html-inline for inline-styled html,
-  :html-classes to use the names of the keys in the :color-scheme map
-  as class names for spans so styling can be specified via CSS.
-
-  `:color-scheme`
-
-  Map of syntax element keywords to color codes.
   "
   (:require
     [arrangement.core :as order]
@@ -234,13 +235,6 @@
      [printer value]
      (format-unknown printer value "Class" (.getName ^Class value)))
 
-   java.util.regex.Pattern
-   (fn pattern-handler
-     [printer value]
-     [:span
-      (color/document printer :delimiter "#")
-      (color/document printer :string (str \" value \"))])
-
    java.util.concurrent.Future
    (fn future-handler
      [printer value]
@@ -252,7 +246,7 @@
    java.util.Date
    (tagged-handler 'inst
      #(-> "yyyy-MM-dd'T'HH:mm:ss.SSS-00:00"
-          java.text.SimpleDateFormat.
+          (java.text.SimpleDateFormat.)
           (doto (.setTimeZone (java.util.TimeZone/getTimeZone "GMT")))
           (.format ^java.util.Date %)))
 
@@ -261,16 +255,9 @@
 
 
 (def clojure-handlers
-  "Map of print handlers for Clojure types. This supports syntax for vars,
-  atoms, pending values, and delays."
-  {clojure.lang.Var
-   (fn var-handler
-     [printer value]
-     [:span
-      (color/document printer :delimiter "#'")
-      (color/document printer :symbol (subs (str value) 2))])
-
-   clojure.lang.Atom
+  "Map of print handlers for 'primary' Clojure types. These should take
+  precedence over the handlers in `clojure-interface-handlers`."
+  {clojure.lang.Atom
    (fn atom-handler
      [printer value]
      (format-unknown printer value "Atom" (format-doc printer @value)))
@@ -290,21 +277,29 @@
 
 
 (def clojure-interface-handlers
-  "Fallback handlers for other Clojure interfaces."
+  "Fallback print handlers for other Clojure interfaces."
   {clojure.lang.IPending
    (fn pending-handler
      [printer value]
      (let [doc (if (realized? value)
                  (format-doc printer @value)
                  (color/document printer :nil "pending"))]
-    (format-unknown printer value doc)))
+       (format-unknown printer value doc)))
 
    clojure.lang.Fn
    (fn fn-handler
      [printer value]
-     (format-unknown printer value "Fn"
-                     (str/replace-first (.getName (class value))
-                                        "$" "/")))})
+     (let [doc (let [[vname & tail] (-> (.getName (class value))
+                                        (str/replace-first "$" "/")
+                                        (str/split #"\$"))]
+                 (if (seq tail)
+                   (str vname "["
+                        (->> tail
+                             (map #(first (str/split % #"__")))
+                             (str/join "/"))
+                        "]")
+                   vname))]
+       (format-unknown printer value "Fn" doc)))})
 
 
 (def common-handlers
@@ -395,6 +390,11 @@
     (fv/visit-unknown this value))
 
   (visit-pattern
+    [this value]
+    ; Defer to unknown, cover with handler.
+    (fv/visit-unknown this value))
+
+  (visit-record
     [this value]
     ; Defer to unknown, cover with handler.
     (fv/visit-unknown this value))
@@ -538,13 +538,22 @@
 
   (visit-var
     [this value]
-    ; Defer to unknown, cover with handler.
-    (fv/visit-unknown this value))
+    [:span
+     (color/document this :delimiter "#'")
+     (color/document this :symbol (subs (str value) 2))])
 
   (visit-pattern
     [this value]
-    ; Defer to unknown, cover with handler.
-    (fv/visit-unknown this value))
+    [:span
+     (color/document this :delimiter "#")
+     (color/document this :string (str \" value \"))])
+
+  (visit-record
+    [this value]
+    (fv/visit-tagged
+      this
+      (tagged-literal (symbol (.getName (class value)))
+                      (into {} value))))
 
 
   ; Special Types
@@ -604,6 +613,7 @@
 
 (defn render-str
   "Renders a value to a string using the given printer."
+  ^String
   [printer value]
   (str/trim-newline
     (with-out-str
