@@ -14,8 +14,6 @@
    [mvxcvi/arrangement "1.0.0"]
    [org.clojure/clojure "1.7.0"]]
 
-  :cljfmt {:indents {with-options [[:block 1]]}}
-
   :codox {:defaults {:doc/format :markdown}
           :output-dir "doc/api"
           :src-dir-uri "https://github.com/greglook/puget/blob/master/"
