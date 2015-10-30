@@ -14,10 +14,10 @@
    [mvxcvi/arrangement "1.0.0"]
    [org.clojure/clojure "1.7.0"]]
 
-  :codox {:defaults {:doc/format :markdown}
-          :output-dir "doc/api"
-          :src-dir-uri "https://github.com/greglook/puget/blob/master/"
-          :src-linenum-anchor-prefix "L"}
+  :codox {:metadata {:doc/format :markdown}
+          :source-uri "https://github.com/greglook/puget/blob/master/{filepath}#L{line}"
+          :doc-paths ["doc/extra"]
+          :output-path "doc/api"}
 
   :hiera {:path "doc/ns-hiera.png"
           :cluster-depth 1})
