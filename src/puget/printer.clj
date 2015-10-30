@@ -430,16 +430,17 @@
 ;; ## Pretty Printer Implementation
 
 (defrecord PrettyPrinter
-  [sort-keys
+  [width
+   print-meta
+   sort-keys
    map-delimiter
    map-coll-separator
    seq-limit
-   print-handlers
-   print-fallback
-   print-meta
    print-color
    color-markup
-   color-scheme]
+   color-scheme
+   print-handlers
+   print-fallback]
 
   fv/IVisitor
 
