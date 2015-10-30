@@ -13,6 +13,8 @@
   If true, metadata will be printed before values. Defaults to the value of
   `*print-meta*` if unset.
 
+  #### Collection Options
+
   `:sort-keys`
 
   Print maps and sets with ordered keys. Defaults to true, which will sort all
@@ -33,6 +35,23 @@
   If set to a positive number, then lists will only render at most the first n
   elements. This can help prevent unintentional realization of infinite lazy
   sequences.
+
+  #### Color Options
+
+  `:print-color`
+
+  When true, ouptut colored text from print functions.
+
+  `:color-markup`
+
+  :ansi for ANSI color text (the default),
+  :html-inline for inline-styled html,
+  :html-classes to use the names of the keys in the :color-scheme map
+  as class names for spans so styling can be specified via CSS.
+
+  `:color-scheme`
+
+  Map of syntax element keywords to color codes.
 
   #### Type Handling
 
@@ -57,24 +76,6 @@
   - A function value will be called with the current printer options and the
     unknown value and is expected to return a formatting document representing
     it.
-
-
-  #### Color Options
-
-  `:print-color`
-
-  When true, ouptut colored text from print functions.
-
-  `:color-markup`
-
-  :ansi for ANSI color text (the default),
-  :html-inline for inline-styled html,
-  :html-classes to use the names of the keys in the :color-scheme map
-  as class names for spans so styling can be specified via CSS.
-
-  `:color-scheme`
-
-  Map of syntax element keywords to color codes.
   "
   (:require
     [arrangement.core :as order]
