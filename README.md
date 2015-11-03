@@ -1,13 +1,12 @@
 Puget
 =====
 
-[![Join the chat at https://gitter.im/greglook/puget](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/greglook/puget?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
+[![Dependency Status](https://www.versioneye.com/clojure/mvxcvi:puget/badge.svg)](https://www.versioneye.com/clojure/mvxcvi:puget)
 [![Build Status](https://travis-ci.org/greglook/puget.svg?branch=master)](https://travis-ci.org/greglook/puget)
 [![Coverage Status](https://coveralls.io/repos/greglook/puget/badge.png?branch=master)](https://coveralls.io/r/greglook/puget?branch=master)
-[![Dependency Status](https://www.versioneye.com/clojure/mvxcvi:puget/badge.svg)](https://www.versioneye.com/clojure/mvxcvi:puget)
 [![API codox](http://b.repl.ca/v1/doc-API-blue.png)](https://greglook.github.io/puget/api/)
 [![marginalia docs](http://b.repl.ca/v1/doc-marginalia-blue.png)](https://greglook.github.io/puget/marginalia/uberdoc.html)
+[![Join the chat at https://gitter.im/greglook/puget](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/greglook/puget)
 
 Puget is a Clojure library for printing Clojure and
 [EDN](https://github.com/edn-format/edn) values. Under the hood, Puget formats
