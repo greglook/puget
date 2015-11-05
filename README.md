@@ -10,8 +10,10 @@ Puget
 
 Puget is a Clojure library for printing Clojure and
 [EDN](https://github.com/edn-format/edn) values. Under the hood, Puget formats
-data into a _print document_ and uses the [Fast Idiomatic
-Pretty-Printer](https://github.com/brandonbloom/fipp) library to render it.
+data into _print documents_ and uses
+[fipp](https://github.com/brandonbloom/fipp) to render them.
+
+![output example](screenshot.png)
 
 Puget offers several features which set it apart from FIPP and Clojure's native
 pretty-printing functions. [Syntax coloring](#syntax-coloring) is the most
@@ -54,9 +56,7 @@ instead of parsing it from text!
 Elements are mapped to color codes by the `:color-scheme` option. The
 `:print-color` option can be set to enable colorization using the `with-color`
 macro - alternately, the `cprint` function always prints with colored output
-enabled:
-
-![colorization example](screenshot.png)
+enabled.
 
 Puget supports three different kinds of color markup:
 - `:ansi` (the default) adds ANSI color escapes for terminal outputs.
@@ -70,11 +70,10 @@ data values are equal, they should be printed identically. This is important for
 when the printed data is hashed, but it also makes it easier to process maps and
 other structures with similar contents.
 
-By default, Puget uses the
-[arrangement](https://github.com/greglook/clj-arrangement) library to sort the
-values in sets and the keys in maps so they are always printed the same way.
-This can be disabled with the `:sort-keys` option, or enabled only for
-collections under a certain size.
+Puget uses the [arrangement](https://github.com/greglook/clj-arrangement)
+library to sort the values in sets and the keys in maps so they are always
+printed the same way. This can be disabled with the `:sort-keys` option, or
+enabled only for collections under a certain size.
 
 Most printing is done with the `PrettyPrinter` class, but the library also
 offers the `CanonicalPrinter` for serializing data in a stricter (and more
