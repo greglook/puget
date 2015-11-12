@@ -1,11 +1,11 @@
 Puget
 =====
 
-[![Dependency Status](https://www.versioneye.com/clojure/mvxcvi:puget/badge.svg)](https://www.versioneye.com/clojure/mvxcvi:puget)
+[![Dependency Status](https://www.versioneye.com/user/projects/53718bfb14c1589a89000144/badge.svg?style=flat)](https://www.versioneye.com/user/projects/53718bfb14c1589a89000144)
 [![Build Status](https://travis-ci.org/greglook/puget.svg?branch=develop)](https://travis-ci.org/greglook/puget)
 [![Coverage Status](https://coveralls.io/repos/greglook/puget/badge.svg?branch=develop&service=github)](https://coveralls.io/github/greglook/puget?branch=develop)
-[![API codox](http://b.repl.ca/v1/doc-API-blue.png)](https://greglook.github.io/puget/api/)
-[![marginalia docs](http://b.repl.ca/v1/doc-marginalia-blue.png)](https://greglook.github.io/puget/marginalia/uberdoc.html)
+[![API codox](https://img.shields.io/badge/doc-API-blue.svg)](https://greglook.github.io/puget/api/)
+[![marginalia docs](https://img.shields.io/badge/doc-marginalia-blue.svg)](https://greglook.github.io/puget/marginalia/uberdoc.html)
 [![Join the chat at https://gitter.im/greglook/puget](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/greglook/puget)
 
 Puget is a Clojure library for printing Clojure and
