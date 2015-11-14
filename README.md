@@ -129,7 +129,7 @@ As an example, extending `#inst` formatting to clj-time's `DateTime`:
      {org.joda.time.DateTime
       (puget/tagged-handler
         'inst
-        (partial f/unparse (f/formatters :date-time)))}})
+        (partial f/unparse (f/formatters :date-time)))})
 #'user/time-handlers
 
 => (puget/pprint (t/now) {:print-handlers time-handlers})
