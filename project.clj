@@ -10,7 +10,7 @@
   [[lein-cloverage "1.0.6"]]
 
   :dependencies
-  [[fipp "0.6.3"]
+  [[fipp "0.6.4"]
    [mvxcvi/arrangement "1.0.0"]
    [org.clojure/clojure "1.7.0"]]
 
