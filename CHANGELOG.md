@@ -7,7 +7,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
-...
+### Added
+- Add checks to `printer/tagged-handler` to ensure argumenst are a symbol and
+  function, respectively.
 
 ## [1.0.0] - 2015-10-29
 

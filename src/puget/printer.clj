@@ -222,6 +222,14 @@
   "Generates a print handler function which renders a tagged-literal with the
   given tag and a value produced by calling the function."
   [tag value-fn]
+  (when-not (symbol? tag)
+    (throw (ex-info (str "Cannot create tagged handler with non-symbol tag "
+                         (pr-str tag))
+                    {:tag tag, :value-fn value-fn})))
+  (when-not (ifn? value-fn)
+    (throw (ex-info (str "Cannot create tagged handler for " tag
+                         " with non-function value transform")
+                    {:tag tag, :value-fn value-fn})))
   (fn handler
     [printer value]
     (format-doc printer (tagged-literal tag (value-fn value)))))
