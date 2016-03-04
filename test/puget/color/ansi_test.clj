@@ -1,7 +1,8 @@
 (ns puget.color.ansi-test
   (:require
-   [clojure.test :refer :all]
-   [puget.color.ansi :as ansi]))
+    [clojure.test :refer :all]
+    [puget.color.ansi :as ansi]))
+
 
 (deftest colored-text
   (let [text "foo"

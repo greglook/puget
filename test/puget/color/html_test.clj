@@ -1,8 +1,9 @@
 (ns puget.color.html-test
   (:require
-   [clojure.test :refer :all]
-   [puget.color.html :as html]
-   [puget.printer :as printer]))
+    [clojure.test :refer :all]
+    [puget.color.html :as html]
+    [puget.printer :as printer]))
+
 
 (def test-color-scheme
   {:delimiter [:green]
@@ -18,17 +19,21 @@
    :class-delimiter [:blue]
    :class-name      [:bold :blue]})
 
+
 (def inline-color
   {:print-color true
    :color-markup :html-inline})
+
 
 (def classes-color
   {:print-color true
    :color-markup :html-classes})
 
+
 (deftest style-test
   (is (= "style=\"font-weight:bold;text-decoration:underline;color:red\""
          (html/style [:bold :underline :red]))))
+
 
 (deftest html-test
   (let [test-data {:a 1 :b 2 "c" 3.0 'd [1 2 3] \e #inst "2001"}
@@ -72,15 +77,15 @@
          "<span class=\"delimiter\">}</span>")]
     (is (= inline-ref
            (printer/cprint-str
-            test-data
-            {:color-markup :html-inline
-             :color-scheme test-color-scheme
-             :print-handlers printer/java-handlers})))
+             test-data
+             {:color-markup :html-inline
+              :color-scheme test-color-scheme
+              :print-handlers printer/java-handlers})))
     (is (= classes-ref
            (printer/cprint-str
-            test-data
-            {:color-markup :html-classes
-             :print-handlers printer/java-handlers}))))
+             test-data
+             {:color-markup :html-classes
+              :print-handlers printer/java-handlers}))))
   (testing "color-text"
     (testing "no color markup"
       (is (= ":inline>"
