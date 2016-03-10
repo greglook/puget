@@ -11,7 +11,7 @@
 
   :dependencies
   [[fipp "0.6.4"]
-   [mvxcvi/arrangement "1.0.0"]
+   [mvxcvi/arrangement "1.1.0"]
    [org.clojure/clojure "1.7.0"]]
 
   :codox {:metadata {:doc/format :markdown}
