@@ -4,9 +4,8 @@
 
   Use with a `:color-markup` of `:ansi`."
   (:require
-    [clojure.string :as str]
-    [puget.color :as color]))
-
+   [clojure.string :as str]
+   [puget.color :as color]))
 
 (def sgr-code
   "Map of symbols to numeric SGR (select graphic rendition) codes."
@@ -38,7 +37,6 @@
    :bg-256     48
    :bg-reset   49})
 
-
 (defn esc
   "Returns an ANSI escope string which will apply the given collection of SGR
   codes."
@@ -47,12 +45,10 @@
         codes (str/join \; codes)]
     (str \u001b \[ codes \m)))
 
-
 (defn escape
   "Returns an ANSI escope string which will enact the given SGR codes."
   [& codes]
   (esc codes))
-
 
 (defn sgr
   "Wraps the given string with SGR escapes to apply the given codes, then reset
@@ -60,19 +56,16 @@
   [string & codes]
   (str (esc codes) string (escape :none)))
 
-
 (defn strip
   "Removes color codes from the given string."
   [string]
   (str/replace string #"\u001b\[[0-9;]*[mK]" ""))
-
 
 (defmethod color/document :ansi
   [options element text]
   (if-let [codes (-> options :color-scheme (get element) seq)]
     [:span [:pass (esc codes)] text [:pass (escape :none)]]
     text))
-
 
 (defmethod color/text :ansi
   [options element text]

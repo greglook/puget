@@ -27,12 +27,10 @@
   (when (:print-color options)
     (:color-markup options)))
 
-
 (defmulti document
   "Constructs a pretty print document, which may be colored if
   `:print-color` is true."
   #'dispatch)
-
 
 (defmulti text
   "Produces text colored according to the active color scheme. This is mostly
@@ -40,7 +38,6 @@
   Puget, but which is not directly printed by the library. Note that this
   function still obeys the `:print-color` option."
   #'dispatch)
-
 
 ;; ## Default Markup
 
