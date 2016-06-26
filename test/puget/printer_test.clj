@@ -1,14 +1,12 @@
 (ns puget.printer-test
   (:require
-    [clojure.string :as str]
-    [clojure.test :refer :all]
-    [puget.printer :refer :all]))
-
+   [clojure.string :as str]
+   [clojure.test :refer :all]
+   [puget.printer :refer :all]))
 
 ;; ## Test Types
 
 (defrecord TestRecord [foo bar])
-
 
 (deftype APending [is-realized]
 
@@ -20,7 +18,6 @@
 
   (isRealized [this] is-realized))
 
-
 (deftype ComplexValue []
 
   Object
@@ -30,8 +27,6 @@
 (defmethod print-method ComplexValue
   [this w]
   (.write w "{{ complex value print }}"))
-
-
 
 ;; ## Canonical Printing
 
@@ -54,7 +49,6 @@
       'sym    "sym"
       'ns/sym "ns/sym")))
 
-
 (deftest canonical-collections
   (let [printer (canonical-printer)]
     (are [v text] (= text (render-str printer v))
@@ -67,14 +61,12 @@
       (lazy-seq [:x])        "(:x)"
       (map inc [0 1 2])      "(1 2 3)")))
 
-
 (deftest canonical-metadata
   (let [printer (canonical-printer)
         value ^:foo [:bar]]
     (binding [*print-meta* true]
       (is (= "[:bar]" (render-str printer value))
           "should not render metadata"))))
-
 
 (deftest canonical-extensions
   (testing "tagged-handler construction"
@@ -87,7 +79,6 @@
     (is (= (str "#uuid \"" uuid-str "\"")
            (render-str printer (java.util.UUID/fromString uuid-str))))))
 
-
 (deftest canonical-errors
   (let [printer (canonical-printer)]
     (are [v] (thrown? IllegalArgumentException
@@ -98,8 +89,6 @@
       (atom :foo)
       (->TestRecord :x \y)
       (java.util.Currency/getInstance "USD"))))
-
-
 
 ;; ## Pretty Printing
 
@@ -121,7 +110,6 @@
     'sym    "sym"
     'ns/sym "ns/sym"))
 
-
 (deftest pretty-collections
   (are [v text] (= text (pprint-str v))
     '(foo :bar)            "(foo :bar)"
@@ -131,7 +119,6 @@
     #{:omega :alpha :beta} "#{:alpha :beta :omega}" ; also sorted
     (list)                 "()"
     (lazy-seq [:x])        "(:x)"))
-
 
 (deftest pretty-java-types
   (testing "class types"
@@ -147,7 +134,6 @@
     (let [uuid-str "31f7dd72-c7f7-4a15-a98b-0f9248d3aaa6"]
       (is (= (str "#uuid \"" uuid-str "\"")
              (pprint-str (java.util.UUID/fromString uuid-str)))))))
-
 
 (deftest pretty-clojure-types
   (testing "records"
@@ -188,7 +174,6 @@
       (is (re-seq #"#<puget\.printer_test\.APending@[0-9a-f]+ pending"
                   (pprint-str v))))))
 
-
 (deftest pretty-metadata
   (testing "print-meta logic"
     (let [value ^:foo [:bar]]
@@ -197,7 +182,6 @@
         (is (= "[:bar]" (pprint-str value {:print-meta false}))))
       (binding [*print-meta* false]
         (is (= "^{:foo true}\n[:bar]" (pprint-str value {:print-meta true})))))))
-
 
 (deftest pretty-collection-options
   (testing "collection key sorting"
@@ -231,7 +215,6 @@
       (is (= "(1 2 3)" (pprint-str (map inc [0 1 2]))))
       (is (= "(0 1 2 3 ...)" (pprint-str (range 100)))))))
 
-
 (deftest pretty-color-options
   (let [value [nil 1.0 true "foo" :bar]
         bw-str (with-out-str (pprint value))
@@ -243,7 +226,6 @@
     (is (= "#{:baz}" (pprint-str #{:baz})))
     (is (= (cprint-str :foo)
            (with-color (color-text :keyword ":foo"))))))
-
 
 (deftest pretty-extensions
   (let [cv (ComplexValue.)]

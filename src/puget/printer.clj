@@ -78,14 +78,13 @@
     it.
   "
   (:require
-    [arrangement.core :as order]
-    [clojure.string :as str]
-    [fipp.engine :as fe]
-    [fipp.visit :as fv]
-    [puget.dispatch :as dispatch]
-    [puget.color :as color]
-    (puget.color ansi html)))
-
+   [arrangement.core :as order]
+   [clojure.string :as str]
+   [fipp.engine :as fe]
+   [fipp.visit :as fv]
+   [puget.dispatch :as dispatch]
+   [puget.color :as color]
+   (puget.color ansi html)))
 
 ;; ## Control Vars
 
@@ -117,14 +116,12 @@
     :class-delimiter [:blue]
     :class-name      [:bold :blue]}})
 
-
 (defn merge-options
   "Merges maps of printer options, taking care to combine the color scheme
   correctly."
   [a b]
   (let [colors (merge (:color-scheme a) (:color-scheme b))]
     (assoc (merge a b) :color-scheme colors)))
-
 
 (defmacro with-options
   "Executes the given expressions with a set of options merged into the current
@@ -133,13 +130,11 @@
   `(binding [*options* (merge-options *options* ~opts)]
      ~@body))
 
-
 (defmacro with-color
   "Executes the given expressions with colored output enabled."
   [& body]
   `(with-options {:print-color true}
      ~@body))
-
 
 (defn color-text
   "Produces text colored according to the active color scheme. This is mostly
@@ -150,8 +145,6 @@
    (color-text *options* element text))
   ([options element text]
    (color/text options element text)))
-
-
 
 ;; ## Formatting Methods
 
@@ -165,7 +158,6 @@
                (>= mode (count value))))
     (sort-fn value)
     (seq value)))
-
 
 (defn format-unknown
   "Renders common syntax doc for an unknown representation of a value."
@@ -184,7 +176,6 @@
         (list " " repr))
       (color/document printer :class-delimiter ">")])))
 
-
 (defn format-doc*
   "Formats a document without considering metadata."
   [printer value]
@@ -194,15 +185,12 @@
       (handler printer value)
       (fv/visit* printer value))))
 
-
 (defn format-doc
   "Recursively renders a print document for the given value."
   [printer value]
   (if-let [metadata (meta value)]
     (fv/visit-meta printer metadata value)
     (format-doc* printer value)))
-
-
 
 ;; ## Type Handlers
 
@@ -211,12 +199,10 @@
   [printer value]
   (pr-str value))
 
-
 (defn unknown-handler
   "Print handler which renders the value using the printer's unknown type logic."
   [printer value]
   (fv/visit-unknown printer value))
-
 
 (defn tagged-handler
   "Generates a print handler function which renders a tagged-literal with the
@@ -233,7 +219,6 @@
   (fn handler
     [printer value]
     (format-doc printer (tagged-literal tag (value-fn value)))))
-
 
 (def java-handlers
   "Map of print handlers for Java types. This supports syntax for regular
@@ -253,14 +238,13 @@
 
    java.util.Date
    (tagged-handler 'inst
-     #(-> "yyyy-MM-dd'T'HH:mm:ss.SSS-00:00"
-          (java.text.SimpleDateFormat.)
-          (doto (.setTimeZone (java.util.TimeZone/getTimeZone "GMT")))
-          (.format ^java.util.Date %)))
+                   #(-> "yyyy-MM-dd'T'HH:mm:ss.SSS-00:00"
+                        (java.text.SimpleDateFormat.)
+                        (doto (.setTimeZone (java.util.TimeZone/getTimeZone "GMT")))
+                        (.format ^java.util.Date %)))
 
    java.util.UUID
    (tagged-handler 'uuid str)})
-
 
 (def clojure-handlers
   "Map of print handlers for 'primary' Clojure types. These should take
@@ -282,7 +266,6 @@
    (fn iseq-handler
      [printer value]
      (fv/visit-seq printer value))})
-
 
 (def clojure-interface-handlers
   "Fallback print handlers for other Clojure interfaces."
@@ -309,22 +292,19 @@
                    vname))]
        (format-unknown printer value "Fn" doc)))})
 
-
 (def common-handlers
   "Print handler dispatch combining Java and Clojure handlers with inheritance
   lookups. Provides a similar experience as the standard Clojure
   pretty-printer."
   (dispatch/chained-lookup
-    (dispatch/inheritance-lookup java-handlers)
-    (dispatch/inheritance-lookup clojure-handlers)
-    (dispatch/inheritance-lookup clojure-interface-handlers)))
-
-
+   (dispatch/inheritance-lookup java-handlers)
+   (dispatch/inheritance-lookup clojure-handlers)
+   (dispatch/inheritance-lookup clojure-interface-handlers)))
 
 ;; ## Canonical Printer Implementation
 
 (defrecord CanonicalPrinter
-  [print-handlers]
+           [print-handlers]
 
   fv/IVisitor
 
@@ -356,10 +336,7 @@
 
   (visit-symbol
     [this value]
-    (str value))
-
-
-  ; Collection Types
+    (str value)); Collection Types
 
   (visit-seq
     [this value]
@@ -382,10 +359,7 @@
     (let [entries (map #(vector :span (format-doc this (key %))
                                 " "   (format-doc this (val %)))
                        (sort-by first order/rank value))]
-      [:group "{" [:align (interpose " " entries)] "}"]))
-
-
-  ; Clojure Types
+      [:group "{" [:align (interpose " " entries)] "}"])); Clojure Types
 
   (visit-meta
     [this metadata value]
@@ -405,10 +379,7 @@
   (visit-record
     [this value]
     ; Defer to unknown, cover with handler.
-    (fv/visit-unknown this value))
-
-
-  ; Special Types
+    (fv/visit-unknown this value)); Special Types
 
   (visit-tagged
     [this value]
@@ -417,9 +388,8 @@
   (visit-unknown
     [this value]
     (throw (IllegalArgumentException.
-             (str "No defined representation for " (class value) ": "
-                  (pr-str value))))))
-
+            (str "No defined representation for " (class value) ": "
+                 (pr-str value))))))
 
 (defn canonical-printer
   "Constructs a new canonical printer with the given handler dispatch."
@@ -429,26 +399,23 @@
    (assoc (CanonicalPrinter. handlers)
           :width 0)))
 
-
 ; Remove automatic constructor function.
 (ns-unmap *ns* '->CanonicalPrinter)
-
-
 
 ;; ## Pretty Printer Implementation
 
 (defrecord PrettyPrinter
-  [width
-   print-meta
-   sort-keys
-   map-delimiter
-   map-coll-separator
-   seq-limit
-   print-color
-   color-markup
-   color-scheme
-   print-handlers
-   print-fallback]
+           [width
+            print-meta
+            sort-keys
+            map-delimiter
+            map-coll-separator
+            seq-limit
+            print-color
+            color-markup
+            color-scheme
+            print-handlers
+            print-fallback]
 
   fv/IVisitor
 
@@ -480,10 +447,7 @@
 
   (visit-symbol
     [this value]
-    (color/document this :symbol (str value)))
-
-
-  ; Collection Types
+    (color/document this :symbol (str value))); Collection Types
 
   (visit-seq
     [this value]
@@ -532,10 +496,7 @@
       [:group
        (color/document this :delimiter "{")
        [:align (interpose [:span map-delimiter :line] entries)]
-       (color/document this :delimiter "}")]))
-
-
-  ; Clojure Types
+       (color/document this :delimiter "}")])); Clojure Types
 
   (visit-meta
     [this metadata value]
@@ -560,12 +521,9 @@
   (visit-record
     [this value]
     (fv/visit-tagged
-      this
-      (tagged-literal (symbol (.getName (class value)))
-                      (into {} value))))
-
-
-  ; Special Types
+     this
+     (tagged-literal (symbol (.getName (class value)))
+                     (into {} value)))); Special Types
 
   (visit-tagged
     [this value]
@@ -579,19 +537,18 @@
     [this value]
     (case print-fallback
       :pretty
-        (format-unknown this value)
+      (format-unknown this value)
       :print
-        [:span (pr-str value)]
+      [:span (pr-str value)]
       :error
-        (throw (IllegalArgumentException.
-                 (str "No defined representation for " (class value) ": "
-                      (pr-str value))))
+      (throw (IllegalArgumentException.
+              (str "No defined representation for " (class value) ": "
+                   (pr-str value))))
       (if (ifn? print-fallback)
         (print-fallback this value)
         (throw (IllegalStateException.
-                 (str "Unsupported value for print-fallback: "
-                      (pr-str print-fallback))))))))
-
+                (str "Unsupported value for print-fallback: "
+                     (pr-str print-fallback))))))))
 
 (defn pretty-printer
   "Constructs a new printer from the given configuration."
@@ -603,11 +560,8 @@
        (reduce merge-options)
        (map->PrettyPrinter)))
 
-
 ; Remove automatic constructor function.
 (ns-unmap *ns* '->PrettyPrinter)
-
-
 
 ;; ## Printing Functions
 
@@ -616,18 +570,16 @@
   [printer value]
   (binding [*print-meta* false]
     (fe/pprint-document
-      (format-doc printer value)
-      {:width (:width printer)})))
-
+     (format-doc printer value)
+     {:width (:width printer)})))
 
 (defn render-str
   "Renders a value to a string using the given printer."
   ^String
   [printer value]
   (str/trim-newline
-    (with-out-str
-      (render-out printer value))))
-
+   (with-out-str
+     (render-out printer value))))
 
 (defn pprint
   "Pretty-prints a value to *out*. Options may be passed to override the
@@ -637,7 +589,6 @@
   ([value opts]
    (render-out (pretty-printer opts) value)))
 
-
 (defn pprint-str
   "Pretty-print a value to a string."
   ([value]
@@ -645,14 +596,12 @@
   ([value opts]
    (render-str (pretty-printer opts) value)))
 
-
 (defn cprint
   "Like pprint, but turns on colored output."
   ([value]
    (cprint value nil))
   ([value opts]
    (pprint value (assoc opts :print-color true))))
-
 
 (defn cprint-str
   "Pretty-prints a value to a colored string."
