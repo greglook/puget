@@ -4,8 +4,16 @@ lein: lein2
 jdk:
   - openjdk7
   - oraclejdk7
+
+script:
+  - lein2 check
+  - lein2 cljfmt check
+  - lein2 test
+  - lein2 cloverage
+
 after_script:
   - bash -ex test/coveralls.sh
+
 notifications:
   webhooks:
     urls:

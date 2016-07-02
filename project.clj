@@ -7,12 +7,13 @@
   :deploy-branches ["master"]
 
   :plugins
-  [[lein-cloverage "1.0.6"]]
+  [[lein-cljfmt "0.5.3"]
+   [lein-cloverage "1.0.6"]]
 
   :dependencies
-  [[fipp "0.6.4"]
+  [[fipp "0.6.5"]
    [mvxcvi/arrangement "1.1.0"]
-   [org.clojure/clojure "1.7.0"]]
+   [org.clojure/clojure "1.8.0"]]
 
   :cljfmt
   {:remove-consecutive-blank-lines? false
