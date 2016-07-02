@@ -79,9 +79,9 @@
                      {clojure.lang.ILookup :interface-lookup
                       java.io.InputStream :input-stream})]
       (is (= :interface-lookup (dispatch clojure.lang.PersistentHashMap)))
-      (is (nil? (dispatch clojure.lang.Keyword)))))
+      (is (nil? (dispatch clojure.lang.Keyword))))
     (let [dispatch (dispatch/inheritance-lookup
                      {clojure.lang.ILookup :interface-lookup
                       java.util.Map :java-map})]
       (is (thrown? RuntimeException
-                   (dispatch clojure.lang.PersistentHashMap)))))
+                   (dispatch clojure.lang.PersistentHashMap))))))

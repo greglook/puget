@@ -252,7 +252,8 @@
        (format-unknown printer value "Future" doc)))
 
    java.util.Date
-   (tagged-handler 'inst
+   (tagged-handler
+     'inst
      #(-> "yyyy-MM-dd'T'HH:mm:ss.SSS-00:00"
           (java.text.SimpleDateFormat.)
           (doto (.setTimeZone (java.util.TimeZone/getTimeZone "GMT")))
@@ -579,13 +580,16 @@
     [this value]
     (case print-fallback
       :pretty
-        (format-unknown this value)
+      (format-unknown this value)
+
       :print
-        [:span (pr-str value)]
+      [:span (pr-str value)]
+
       :error
-        (throw (IllegalArgumentException.
-                 (str "No defined representation for " (class value) ": "
-                      (pr-str value))))
+      (throw (IllegalArgumentException.
+               (str "No defined representation for " (class value) ": "
+                    (pr-str value))))
+
       (if (ifn? print-fallback)
         (print-fallback this value)
         (throw (IllegalStateException.
