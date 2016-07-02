@@ -14,10 +14,19 @@
    [mvxcvi/arrangement "1.1.0"]
    [org.clojure/clojure "1.7.0"]]
 
-  :codox {:metadata {:doc/format :markdown}
-          :source-uri "https://github.com/greglook/puget/blob/master/{filepath}#L{line}"
-          :doc-paths ["doc/extra"]
-          :output-path "doc/api"}
+  :cljfmt
+  {:remove-consecutive-blank-lines? false
+   :indents {ns [[:block 1] [:inner 1]]
+             defrecord ^:replace [[:block 1] [:inner 1]]
+             with-options [[:inner 0]]
+             #"[^\[{].*" [[:block 0]]}}
 
-  :hiera {:path "doc/ns-hiera.png"
-          :cluster-depth 1})
+  :codox
+  {:metadata {:doc/format :markdown}
+   :source-uri "https://github.com/greglook/puget/blob/master/{filepath}#L{line}"
+   :doc-paths ["doc/extra"]
+   :output-path "doc/api"}
+
+  :hiera
+  {:path "doc/ns-hiera.png"
+   :cluster-depth 1})
