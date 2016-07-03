@@ -1,0 +1,11 @@
+machine:
+  java:
+    version: openjdk7
+
+test:
+  pre:
+    - lein check
+    - lein cljmft check
+  post:
+    - lein cloverage --coveralls
+    - curl -F json_file=@target/coverage/coveralls.json https://coveralls.io/api/v1/jobs
