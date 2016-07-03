@@ -2,7 +2,7 @@ Puget
 =====
 
 [![Dependency Status](https://www.versioneye.com/user/projects/53718bfb14c1589a89000144/badge.svg?style=flat)](https://www.versioneye.com/user/projects/53718bfb14c1589a89000144)
-[![Build Status](https://travis-ci.org/greglook/puget.svg?branch=develop)](https://travis-ci.org/greglook/puget)
+[![Build Status](https://circleci.com/gh/greglook/puget.svg?style=shield&circle-token=cce98d9ba9811c55b454e22db02c338f81d6b093)](https://circleci.com/gh/greglook/puget)
 [![Coverage Status](https://coveralls.io/repos/greglook/puget/badge.svg?branch=develop&service=github)](https://coveralls.io/github/greglook/puget?branch=develop)
 [![API codox](https://img.shields.io/badge/doc-API-blue.svg)](https://greglook.github.io/puget/api/)
 [![marginalia docs](https://img.shields.io/badge/doc-marginalia-blue.svg)](https://greglook.github.io/puget/marginalia/uberdoc.html)
