@@ -5,7 +5,7 @@ machine:
 test:
   pre:
     - lein test
-    - lein cloverage --coveralls
+    - lein cljfmt check
   override:
     - lein test
     - lein cloverage --coveralls
