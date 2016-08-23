@@ -11,6 +11,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Add checks to `printer/tagged-handler` to ensure argumenst are a symbol and
   function, respectively.
 
+### Changed
+- Upgraded fipp to 0.6.6
+  [#33](//github.com/greglook/puget/pull/33)
+
 ## [1.0.0] - 2015-10-29
 
 ### Added
