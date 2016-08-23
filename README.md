@@ -1,16 +1,19 @@
 Puget
 =====
 
-[![Build Status](https://travis-ci.org/greglook/puget.svg?branch=master)](https://travis-ci.org/greglook/puget)
-[![Coverage Status](https://coveralls.io/repos/greglook/puget/badge.png?branch=master)](https://coveralls.io/r/greglook/puget?branch=master)
-[![Dependency Status](https://www.versioneye.com/clojure/mvxcvi:puget/badge.svg)](https://www.versioneye.com/clojure/mvxcvi:puget)
-[![API codox](http://b.repl.ca/v1/doc-API-blue.png)](https://greglook.github.io/puget/api/)
-[![marginalia docs](http://b.repl.ca/v1/doc-marginalia-blue.png)](https://greglook.github.io/puget/marginalia/uberdoc.html)
+[![Dependency Status](https://www.versioneye.com/user/projects/53718bfb14c1589a89000144/badge.svg?style=flat)](https://www.versioneye.com/user/projects/53718bfb14c1589a89000144)
+[![Build Status](https://circleci.com/gh/greglook/puget.svg?style=shield&circle-token=cce98d9ba9811c55b454e22db02c338f81d6b093)](https://circleci.com/gh/greglook/puget)
+[![Coverage Status](https://coveralls.io/repos/greglook/puget/badge.svg?branch=develop&service=github)](https://coveralls.io/github/greglook/puget?branch=develop)
+[![API codox](https://img.shields.io/badge/doc-API-blue.svg)](https://greglook.github.io/puget/api/)
+[![marginalia docs](https://img.shields.io/badge/doc-marginalia-blue.svg)](https://greglook.github.io/puget/marginalia/uberdoc.html)
+[![Join the chat at https://gitter.im/greglook/puget](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/greglook/puget)
 
 Puget is a Clojure library for printing Clojure and
 [EDN](https://github.com/edn-format/edn) values. Under the hood, Puget formats
-data into a _print document_ and uses the [Fast Idiomatic
-Pretty-Printer](https://github.com/brandonbloom/fipp) library to render it.
+data into _print documents_ and uses
+[fipp](https://github.com/brandonbloom/fipp) to render them.
+
+![output example](screenshot.png)
 
 Puget offers several features which set it apart from FIPP and Clojure's native
 pretty-printing functions. [Syntax coloring](#syntax-coloring) is the most
@@ -53,9 +56,7 @@ instead of parsing it from text!
 Elements are mapped to color codes by the `:color-scheme` option. The
 `:print-color` option can be set to enable colorization using the `with-color`
 macro - alternately, the `cprint` function always prints with colored output
-enabled:
-
-![colorization example](screenshot.png)
+enabled.
 
 Puget supports three different kinds of color markup:
 - `:ansi` (the default) adds ANSI color escapes for terminal outputs.
@@ -69,11 +70,10 @@ data values are equal, they should be printed identically. This is important for
 when the printed data is hashed, but it also makes it easier to process maps and
 other structures with similar contents.
 
-By default, Puget uses the
-[arrangement](https://github.com/greglook/clj-arrangement) library to sort the
-values in sets and the keys in maps so they are always printed the same way.
-This can be disabled with the `:sort-keys` option, or enabled only for
-collections under a certain size.
+Puget uses the [arrangement](https://github.com/greglook/clj-arrangement)
+library to sort the values in sets and the keys in maps so they are always
+printed the same way. This can be disabled with the `:sort-keys` option, or
+enabled only for collections under a certain size.
 
 Most printing is done with the `PrettyPrinter` class, but the library also
 offers the `CanonicalPrinter` for serializing data in a stricter (and more
@@ -129,7 +129,7 @@ As an example, extending `#inst` formatting to clj-time's `DateTime`:
      {org.joda.time.DateTime
       (puget/tagged-handler
         'inst
-        (partial f/unparse (f/formatters :date-time)))}})
+        (partial f/unparse (f/formatters :date-time)))})
 #'user/time-handlers
 
 => (puget/pprint (t/now) {:print-handlers time-handlers})

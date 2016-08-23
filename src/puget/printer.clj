@@ -222,6 +222,14 @@
   "Generates a print handler function which renders a tagged-literal with the
   given tag and a value produced by calling the function."
   [tag value-fn]
+  (when-not (symbol? tag)
+    (throw (ex-info (str "Cannot create tagged handler with non-symbol tag "
+                         (pr-str tag))
+                    {:tag tag, :value-fn value-fn})))
+  (when-not (ifn? value-fn)
+    (throw (ex-info (str "Cannot create tagged handler for " tag
+                         " with non-function value transform")
+                    {:tag tag, :value-fn value-fn})))
   (fn handler
     [printer value]
     (format-doc printer (tagged-literal tag (value-fn value)))))
@@ -244,7 +252,8 @@
        (format-unknown printer value "Future" doc)))
 
    java.util.Date
-   (tagged-handler 'inst
+   (tagged-handler
+     'inst
      #(-> "yyyy-MM-dd'T'HH:mm:ss.SSS-00:00"
           (java.text.SimpleDateFormat.)
           (doto (.setTimeZone (java.util.TimeZone/getTimeZone "GMT")))
@@ -430,16 +439,17 @@
 ;; ## Pretty Printer Implementation
 
 (defrecord PrettyPrinter
-  [sort-keys
+  [width
+   print-meta
+   sort-keys
    map-delimiter
    map-coll-separator
    seq-limit
-   print-handlers
-   print-fallback
-   print-meta
    print-color
    color-markup
-   color-scheme]
+   color-scheme
+   print-handlers
+   print-fallback]
 
   fv/IVisitor
 
@@ -570,13 +580,16 @@
     [this value]
     (case print-fallback
       :pretty
-        (format-unknown this value)
+      (format-unknown this value)
+
       :print
-        [:span (pr-str value)]
+      [:span (pr-str value)]
+
       :error
-        (throw (IllegalArgumentException.
-                 (str "No defined representation for " (class value) ": "
-                      (pr-str value))))
+      (throw (IllegalArgumentException.
+               (str "No defined representation for " (class value) ": "
+                    (pr-str value))))
+
       (if (ifn? print-fallback)
         (print-fallback this value)
         (throw (IllegalStateException.

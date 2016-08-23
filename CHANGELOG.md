@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file, which
 follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 This project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.0.1] - 2016-08-23
+
+### Added
+- Add checks to `printer/tagged-handler` to ensure argumenst are a symbol and
+  function, respectively.
+
+### Changed
+- Upgraded fipp to 0.6.6
+  [#33](//github.com/greglook/puget/pull/33)
+
 ## [1.0.0] - 2015-10-29
 
 Finally decided it was time to recognize that this is a stable library!
@@ -115,6 +125,7 @@ to fipp and Clojure 1.7.
 - Maps default to using commas between entries.
 - Gave characters a separate syntax element than strings.
 
+[1.0.1]: https://github.com/greglook/puget/compare/1.0.0...1.0.1
 [1.0.0]: https://github.com/greglook/puget/compare/0.9.2...1.0.0
 [0.9.2]: https://github.com/greglook/puget/compare/0.9.1...0.9.2
 [0.9.1]: https://github.com/greglook/puget/compare/0.9.0...0.9.1

@@ -77,6 +77,10 @@
 
 
 (deftest canonical-extensions
+  (testing "tagged-handler construction"
+    (is (thrown? clojure.lang.ExceptionInfo (tagged-handler "foo" str)))
+    (is (thrown? clojure.lang.ExceptionInfo (tagged-handler 'foo "abcd")))
+    (is (ifn? (tagged-handler 'foo str))))
   (let [handlers {java.util.UUID (tagged-handler 'uuid str)}
         printer (canonical-printer handlers)
         uuid-str "31f7dd72-c7f7-4a15-a98b-0f9248d3aaa6"]
