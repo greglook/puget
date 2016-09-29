@@ -63,6 +63,9 @@ Puget supports three different kinds of color markup:
 - `:html-inline` adds HTML `span` elements with inline `style` attributes.
 - `:html-classes` adds `span` elements with semantic `class` attributes.
 
+See the [`puget.color.ansi`](src/puget/color/ansi.clj) namespace for the
+available ANSI color styles which can be applied to syntax elements.
+
 ## Canonical Representation
 
 Puget also provides _canonical serialization_ of data. In most cases, if two
