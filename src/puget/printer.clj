@@ -277,17 +277,17 @@
      (let [doc (if (realized? value)
                  (format-doc printer @value)
                  (color/document printer :nil "pending"))]
-       (format-unknown printer value "Delay" doc)))
-
-   clojure.lang.ISeq
-   (fn iseq-handler
-     [printer value]
-     (fv/visit-seq printer value))})
+       (format-unknown printer value "Delay" doc)))})
 
 
 (def clojure-interface-handlers
   "Fallback print handlers for other Clojure interfaces."
-  {clojure.lang.IPending
+  {clojure.lang.ISeq
+   (fn iseq-handler
+     [printer value]
+     (fv/visit-seq printer value))
+
+   clojure.lang.IPending
    (fn pending-handler
      [printer value]
      (let [doc (if (realized? value)
