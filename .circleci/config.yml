@@ -12,14 +12,14 @@ jobs:
             - puget-{{ checksum "project.clj" }}
             - puget-
       - run: lein deps
-      - save_cache:
-          paths:
-            - ~/.m2
-          key: puget-{{ checksum "project.clj" }}
       - run: lein cljfmt check
       - run: lein check
       - run: lein test
       - run: lein cloverage --codecov
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: puget-{{ checksum "project.clj" }}
       - store_artifacts:
           path: target/coverage
           destination: coverage
