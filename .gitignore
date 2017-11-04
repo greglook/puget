@@ -1,5 +1,4 @@
 /checkouts/
-/doc/
 /target/
 .lein-*
 .nrepl-port
