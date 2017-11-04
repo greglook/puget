@@ -22,12 +22,12 @@
              with-options [[:inner 0]]
              #"[^\[{].*" [[:block 0]]}}
 
+  :hiera
+  {:path "doc/ns-hiera.png"
+   :cluster-depth 1}
+
   :codox
   {:metadata {:doc/format :markdown}
    :source-uri "https://github.com/greglook/puget/blob/master/{filepath}#L{line}"
    :doc-paths ["doc/extra"]
-   :output-path "doc/api"}
-
-  :hiera
-  {:path "doc/ns-hiera.png"
-   :cluster-depth 1})
+   :output-path "target/doc/api"})
