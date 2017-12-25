@@ -8,13 +8,12 @@
   :pedantic? :abort
 
   :plugins
-  [[lein-cljfmt "0.5.3"]
-   [lein-cloverage "1.0.10"]]
+  [[lein-cloverage "1.0.10"]]
 
   :dependencies
-  [[org.clojure/clojure "1.8.0"]
+  [[org.clojure/clojure "1.9.0"]
    [mvxcvi/arrangement "1.1.1"]
-   [fipp "0.6.10"]]
+   [fipp "0.6.12"]]
 
   :cljfmt
   {:remove-consecutive-blank-lines? false
