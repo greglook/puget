@@ -84,7 +84,8 @@
     [fipp.visit :as fv]
     [puget.dispatch :as dispatch]
     [puget.color :as color]
-    (puget.color ansi html)))
+    [puget.color.ansi]
+    [puget.color.html]))
 
 
 ;; ## Control Vars
@@ -580,15 +581,15 @@
     [this value]
     (case print-fallback
       :pretty
-      (format-unknown this value)
+        (format-unknown this value)
 
       :print
-      [:span (pr-str value)]
+        [:span (pr-str value)]
 
       :error
-      (throw (IllegalArgumentException.
-               (str "No defined representation for " (class value) ": "
-                    (pr-str value))))
+        (throw (IllegalArgumentException.
+                 (str "No defined representation for " (class value) ": "
+                      (pr-str value))))
 
       (if (ifn? print-fallback)
         (print-fallback this value)

@@ -8,6 +8,7 @@
   (:require
     [clojure.string :as str]))
 
+
 ;; ## Logical Dispatch
 
 (defn chained-lookup
@@ -23,7 +24,8 @@
                 "chained-lookup must be provided at least one dispatch function to try.")))
      (if (= 1 (count candidates))
        (first candidates)
-       (fn lookup [t]
+       (fn lookup
+         [t]
          (some #(% t) candidates)))))
   ([a b & more]
    (chained-lookup (list* a b more))))
@@ -35,7 +37,8 @@
   lookup logic to determine the dispatched value."
   [dispatch]
   (let [cache (atom {})]
-    (fn lookup [t]
+    (fn lookup
+      [t]
       (let [memory @cache]
         (if (contains? memory t)
           (get memory t)
@@ -52,7 +55,8 @@
   useful for checking configuration that must be created in situations where the
   classes themselves may not be loaded yet."
   [dispatch]
-  (fn lookup [^Class t]
+  (fn lookup
+    [^Class t]
     (dispatch (symbol (.getName t)))))
 
 
@@ -86,7 +90,8 @@
   then attempting to look up its ancestor classes, implemented interfaces, and
   finally `java.lang.Object`."
   [dispatch]
-  (fn lookup [t]
+  (fn lookup
+    [t]
     (or
       ; Look up base class and ancestors up to the base class.
       (some dispatch (lineage t))

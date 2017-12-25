@@ -10,7 +10,8 @@
 (defrecord TestRecord [foo bar])
 
 
-(deftype APending [is-realized]
+(deftype APending
+  [is-realized]
 
   clojure.lang.IDeref
 
@@ -21,11 +22,13 @@
   (isRealized [this] is-realized))
 
 
-(deftype ComplexValue []
+(deftype ComplexValue
+  []
 
   Object
 
   (toString [_] "to-string"))
+
 
 (defmethod print-method ComplexValue
   [this w]
@@ -91,7 +94,7 @@
 (deftest canonical-errors
   (let [printer (canonical-printer)]
     (are [v] (thrown? IllegalArgumentException
-                      (render-str printer v))
+               (render-str printer v))
       #"^foo"
       #'*options*
       (delay 5)
@@ -269,7 +272,7 @@
     (testing "error print fallback"
       (with-options {:print-fallback :error}
         (is (thrown? IllegalArgumentException
-                     (pprint-str cv)))))
+              (pprint-str cv)))))
     (testing "handler function print-fallback"
       (with-options {:print-fallback (constantly [:span "custom-fn"])}
         (is (= "custom-fn" (pprint-str cv)))))
