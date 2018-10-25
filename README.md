@@ -96,6 +96,19 @@ compact) fashion.
 ; IllegalArgumentException: No defined representation for class java.util.Currency: USD
 ```
 
+If you like the strictness of the canonical printer but don't need the
+guaranteed canonicalization, you can avoid unnecessary sorting by
+using the alternative `compact-printer`:
+
+```clojure
+=> (puget/render-out (puget/compact-printer) (set (range 10)))
+#{0 7 1 4 6 3 2 9 5 8}
+
+=> (puget/render-out (puget/compact-printer) usd)
+; IllegalArgumentException No defined representation for class java.util.Currency: USD
+```
+
+
 ## Type Extensions
 
 All of Clojure's primitive types are given their standard print representations.
