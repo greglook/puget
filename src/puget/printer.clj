@@ -326,7 +326,7 @@
 ;; ## Canonical Printer Implementation
 
 (defrecord CanonicalPrinter
-  [print-handlers]
+  [print-handlers sort-keys]
 
   fv/IVisitor
 
@@ -376,14 +376,14 @@
   (visit-set
     [this value]
     (let [entries (map (partial format-doc this)
-                       (sort order/rank value))]
+                       (order-collection sort-keys value (partial sort order/rank)))]
       [:group "#{" [:align (interpose " " entries)] "}"]))
 
   (visit-map
     [this value]
     (let [entries (map #(vector :span (format-doc this (key %))
                                 " "   (format-doc this (val %)))
-                       (sort-by first order/rank value))]
+                       (order-collection sort-keys value (partial sort order/rank)))]
       [:group "{" [:align (interpose " " entries)] "}"]))
 
 
@@ -428,7 +428,19 @@
   ([]
    (canonical-printer nil))
   ([handlers]
-   (assoc (CanonicalPrinter. handlers)
+   (assoc (CanonicalPrinter. handlers true)
+          :width 0)))
+
+
+(defn compact-printer
+  "Constructs a new compact printer with the given handler dispatch. A
+  compact printer strictly serializes the data according to the
+  handler dispatch, but does not guarantee canonicalization (keys are
+  not sorted)."
+  ([]
+   (compact-printer nil))
+  ([handlers]
+   (assoc (CanonicalPrinter. handlers false)
           :width 0)))
 
 

@@ -103,6 +103,24 @@
       (java.util.Currency/getInstance "USD"))))
 
 
+(deftest compact-collections
+  (let [printer (compact-printer)]
+    (are [v] (= v (read-string (render-str printer v)))
+      '(foo :bar)
+      #{:omega :alpha :beta}
+      {:foo 8, :bar 'baz})
+    (are [v text] (= text (render-str printer v))
+      [:a :b :c]            "[:a :b :c]"
+      (sorted-set :a :b :c) "#{:a :b :c}"
+      (sorted-set-by
+        (comp - compare)
+        :a :b :c)           "#{:c :b :a}"
+      (sorted-map 1 2, 3 4) "{1 2 3 4}"
+      (sorted-map-by
+        (comp - compare)
+        1 2, 3 4)           "{3 4 1 2}")))
+
+
 
 ;; ## Pretty Printing
 
