@@ -1,4 +1,4 @@
-(defproject mvxcvi/puget "1.0.2"
+(defproject mvxcvi/puget "1.0.3"
   :description "Colorizing canonical Clojure printer for EDN values."
   :url "https://github.com/greglook/puget"
   :license {:name "Public Domain"
@@ -8,20 +8,19 @@
   :pedantic? :abort
 
   :plugins
-  [[lein-cljfmt "0.5.3"]
+  [[mvxcvi/lein-cljfmt "0.7.0-SNAPSHOT"]
    [lein-cloverage "1.0.10"]]
 
   :dependencies
-  [[org.clojure/clojure "1.8.0"]
+  [[org.clojure/clojure "1.9.0"]
    [mvxcvi/arrangement "1.1.1"]
-   [fipp "0.6.10"]]
+   [fipp "0.6.13"]
+   ; Fixed boxed-math warnings until fipp upgrades:
+   [org.clojure/core.rrb-vector "0.0.13"]]
 
   :cljfmt
   {:remove-consecutive-blank-lines? false
-   :indents {ns [[:block 1] [:inner 1]]
-             defrecord ^:replace [[:block 1] [:inner 1]]
-             with-options [[:inner 0]]
-             #"[^\[{].*" [[:block 0]]}}
+   :indents {with-options [[:inner 0]]}}
 
   :hiera
   {:path "doc/ns-hiera.png"

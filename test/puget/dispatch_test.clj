@@ -16,7 +16,7 @@
 (deftest chained-dispatch
   (testing "Empty chained dispatch"
     (is (thrown? IllegalArgumentException
-                 (dispatch/chained-lookup [nil nil]))))
+          (dispatch/chained-lookup [nil nil]))))
   (testing "Single chained dispatch"
     (let [dispatch (dispatch/chained-lookup [{:foo :bar}])]
       (is (= :bar (dispatch :foo)))
@@ -55,7 +55,8 @@
 
 (defn printing-lookup
   [dispatch]
-  (fn lookup [t]
+  (fn lookup
+    [t]
     (let [v (dispatch t)]
       (println t "=>" v)
       v)))
@@ -84,4 +85,4 @@
                      {clojure.lang.ILookup :interface-lookup
                       java.util.Map :java-map})]
       (is (thrown? RuntimeException
-                   (dispatch clojure.lang.PersistentHashMap))))))
+            (dispatch clojure.lang.PersistentHashMap))))))
