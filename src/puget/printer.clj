@@ -82,10 +82,10 @@
     [clojure.string :as str]
     [fipp.engine :as fe]
     [fipp.visit :as fv]
-    [puget.dispatch :as dispatch]
     [puget.color :as color]
     [puget.color.ansi]
-    [puget.color.html]))
+    [puget.color.html]
+    [puget.dispatch :as dispatch]))
 
 
 ;; ## Control Vars

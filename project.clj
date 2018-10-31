@@ -8,7 +8,8 @@
   :pedantic? :abort
 
   :plugins
-  [[lein-cloverage "1.0.10"]]
+  [[mvxcvi/lein-cljfmt "0.7.0-SNAPSHOT"]
+   [lein-cloverage "1.0.10"]]
 
   :dependencies
   [[org.clojure/clojure "1.9.0"]
@@ -17,10 +18,7 @@
 
   :cljfmt
   {:remove-consecutive-blank-lines? false
-   :indents {ns [[:block 1] [:inner 1]]
-             defrecord ^:replace [[:block 1] [:inner 1]]
-             with-options [[:inner 0]]
-             #"[^\[{].*" [[:block 0]]}}
+   :indents {with-options [[:inner 0]]}}
 
   :hiera
   {:path "doc/ns-hiera.png"
