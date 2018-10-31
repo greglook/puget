@@ -13,7 +13,7 @@
   :dependencies
   [[org.clojure/clojure "1.9.0"]
    [mvxcvi/arrangement "1.1.1"]
-   [fipp "0.6.12"]]
+   [fipp "0.6.13"]]
 
   :cljfmt
   {:remove-consecutive-blank-lines? false
