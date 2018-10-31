@@ -14,7 +14,9 @@
   :dependencies
   [[org.clojure/clojure "1.9.0"]
    [mvxcvi/arrangement "1.1.1"]
-   [fipp "0.6.13"]]
+   [fipp "0.6.13"]
+   ; Fixed boxed-math warnings until fipp upgrades:
+   [org.clojure/core.rrb-vector "0.0.13"]]
 
   :cljfmt
   {:remove-consecutive-blank-lines? false

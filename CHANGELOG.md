@@ -9,6 +9,12 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ...
 
+## [1.0.3] - 2018-10-30
+
+### Changed
+- Upgrade to fipp 0.6.13 for Java 11 compatibility.
+  [#38](//github.com/greglook/puget/pull/38)
+
 ## [1.0.2] - 2017-11-04
 
 ### Changed
@@ -135,7 +141,8 @@ to fipp and Clojure 1.7.
 - Maps default to using commas between entries.
 - Gave characters a separate syntax element than strings.
 
-[Unreleased]: https://github.com/greglook/puget/compare/1.0.2...HEAD
+[Unreleased]: https://github.com/greglook/puget/compare/1.0.3...HEAD
+[1.0.3]: https://github.com/greglook/puget/compare/1.0.2...1.0.3
 [1.0.2]: https://github.com/greglook/puget/compare/1.0.1...1.0.2
 [1.0.1]: https://github.com/greglook/puget/compare/1.0.0...1.0.1
 [1.0.0]: https://github.com/greglook/puget/compare/0.9.2...1.0.0
