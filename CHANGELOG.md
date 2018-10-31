@@ -7,7 +7,13 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
-...
+### Added
+- Empty collections are more efficient to render since they can omit child
+  format document nodes.
+
+### Changed
+- Collections which are `sorted?` are no longer reordered by the pretty-printer.
+  [#37](//github.com/greglook/puget/issues/37)
 
 ## [1.0.3] - 2018-10-30
 

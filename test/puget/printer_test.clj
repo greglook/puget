@@ -226,7 +226,11 @@
       (testing "always sort"
         (with-options {:sort-keys true}
           (is (= "{:a 1, :b 0}" (pprint-str map1)))
-          (is (= "{:a 5, :m 8, :z 2}" (pprint-str map2)))))))
+          (is (= "{:a 5, :m 8, :z 2}" (pprint-str map2)))))
+      (testing "sorted colls"
+        (with-options {:sort-keys true}
+          (is (= "#{3 2 1}" (pprint-str (sorted-set-by > 1 2 3)))
+              "sorted collection should not be reordered")))))
   (testing "map delimiter"
     (is (= "{:a 0, :b 1}" (pprint-str {:a 0, :b 1}))
         "default separator is a comma")

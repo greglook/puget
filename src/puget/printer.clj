@@ -17,9 +17,11 @@
 
   `:sort-keys`
 
-  Print maps and sets with ordered keys. Defaults to true, which will sort all
-  collections. If a number, counted collections will be sorted up to the set
-  size. Otherwise, collections are not sorted before printing.
+  Print maps and sets with ordered keys. If true, the pretty printer will sort
+  all unordered collections before printing. If a number, counted collections
+  will be sorted if they are smaller than the given size. Otherwise,
+  collections are printed in their natural sort order. Sorted collections are
+  always printed in their natural sort order.
 
   `:map-delimiter`
 
@@ -159,13 +161,14 @@
 (defn- order-collection
   "Takes a sequence of entries and checks the mode to determine whether to sort
   them. Returns an appropriately ordered sequence."
-  [mode value sort-fn]
-  (if (or (true? mode)
-          (and (number? mode)
-               (counted? value)
-               (>= mode (count value))))
-    (sort-fn value)
-    (seq value)))
+  [mode coll sort-fn]
+  (if (and (not (sorted? coll))
+           (or (true? mode)
+               (and (number? mode)
+                    (counted? coll)
+                    (>= mode (count coll)))))
+    (sort-fn coll)
+    (seq coll)))
 
 
 (defn format-unknown
