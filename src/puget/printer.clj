@@ -32,6 +32,11 @@
   The text placed between a map key and a collection value. The keyword :line
   will cause line breaks if the whole map does not fit on a single line.
 
+  `:namespace-maps`
+
+  Extract common keyword namespaces from maps using the namespace map literal
+  syntax. See `*print-namespace-maps*`.
+
   `:seq-limit`
 
   If set to a positive number, then lists will only render at most the first n
@@ -98,6 +103,7 @@
    :sort-keys 80
    :map-delimiter ","
    :map-coll-separator " "
+   :namespace-maps false
    :print-fallback :pretty
    :print-color false
    :color-markup :ansi
@@ -169,6 +175,28 @@
                     (>= mode (count coll)))))
     (sort-fn coll)
     (seq coll)))
+
+
+(defn- common-key-ns
+  "Extract a common namespace from the keys in the map. Returns a tuple of the
+  ns string and the stripped map, or nil if the keys are not keywords or
+  symbols or there is no sufficiently common namespace."
+  [m]
+  (when (and (every? (some-fn keyword? symbol?) (keys m))
+             (every? namespace (keys m)))
+    (let [nsf (frequencies (map namespace (keys m)))
+          [common n] (apply max-key val nsf)]
+      (when (< (/ (count m) 2) n)
+        [common
+         (into (empty m)
+               (map (fn strip-common
+                      [[k v :as e]]
+                      (if (= common (namespace k))
+                        (if (keyword? k)
+                          [(keyword (name k)) v]
+                          [(symbol (name k)) v])
+                        e)))
+               m)]))))
 
 
 (defn format-unknown
@@ -456,6 +484,7 @@
    sort-keys
    map-delimiter
    map-coll-separator
+   namespace-maps
    seq-limit
    print-color
    color-markup
@@ -540,7 +569,10 @@
   (visit-map
     [this value]
     (if (seq value)
-      (let [ks (order-collection sort-keys value (partial sort-by first order/rank))
+      (let [[common-ns stripped] (when namespace-maps (common-key-ns value))
+            kvs (order-collection sort-keys
+                                  (or stripped value)
+                                  (partial sort-by first order/rank))
             entries (map (fn [[k v]]
                            [:span
                             (format-doc this k)
@@ -548,11 +580,14 @@
                               map-coll-separator
                               " ")
                             (format-doc this v)])
-                         ks)]
-        [:group
-         (color/document this :delimiter "{")
-         [:align (interpose [:span map-delimiter :line] entries)]
-         (color/document this :delimiter "}")])
+                         kvs)
+            map-doc [:group
+                     (color/document this :delimiter "{")
+                     [:align (interpose [:span map-delimiter :line] entries)]
+                     (color/document this :delimiter "}")]]
+        (if common-ns
+          [:group (color/document this :tag (str "#:" common-ns)) :line map-doc]
+          map-doc))
       (color/document this :delimiter "{}")))
 
 

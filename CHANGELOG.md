@@ -8,12 +8,16 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Added
-- Empty collections are more efficient to render since they can omit child
-  format document nodes.
+- The pretty-printer supports a `:namespace-maps` option which will render maps
+  using the new namespace map literal syntax introduced in Clojure 1.9.0 when
+  possible.
+  [#36](//github.com/greglook/puget/issues/36)
 
 ### Changed
 - Collections which are `sorted?` are no longer reordered by the pretty-printer.
   [#37](//github.com/greglook/puget/issues/37)
+- Empty collections now omit child document nodes, so they are slightly more
+  efficient to render.
 
 ## [1.0.3] - 2018-10-30
 
