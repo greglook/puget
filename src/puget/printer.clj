@@ -179,11 +179,10 @@
 
 (defn- common-key-ns
   "Extract a common namespace from the keys in the map. Returns a tuple of the
-  ns string and the stripped map, or nil if the keys are not keywords or
-  symbols or there is no sufficiently common namespace."
+  ns string and the stripped map, or nil if the keys are not keywords or there
+  is no sufficiently common namespace."
   [m]
-  (when (and (every? (some-fn keyword? symbol?) (keys m))
-             (every? namespace (keys m)))
+  (when (every? (every-pred keyword? namespace) (keys m))
     (let [nsf (frequencies (map namespace (keys m)))
           [common n] (apply max-key val nsf)]
       (when (< (/ (count m) 2) n)
@@ -192,9 +191,7 @@
                (map (fn strip-common
                       [[k v :as e]]
                       (if (= common (namespace k))
-                        (if (keyword? k)
-                          [(keyword (name k)) v]
-                          [(symbol (name k)) v])
+                        [(keyword (name k)) v]
                         e)))
                m)]))))
 

@@ -242,17 +242,15 @@
   (testing "namespace maps"
     (with-options {:namespace-maps true}
       (is (= "{:b 3, :a/x 1, :a/y 2}" (pprint-str {:a/x 1, :a/y 2, :b 3}))
-          "any simple keys should not be namespaced")
+          "any simple keys should prevent namespacing")
       (is (= "#:a {:x 1, :y 2}" (pprint-str {:a/x 1, :a/y 2}))
-          "all qualified common ns keys should be namespaced")
+          "map with all common qualified keys should be namespaced")
       (is (= "{:a/x 1, :b/x 2}" (pprint-str {:a/x 1, :b/x 2}))
-          "insufficiently common ns should not be qualified")
+          "map with insufficiently common qualifiers should not be namespaced")
       (is (= "#:a {:x 1, :y 2, :b/x 3}" (pprint-str {:a/x 1, :a/y 2, :b/x 3}))
           "common ns should be qualified even with other ns keys")
-      (is (= "#:a {x 1, y 2}" (pprint-str {'a/x 1, 'a/y 2}))
-          "also works with symbol keys")
       (is (= "{\"a/x\" 1, :a/y 2}" (pprint-str {"a/x" 1, :a/y 2}))
-          "any non-ident keys should not be namespaced")))
+          "any non-ident keys should prevent namespacing")))
   (testing "lazy seq limits"
     (with-options {:seq-limit 4}
       (is (= "(1 2 3)" (pprint-str (map inc [0 1 2]))))
