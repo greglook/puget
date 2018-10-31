@@ -365,26 +365,34 @@
 
   (visit-seq
     [this value]
-    (let [entries (map (partial format-doc this) value)]
-      [:group "(" [:align (interpose " " entries)] ")"]))
+    (if (seq value)
+      (let [entries (map (partial format-doc this) value)]
+        [:group "(" [:align (interpose " " entries)] ")"])
+      "()"))
 
   (visit-vector
     [this value]
-    (let [entries (map (partial format-doc this) value)]
-      [:group "[" [:align (interpose " " entries)] "]"]))
+    (if (seq value)
+      (let [entries (map (partial format-doc this) value)]
+        [:group "[" [:align (interpose " " entries)] "]"])
+      "[]"))
 
   (visit-set
     [this value]
-    (let [entries (map (partial format-doc this)
-                       (sort order/rank value))]
-      [:group "#{" [:align (interpose " " entries)] "}"]))
+    (if (seq value)
+      (let [entries (map (partial format-doc this)
+                         (sort order/rank value))]
+        [:group "#{" [:align (interpose " " entries)] "}"])
+      "#{}"))
 
   (visit-map
     [this value]
-    (let [entries (map #(vector :span (format-doc this (key %))
-                                " "   (format-doc this (val %)))
-                       (sort-by first order/rank value))]
-      [:group "{" [:align (interpose " " entries)] "}"]))
+    (if (seq value)
+      (let [entries (map #(vector :span (format-doc this (key %))
+                                  " "   (format-doc this (val %)))
+                         (sort-by first order/rank value))]
+        [:group "{" [:align (interpose " " entries)] "}"])
+      "{}"))
 
 
   ; Clojure Types
@@ -489,52 +497,60 @@
 
   (visit-seq
     [this value]
-    (let [[values trimmed?]
-          (if (and seq-limit (pos? seq-limit))
-            (let [head (take seq-limit value)]
-              [head (<= seq-limit (count head))])
-            [(seq value) false])
-          elements
-          (cond-> (if (symbol? (first values))
-                    (cons (color/document this :function-symbol (str (first values)))
-                          (map (partial format-doc this) (rest values)))
-                    (map (partial format-doc this) values))
-            trimmed? (concat [(color/document this :nil "...")]))]
-      [:group
-       (color/document this :delimiter "(")
-       [:align (interpose :line elements)]
-       (color/document this :delimiter ")")]))
+    (if (seq value)
+      (let [[values trimmed?]
+            (if (and seq-limit (pos? seq-limit))
+              (let [head (take seq-limit value)]
+                [head (<= seq-limit (count head))])
+              [(seq value) false])
+            elements
+            (cond-> (if (symbol? (first values))
+                      (cons (color/document this :function-symbol (str (first values)))
+                            (map (partial format-doc this) (rest values)))
+                      (map (partial format-doc this) values))
+              trimmed? (concat [(color/document this :nil "...")]))]
+        [:group
+         (color/document this :delimiter "(")
+         [:align (interpose :line elements)]
+         (color/document this :delimiter ")")])
+      (color/document this :delimiter "()")))
 
   (visit-vector
     [this value]
-    [:group
-     (color/document this :delimiter "[")
-     [:align (interpose :line (map (partial format-doc this) value))]
-     (color/document this :delimiter "]")])
+    (if (seq value)
+      [:group
+       (color/document this :delimiter "[")
+       [:align (interpose :line (map (partial format-doc this) value))]
+       (color/document this :delimiter "]")]
+      (color/document this :delimiter "[]")))
 
   (visit-set
     [this value]
-    (let [entries (order-collection sort-keys value (partial sort order/rank))]
-      [:group
-       (color/document this :delimiter "#{")
-       [:align (interpose :line (map (partial format-doc this) entries))]
-       (color/document this :delimiter "}")]))
+    (if (seq value)
+      (let [entries (order-collection sort-keys value (partial sort order/rank))]
+        [:group
+         (color/document this :delimiter "#{")
+         [:align (interpose :line (map (partial format-doc this) entries))]
+         (color/document this :delimiter "}")])
+      (color/document this :delimiter "#{}")))
 
   (visit-map
     [this value]
-    (let [ks (order-collection sort-keys value (partial sort-by first order/rank))
-          entries (map (fn [[k v]]
-                         [:span
-                          (format-doc this k)
-                          (if (coll? v)
-                            map-coll-separator
-                            " ")
-                          (format-doc this v)])
-                       ks)]
-      [:group
-       (color/document this :delimiter "{")
-       [:align (interpose [:span map-delimiter :line] entries)]
-       (color/document this :delimiter "}")]))
+    (if (seq value)
+      (let [ks (order-collection sort-keys value (partial sort-by first order/rank))
+            entries (map (fn [[k v]]
+                           [:span
+                            (format-doc this k)
+                            (if (coll? v)
+                              map-coll-separator
+                              " ")
+                            (format-doc this v)])
+                         ks)]
+        [:group
+         (color/document this :delimiter "{")
+         [:align (interpose [:span map-delimiter :line] entries)]
+         (color/document this :delimiter "}")])
+      (color/document this :delimiter "{}")))
 
 
   ; Clojure Types

@@ -61,12 +61,15 @@
 (deftest canonical-collections
   (let [printer (canonical-printer)]
     (are [v text] (= text (render-str printer v))
-      '(foo :bar)           "(foo :bar)"
+      '()                    "()"
+      '(foo :bar)            "(foo :bar)"
       '(1 2 3)               "(1 2 3)"
+      []                     "[]"
       [4 "five" 6.0]         "[4 \"five\" 6.0]"
+      {}                     "{}"
       {:foo 8, :bar 'baz}    "{:bar baz :foo 8}"
+      #{}                    "#{}"
       #{:omega :alpha :beta} "#{:alpha :beta :omega}"
-      (list)                 "()"
       (lazy-seq [:x])        "(:x)"
       (map inc [0 1 2])      "(1 2 3)")))
 
@@ -127,12 +130,15 @@
 
 (deftest pretty-collections
   (are [v text] (= text (pprint-str v))
+    '()                    "()"
     '(foo :bar)            "(foo :bar)"
     '(1 2 3)               "(1 2 3)"
+    []                     "[]"
     [4 "five" 6.0]         "[4 \"five\" 6.0]"
+    {}                     "{}"
     {:foo 8 :bar 'baz}     "{:bar baz, :foo 8}"     ; gets sorted
+    #{}                    "#{}"
     #{:omega :alpha :beta} "#{:alpha :beta :omega}" ; also sorted
-    (list)                 "()"
     (lazy-seq [:x])        "(:x)"))
 
 
