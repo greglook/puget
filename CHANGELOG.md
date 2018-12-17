@@ -9,6 +9,20 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ...
 
+## [1.1.0] - 2018-12-16
+
+### Added
+- The pretty-printer supports a `:namespace-maps` option which will render maps
+  using the new namespace map literal syntax introduced in Clojure 1.9.0 when
+  possible.
+  [#36](//github.com/greglook/puget/issues/36)
+
+### Changed
+- Collections which are `sorted?` are no longer reordered by the pretty-printer.
+  [#37](//github.com/greglook/puget/issues/37)
+- Empty collections now omit child document nodes, so they are slightly more
+  efficient to render.
+
 ## [1.0.3] - 2018-10-30
 
 ### Changed
@@ -141,7 +155,8 @@ to fipp and Clojure 1.7.
 - Maps default to using commas between entries.
 - Gave characters a separate syntax element than strings.
 
-[Unreleased]: https://github.com/greglook/puget/compare/1.0.3...HEAD
+[Unreleased]: https://github.com/greglook/puget/compare/1.1.0...HEAD
+[1.1.0]: https://github.com/greglook/puget/compare/1.0.3...1.1.0
 [1.0.3]: https://github.com/greglook/puget/compare/1.0.2...1.0.3
 [1.0.2]: https://github.com/greglook/puget/compare/1.0.1...1.0.2
 [1.0.1]: https://github.com/greglook/puget/compare/1.0.0...1.0.1

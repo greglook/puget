@@ -17,9 +17,11 @@
 
   `:sort-keys`
 
-  Print maps and sets with ordered keys. Defaults to true, which will sort all
-  collections. If a number, counted collections will be sorted up to the set
-  size. Otherwise, collections are not sorted before printing.
+  Print maps and sets with ordered keys. If true, the pretty printer will sort
+  all unordered collections before printing. If a number, counted collections
+  will be sorted if they are smaller than the given size. Otherwise,
+  collections are printed in their natural sort order. Sorted collections are
+  always printed in their natural sort order.
 
   `:map-delimiter`
 
@@ -29,6 +31,11 @@
 
   The text placed between a map key and a collection value. The keyword :line
   will cause line breaks if the whole map does not fit on a single line.
+
+  `:namespace-maps`
+
+  Extract common keyword namespaces from maps using the namespace map literal
+  syntax. See `*print-namespace-maps*`.
 
   `:seq-limit`
 
@@ -96,6 +103,7 @@
    :sort-keys 80
    :map-delimiter ","
    :map-coll-separator " "
+   :namespace-maps false
    :print-fallback :pretty
    :print-color false
    :color-markup :ansi
@@ -159,13 +167,33 @@
 (defn- order-collection
   "Takes a sequence of entries and checks the mode to determine whether to sort
   them. Returns an appropriately ordered sequence."
-  [mode value sort-fn]
-  (if (or (true? mode)
-          (and (number? mode)
-               (counted? value)
-               (>= mode (count value))))
-    (sort-fn value)
-    (seq value)))
+  [mode coll sort-fn]
+  (if (and (not (sorted? coll))
+           (or (true? mode)
+               (and (number? mode)
+                    (counted? coll)
+                    (>= mode (count coll)))))
+    (sort-fn coll)
+    (seq coll)))
+
+
+(defn- common-key-ns
+  "Extract a common namespace from the keys in the map. Returns a tuple of the
+  ns string and the stripped map, or nil if the keys are not keywords or there
+  is no sufficiently common namespace."
+  [m]
+  (when (every? (every-pred keyword? namespace) (keys m))
+    (let [nsf (frequencies (map namespace (keys m)))
+          [common n] (apply max-key val nsf)]
+      (when (< (/ (count m) 2) n)
+        [common
+         (into (empty m)
+               (map (fn strip-common
+                      [[k v :as e]]
+                      (if (= common (namespace k))
+                        [(keyword (name k)) v]
+                        e)))
+               m)]))))
 
 
 (defn format-unknown
@@ -365,26 +393,34 @@
 
   (visit-seq
     [this value]
-    (let [entries (map (partial format-doc this) value)]
-      [:group "(" [:align (interpose " " entries)] ")"]))
+    (if (seq value)
+      (let [entries (map (partial format-doc this) value)]
+        [:group "(" [:align (interpose " " entries)] ")"])
+      "()"))
 
   (visit-vector
     [this value]
-    (let [entries (map (partial format-doc this) value)]
-      [:group "[" [:align (interpose " " entries)] "]"]))
+    (if (seq value)
+      (let [entries (map (partial format-doc this) value)]
+        [:group "[" [:align (interpose " " entries)] "]"])
+      "[]"))
 
   (visit-set
     [this value]
-    (let [entries (map (partial format-doc this)
-                       (sort order/rank value))]
-      [:group "#{" [:align (interpose " " entries)] "}"]))
+    (if (seq value)
+      (let [entries (map (partial format-doc this)
+                         (sort order/rank value))]
+        [:group "#{" [:align (interpose " " entries)] "}"])
+      "#{}"))
 
   (visit-map
     [this value]
-    (let [entries (map #(vector :span (format-doc this (key %))
-                                " "   (format-doc this (val %)))
-                       (sort-by first order/rank value))]
-      [:group "{" [:align (interpose " " entries)] "}"]))
+    (if (seq value)
+      (let [entries (map #(vector :span (format-doc this (key %))
+                                  " "   (format-doc this (val %)))
+                         (sort-by first order/rank value))]
+        [:group "{" [:align (interpose " " entries)] "}"])
+      "{}"))
 
 
   ; Clojure Types
@@ -445,6 +481,7 @@
    sort-keys
    map-delimiter
    map-coll-separator
+   namespace-maps
    seq-limit
    print-color
    color-markup
@@ -489,52 +526,66 @@
 
   (visit-seq
     [this value]
-    (let [[values trimmed?]
-          (if (and seq-limit (pos? seq-limit))
-            (let [head (take seq-limit value)]
-              [head (<= seq-limit (count head))])
-            [(seq value) false])
-          elements
-          (cond-> (if (symbol? (first values))
-                    (cons (color/document this :function-symbol (str (first values)))
-                          (map (partial format-doc this) (rest values)))
-                    (map (partial format-doc this) values))
-            trimmed? (concat [(color/document this :nil "...")]))]
-      [:group
-       (color/document this :delimiter "(")
-       [:align (interpose :line elements)]
-       (color/document this :delimiter ")")]))
+    (if (seq value)
+      (let [[values trimmed?]
+            (if (and seq-limit (pos? seq-limit))
+              (let [head (take seq-limit value)]
+                [head (<= seq-limit (count head))])
+              [(seq value) false])
+            elements
+            (cond-> (if (symbol? (first values))
+                      (cons (color/document this :function-symbol (str (first values)))
+                            (map (partial format-doc this) (rest values)))
+                      (map (partial format-doc this) values))
+              trimmed? (concat [(color/document this :nil "...")]))]
+        [:group
+         (color/document this :delimiter "(")
+         [:align (interpose :line elements)]
+         (color/document this :delimiter ")")])
+      (color/document this :delimiter "()")))
 
   (visit-vector
     [this value]
-    [:group
-     (color/document this :delimiter "[")
-     [:align (interpose :line (map (partial format-doc this) value))]
-     (color/document this :delimiter "]")])
+    (if (seq value)
+      [:group
+       (color/document this :delimiter "[")
+       [:align (interpose :line (map (partial format-doc this) value))]
+       (color/document this :delimiter "]")]
+      (color/document this :delimiter "[]")))
 
   (visit-set
     [this value]
-    (let [entries (order-collection sort-keys value (partial sort order/rank))]
-      [:group
-       (color/document this :delimiter "#{")
-       [:align (interpose :line (map (partial format-doc this) entries))]
-       (color/document this :delimiter "}")]))
+    (if (seq value)
+      (let [entries (order-collection sort-keys value (partial sort order/rank))]
+        [:group
+         (color/document this :delimiter "#{")
+         [:align (interpose :line (map (partial format-doc this) entries))]
+         (color/document this :delimiter "}")])
+      (color/document this :delimiter "#{}")))
 
   (visit-map
     [this value]
-    (let [ks (order-collection sort-keys value (partial sort-by first order/rank))
-          entries (map (fn [[k v]]
-                         [:span
-                          (format-doc this k)
-                          (if (coll? v)
-                            map-coll-separator
-                            " ")
-                          (format-doc this v)])
-                       ks)]
-      [:group
-       (color/document this :delimiter "{")
-       [:align (interpose [:span map-delimiter :line] entries)]
-       (color/document this :delimiter "}")]))
+    (if (seq value)
+      (let [[common-ns stripped] (when namespace-maps (common-key-ns value))
+            kvs (order-collection sort-keys
+                                  (or stripped value)
+                                  (partial sort-by first order/rank))
+            entries (map (fn [[k v]]
+                           [:span
+                            (format-doc this k)
+                            (if (coll? v)
+                              map-coll-separator
+                              " ")
+                            (format-doc this v)])
+                         kvs)
+            map-doc [:group
+                     (color/document this :delimiter "{")
+                     [:align (interpose [:span map-delimiter :line] entries)]
+                     (color/document this :delimiter "}")]]
+        (if common-ns
+          [:group (color/document this :tag (str "#:" common-ns)) :line map-doc]
+          map-doc))
+      (color/document this :delimiter "{}")))
 
 
   ; Clojure Types

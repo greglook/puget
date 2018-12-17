@@ -61,12 +61,15 @@
 (deftest canonical-collections
   (let [printer (canonical-printer)]
     (are [v text] (= text (render-str printer v))
-      '(foo :bar)           "(foo :bar)"
+      '()                    "()"
+      '(foo :bar)            "(foo :bar)"
       '(1 2 3)               "(1 2 3)"
+      []                     "[]"
       [4 "five" 6.0]         "[4 \"five\" 6.0]"
+      {}                     "{}"
       {:foo 8, :bar 'baz}    "{:bar baz :foo 8}"
+      #{}                    "#{}"
       #{:omega :alpha :beta} "#{:alpha :beta :omega}"
-      (list)                 "()"
       (lazy-seq [:x])        "(:x)"
       (map inc [0 1 2])      "(1 2 3)")))
 
@@ -127,12 +130,15 @@
 
 (deftest pretty-collections
   (are [v text] (= text (pprint-str v))
+    '()                    "()"
     '(foo :bar)            "(foo :bar)"
     '(1 2 3)               "(1 2 3)"
+    []                     "[]"
     [4 "five" 6.0]         "[4 \"five\" 6.0]"
+    {}                     "{}"
     {:foo 8 :bar 'baz}     "{:bar baz, :foo 8}"     ; gets sorted
+    #{}                    "#{}"
     #{:omega :alpha :beta} "#{:alpha :beta :omega}" ; also sorted
-    (list)                 "()"
     (lazy-seq [:x])        "(:x)"))
 
 
@@ -220,7 +226,11 @@
       (testing "always sort"
         (with-options {:sort-keys true}
           (is (= "{:a 1, :b 0}" (pprint-str map1)))
-          (is (= "{:a 5, :m 8, :z 2}" (pprint-str map2)))))))
+          (is (= "{:a 5, :m 8, :z 2}" (pprint-str map2)))))
+      (testing "sorted colls"
+        (with-options {:sort-keys true}
+          (is (= "#{3 2 1}" (pprint-str (sorted-set-by > 1 2 3)))
+              "sorted collection should not be reordered")))))
   (testing "map delimiter"
     (is (= "{:a 0, :b 1}" (pprint-str {:a 0, :b 1}))
         "default separator is a comma")
@@ -229,6 +239,18 @@
   (testing "map collection separator"
     (with-options {:map-coll-separator :line, :width 10}
       (is (= "{:bar\n [:a :b]}" (pprint-str {:bar [:a :b]})))))
+  (testing "namespace maps"
+    (with-options {:namespace-maps true}
+      (is (= "{:b 3, :a/x 1, :a/y 2}" (pprint-str {:a/x 1, :a/y 2, :b 3}))
+          "any simple keys should prevent namespacing")
+      (is (= "#:a {:x 1, :y 2}" (pprint-str {:a/x 1, :a/y 2}))
+          "map with all common qualified keys should be namespaced")
+      (is (= "{:a/x 1, :b/x 2}" (pprint-str {:a/x 1, :b/x 2}))
+          "map with insufficiently common qualifiers should not be namespaced")
+      (is (= "#:a {:x 1, :y 2, :b/x 3}" (pprint-str {:a/x 1, :a/y 2, :b/x 3}))
+          "common ns should be qualified even with other ns keys")
+      (is (= "{\"a/x\" 1, :a/y 2}" (pprint-str {"a/x" 1, :a/y 2}))
+          "any non-ident keys should prevent namespacing")))
   (testing "lazy seq limits"
     (with-options {:seq-limit 4}
       (is (= "(1 2 3)" (pprint-str (map inc [0 1 2]))))

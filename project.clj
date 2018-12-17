@@ -1,4 +1,4 @@
-(defproject mvxcvi/puget "1.0.3"
+(defproject mvxcvi/puget "1.1.0"
   :description "Colorizing canonical Clojure printer for EDN values."
   :url "https://github.com/greglook/puget"
   :license {:name "Public Domain"
@@ -14,9 +14,7 @@
   :dependencies
   [[org.clojure/clojure "1.9.0"]
    [mvxcvi/arrangement "1.1.1"]
-   [fipp "0.6.13"]
-   ; Fixed boxed-math warnings until fipp upgrades:
-   [org.clojure/core.rrb-vector "0.0.13"]]
+   [fipp "0.6.14"]]
 
   :cljfmt
   {:remove-consecutive-blank-lines? false
