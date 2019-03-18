@@ -9,6 +9,13 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ...
 
+## [1.1.1] - 2019-03-17
+
+### Changed
+- Upgrade to clojure 1.10.0.
+- Upgrade to clj-arrangement 1.2.0 for a ~3x speedup when sorting complex
+  collections for canonical printing.
+
 ## [1.1.0] - 2018-12-16
 
 ### Added
@@ -155,7 +162,8 @@ to fipp and Clojure 1.7.
 - Maps default to using commas between entries.
 - Gave characters a separate syntax element than strings.
 
-[Unreleased]: https://github.com/greglook/puget/compare/1.1.0...HEAD
+[Unreleased]: https://github.com/greglook/puget/compare/1.1.1...HEAD
+[1.1.1]: https://github.com/greglook/puget/compare/1.1.0...1.1.1
 [1.1.0]: https://github.com/greglook/puget/compare/1.0.3...1.1.0
 [1.0.3]: https://github.com/greglook/puget/compare/1.0.2...1.0.3
 [1.0.2]: https://github.com/greglook/puget/compare/1.0.1...1.0.2
