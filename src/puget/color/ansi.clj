@@ -68,10 +68,10 @@
 
 
 (defmethod color/document :ansi
-  [options element text]
+  [options element document]
   (if-let [codes (-> options :color-scheme (get element) seq)]
-    [:span [:pass (esc codes)] text [:pass (escape :none)]]
-    text))
+    [:span [:pass (esc codes)] document [:pass (escape :none)]]
+    document))
 
 
 (defmethod color/text :ansi

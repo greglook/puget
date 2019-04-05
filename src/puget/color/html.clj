@@ -46,43 +46,52 @@
   "Returns a formatted style attribute for a span given a seq of
   keywords usable in a :color-scheme value"
   [codes]
-  (let [attributes (filter identity (map style-attribute codes))]
+  (let [attributes (map #(get style-attribute % [:color (name %)]) codes)]
     (str "style=\""
          (str/join ";" (map (fn [[k v]] (str (name k) ":" v)) attributes))
          "\"")))
 
 
 (defn escape-html-text
-  "Escapes special characters into html entities"
+  "Escapes special characters into HTML entities."
   [text]
   (str/escape text {\& "&amp;" \< "&lt;" \> "&gt;" \" "&quot;"}))
 
 
+(defn escape-html-node
+  "Applies HTML escaping to the node if it is a string. Returns a print
+  document representing the escaped string, or the original node if not."
+  [node]
+  (if (string? node)
+    (let [escaped-text (escape-html-text node)
+          spans (str/split escaped-text #"(?=&)")]
+      (reduce (fn [acc span]
+                (case (first span)
+                  nil acc
+                  \& (let [[escaped span] (str/split span #"(?<=;)" 2)
+                           acc (conj acc [:escaped escaped])]
+                       (if (seq span)
+                         (conj acc span)
+                         acc))
+                  (conj acc span)))
+              [:span]
+              spans))
+    node))
+
+
 (defn escape-html-document
   "Escapes special characters into fipp :span/:escaped nodes"
-  [text]
-  (let [escaped-text (escape-html-text text)
-        spans (str/split escaped-text #"(?=&)")]
-    (reduce (fn [acc span]
-              (case (first span)
-                nil acc
-                \& (let [[escaped span] (str/split span #"(?<=;)" 2)
-                         acc (conj acc [:escaped escaped])]
-                     (if (seq span)
-                       (conj acc span)
-                       acc))
-                (conj acc span)))
-            [:span]
-            spans)))
+  [document]
+  (clojure.walk/postwalk escape-html-node document))
 
 
 (defmethod color/document :html-inline
-  [options element text]
+  [options element document]
   (if-let [codes (-> options :color-scheme (get element) seq)]
     [:span [:pass "<span " (style codes) ">"]
-     (escape-html-document text)
+     (escape-html-document document)
      [:pass "</span>"]]
-    (escape-html-document text)))
+    (escape-html-document document)))
 
 
 (defmethod color/text :html-inline
@@ -93,9 +102,9 @@
 
 
 (defmethod color/document :html-classes
-  [options element text]
+  [options element document]
   [:span [:pass "<span class=\"" (name element) "\">"]
-   (escape-html-document text)
+   (escape-html-document document)
    [:pass "</span>"]])
 
 

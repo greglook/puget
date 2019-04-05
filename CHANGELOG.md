@@ -9,6 +9,14 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ...
 
+## [1.1.2] - 2019-04-04
+
+### Fixed
+- The `:html-inline` color markup now properly handles nested documents in
+  `color/document` calls.
+- The `:html-inline` color markup now defaults to assuming a style value is a
+  color, allowing use of any CSS color name.
+
 ## [1.1.1] - 2019-03-17
 
 ### Changed
@@ -162,7 +170,8 @@ to fipp and Clojure 1.7.
 - Maps default to using commas between entries.
 - Gave characters a separate syntax element than strings.
 
-[Unreleased]: https://github.com/greglook/puget/compare/1.1.1...HEAD
+[Unreleased]: https://github.com/greglook/puget/compare/1.1.2...HEAD
+[1.1.2]: https://github.com/greglook/puget/compare/1.1.1...1.1.2
 [1.1.1]: https://github.com/greglook/puget/compare/1.1.0...1.1.1
 [1.1.0]: https://github.com/greglook/puget/compare/1.0.3...1.1.0
 [1.0.3]: https://github.com/greglook/puget/compare/1.0.2...1.0.3
