@@ -4,7 +4,7 @@ jobs:
   build:
     working_directory: ~/merkle-db
     docker:
-      - image: circleci/clojure:lein-2.7.1
+      - image: circleci/clojure:lein-2.9.0
     steps:
       - checkout
       - restore_cache:
