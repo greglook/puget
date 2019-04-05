@@ -12,7 +12,7 @@
    :boolean   [:cyan]
    :number    [:red]
    :string    [:magenta :underline]
-   :character [:yello]
+   :character [:darkorange]
    :keyword   [:cyan]
    :symbol    nil
    :function-symbol [:bold :blue]
@@ -40,7 +40,7 @@
         inline-ref
         (str
           "<span style=\"color:green\">{</span>"
-          "<span style=\"\">\\e</span> "
+          "<span style=\"color:darkorange\">\\e</span> "
           "<span style=\"font-weight:bold;color:white\">#inst</span> "
           "<span style=\"color:magenta;text-decoration:underline\">"
           "&quot;2001-01-01T00:00:00.000-00:00&quot;</span>, "

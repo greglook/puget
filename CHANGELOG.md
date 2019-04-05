@@ -7,7 +7,11 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
-...
+### Fixed
+- The `:html-inline` color markup now properly handles nested documents in
+  `color/document` calls.
+- The `:html-inline` color markup now defaults to assuming a style value is a
+  color, allowing use of any CSS color name.
 
 ## [1.1.1] - 2019-03-17
 
