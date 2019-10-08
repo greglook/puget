@@ -7,7 +7,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
-...
+### Fixed
+- Ansi codes now respect indentation and start at beginning of element rather
+  than beginning of line.
+  [#44](//github.com/greglook/puget/issues/44)
 
 ## [1.1.2] - 2019-04-04
 
