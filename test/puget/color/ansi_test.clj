@@ -44,7 +44,8 @@
       (->> (filter seq))))
 
 
-(defn- ansi [text codes]
+(defn- ansi
+  [text codes]
   (apply ansi/sgr text codes))
 
 
