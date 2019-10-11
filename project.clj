@@ -13,18 +13,4 @@
   :dependencies
   [[org.clojure/clojure "1.10.0"]
    [mvxcvi/arrangement "1.2.0"]
-   [fipp "0.6.21"]]
-
-  :cljfmt
-  {:remove-consecutive-blank-lines? false
-   :indents {with-options [[:inner 0]]}}
-
-  :hiera
-  {:path "doc/ns-hiera.png"
-   :cluster-depth 1}
-
-  :codox
-  {:metadata {:doc/format :markdown}
-   :source-uri "https://github.com/greglook/puget/blob/master/{filepath}#L{line}"
-   :doc-paths ["doc/extra"]
-   :output-path "target/doc/api"})
+   [fipp "0.6.21"]])
