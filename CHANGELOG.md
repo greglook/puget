@@ -7,10 +7,18 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+...
+
+## [1.2.0] - 2019-10-11
+
 ### Fixed
 - Ansi codes now respect indentation and start at beginning of element rather
   than beginning of line.
   [#44](//github.com/greglook/puget/issues/44)
+
+### Changed
+- Update CI configuration to support style checks and separate coverage check.
+- Switch to cljdoc for documentation.
 
 ## [1.1.2] - 2019-04-04
 
@@ -173,7 +181,8 @@ to fipp and Clojure 1.7.
 - Maps default to using commas between entries.
 - Gave characters a separate syntax element than strings.
 
-[Unreleased]: https://github.com/greglook/puget/compare/1.1.2...HEAD
+[Unreleased]: https://github.com/greglook/puget/compare/1.2.0...HEAD
+[1.2.0]: https://github.com/greglook/puget/compare/1.1.2...1.2.0
 [1.1.2]: https://github.com/greglook/puget/compare/1.1.1...1.1.2
 [1.1.1]: https://github.com/greglook/puget/compare/1.1.0...1.1.1
 [1.1.0]: https://github.com/greglook/puget/compare/1.0.3...1.1.0
