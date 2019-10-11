@@ -1,28 +1,80 @@
-version: 2
+version: 2.1
 
-jobs:
-  build:
-    working_directory: ~/merkle-db
+# Common executor configuration
+executors:
+  clojure:
     docker:
-      - image: circleci/clojure:lein-2.7.1
+      - image: circleci/clojure:openjdk-11-lein-2.9.1
+    working_directory: ~/repo
+
+
+# Job definitions
+jobs:
+  style:
+    executor: clojure
+    steps:
+      - checkout
+      - run:
+          name: Install cljfmt CLI
+          environment:
+            CLJFMT_VERSION: 0.8.3
+          command: |
+            wget https://github.com/greglook/cljfmt/releases/download/${CLJFMT_VERSION}/cljfmt_${CLJFMT_VERSION}_linux.tar.gz
+            tar -xzf cljfmt_${CLJFMT_VERSION}_linux.tar.gz
+      - run:
+          name: Check source formatting
+          command: "./cljfmt check --stats style-stats.tsv"
+      - store_artifacts:
+          path: style-stats.tsv
+          destination: style
+
+  test:
+    executor: clojure
     steps:
       - checkout
       - restore_cache:
           keys:
-            - puget-{{ checksum "project.clj" }}
-            - puget-
+            - v1-test-{{ checksum "project.clj" }}
+            - v1-test-
       - run: lein deps
-      - run: lein cljfmt check
       - run: lein check
       - run: lein test
-      - run: lein cloverage --codecov
+      - save_cache:
+          key: v1-test-{{ checksum "project.clj" }}
+          paths:
+            - ~/.m2
+
+  coverage:
+    executor: clojure
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-coverage-{{ checksum "core/project.clj" }}
+            - v1-coverage-
+            - v1-test-
+      - run:
+          name: Generate test coverage
+          command: lein cloverage --codecov
       - save_cache:
           paths:
             - ~/.m2
-          key: puget-{{ checksum "project.clj" }}
+          key: v1-coverage-{{ checksum "core/project.clj" }}
       - store_artifacts:
           path: target/coverage
           destination: coverage
       - run:
           name: Publish Coverage
-          command: "(curl -s https://codecov.io/bash > codecov) && bash codecov -f target/coverage/codecov.json"
+          command: 'bash <(curl -s https://codecov.io/bash) -f target/coverage/codecov.json'
+
+
+# Workflow definitions
+workflows:
+  version: 2
+  test:
+    jobs:
+      - style
+      - test
+      - coverage:
+          requires:
+            - test
