@@ -8,8 +8,7 @@
   :pedantic? :abort
 
   :plugins
-  [[mvxcvi/lein-cljfmt "0.7.0-SNAPSHOT"]
-   [lein-cloverage "1.1.0"]]
+  [[lein-cloverage "1.1.2"]]
 
   :dependencies
   [[org.clojure/clojure "1.10.0"]
