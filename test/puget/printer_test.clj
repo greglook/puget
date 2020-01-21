@@ -7,7 +7,8 @@
 
 ;; ## Test Types
 
-(defrecord TestRecord [foo bar])
+(defrecord TestRecord
+  [foo bar])
 
 
 (deftype APending
@@ -16,6 +17,7 @@
   clojure.lang.IDeref
 
   (deref [this] 1)
+
 
   clojure.lang.IPending
 

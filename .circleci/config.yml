@@ -15,15 +15,15 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install cljfmt CLI
+          name: Install cljstyle
           environment:
-            CLJFMT_VERSION: 0.8.3
+            CLJSTYLE_VERSION: 0.10.1
           command: |
-            wget https://github.com/greglook/cljfmt/releases/download/${CLJFMT_VERSION}/cljfmt_${CLJFMT_VERSION}_linux.tar.gz
-            tar -xzf cljfmt_${CLJFMT_VERSION}_linux.tar.gz
+            wget https://github.com/greglook/cljstyle/releases/download/${CLJSTYLE_VERSION}/cljstyle_${CLJSTYLE_VERSION}_linux.tar.gz
+            tar -xzf cljstyle_${CLJSTYLE_VERSION}_linux.tar.gz
       - run:
           name: Check source formatting
-          command: "./cljfmt check --stats style-stats.tsv"
+          command: "./cljstyle check --stats style-stats.tsv"
       - store_artifacts:
           path: style-stats.tsv
           destination: style
