@@ -510,10 +510,12 @@
   (delimiter [this] "{}"))
 
 
-(defn trim-coll? [coll coll-limit]
+(defn trim-coll? 
+  [coll coll-limit]
   (and coll-limit (pos? coll-limit) (< coll-limit (count coll))))
 
-(defn visit-coll [this coll coll-limit order? sort-keys]
+(defn visit-coll 
+  [this coll coll-limit order? sort-keys]
   (if (seq coll)
     (let [[values trimmed?] (if (trim-coll? coll coll-limit) 
                               [(take coll-limit coll) true]
@@ -618,8 +620,7 @@
   (visit-map
     [this value]
     (if (seq value)
-      (let [
-            [values trimmed?]
+      (let [[values trimmed?]
             (if (trim-coll? value coll-limit)
               [(take coll-limit value) true]
               [(order-collection sort-keys value (partial sort order/rank)) false])

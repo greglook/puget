@@ -284,7 +284,6 @@
       (is (= "{:a 1, :b 2, :c 3, ...}" (pprint-str {:a 1 :b 2 :c 3 :d 4})))
       (is (= "{:d 4, :c 3, :b 2, ...}" (pprint-str {:d 4 :c 3 :b 2 :a 1}))))))
 
-(number? nil)
 
 (deftest pretty-color-options
   (let [value [nil 1.0 true "foo" :bar]
