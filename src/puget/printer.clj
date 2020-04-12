@@ -47,7 +47,8 @@
 
   If set to a positive number, then collections will only render at most the 
   first n elements. This can help prevent unintentional printing of large 
-  collections. Note: Lazy sequences and ranges are controlled by `:seq-limit`
+  collections. Note: `:seq-limit` has higher precendence than `:coll-limit`
+  if both are set.
 
   #### Color Options
 
@@ -587,10 +588,12 @@
     (if (seq value)
       (if (instance? clojure.lang.PersistentList value)
         (visit-coll this value coll-limit false sort-keys)
-        (let [[values trimmed?]
-              (if (and seq-limit (pos? seq-limit))
-                (let [head (take seq-limit value)]
-                  [head (<= seq-limit (count head))])
+        (let [pos-int (fn [x] (if (and (integer? x) (pos? x)) x))
+              limit (or (pos-int seq-limit) (pos-int coll-limit))
+              [values trimmed?]
+              (if limit
+                (let [head (take limit value)]
+                  [head (<= limit (count head))])
                 [(seq value) false])
               elements
               (cond-> (if (symbol? (first values))
