@@ -488,6 +488,7 @@
   (right-delimiter [this] "The string representation of the right delimiter")
   (delimiter [this] "The string representation of the full delimiter"))
 
+
 (extend-protocol Delimiters
   clojure.lang.PersistentList
   (left-delimiter [this] "(")
@@ -514,6 +515,7 @@
   [coll coll-limit]
   (and coll-limit (pos? coll-limit) (< coll-limit (count coll))))
 
+
 (defn visit-coll 
   [this coll coll-limit order? sort-keys]
   (if (seq coll)
@@ -534,6 +536,7 @@
        [:align (interpose :line elements)]
        (color/document this :delimiter (right-delimiter coll))])
     (color/document this :delimiter (delimiter coll))))
+
 
 (defrecord PrettyPrinter
   [width
