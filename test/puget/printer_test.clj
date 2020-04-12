@@ -256,7 +256,25 @@
   (testing "lazy seq limits"
     (with-options {:seq-limit 4}
       (is (= "(1 2 3)" (pprint-str (map inc [0 1 2]))))
-      (is (= "(0 1 2 3 ...)" (pprint-str (range 100)))))))
+      (is (= "(0 1 2 3 ...)" (pprint-str (range 100))))))
+  (testing "coll-limit on lists"
+    (with-options {:coll-limit 4}
+      (is (= "(0 1 2)" (pprint-str '(0 1 2))))
+      (is (= "(0 1 2 3 ...)" (pprint-str '(0 1 2 3 4 5))))))
+  (testing "coll-limit on vectors"
+    (with-options {:coll-limit 4}
+      (is (= "[0 1 2]" (pprint-str [0 1 2])))
+      (is (= "[5 4 3 2 ...]" (pprint-str [5 4 3 2 1])))))
+  (testing "coll-limit on sets"
+    (with-options {:coll-limit 4}
+      (is (= "#{1 2 3}" (pprint-str #{3 2 1})))
+      (is (= "#{1 4 3 2 ...}" (pprint-str #{5 4 3 2 1})))))
+  (testing "coll-limit on maps"
+    (with-options {:coll-limit 3}
+      (is (= "{:a 1, :b 2, :c 3}" (pprint-str {:a 1 :b 2 :c 3})))
+      (is (= "{:a 1, :b 2, :c 3}" (pprint-str {:c 3 :b 2 :a 1})))
+      (is (= "{:a 1, :b 2, :c 3, ...}" (pprint-str {:a 1 :b 2 :c 3 :d 4})))
+      (is (= "{:d 4, :c 3, :b 2, ...}" (pprint-str {:d 4 :c 3 :b 2 :a 1}))))))
 
 
 (deftest pretty-color-options

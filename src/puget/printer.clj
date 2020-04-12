@@ -43,6 +43,12 @@
   elements. This can help prevent unintentional realization of infinite lazy
   sequences.
 
+  `:coll-limit`
+
+  If set to a positive number, then collections will only render at most the 
+  first n elements. This can help prevent unintentional printing of large 
+  collections. Note: Lazy sequences and ranges are controlled by `:seq-limit`
+
   #### Color Options
 
   `:print-color`
@@ -475,6 +481,57 @@
 
 ;; ## Pretty Printer Implementation
 
+(defprotocol Delimiters
+  "A protocol for string representation of delimiters"
+  (left-delimiter [this] "The string representation of the left delimiter")
+  (right-delimiter [this] "The string representation of the right delimiter")
+  (delimiter [this] "The string representation of the full delimiter"))
+
+(extend-protocol Delimiters
+  clojure.lang.PersistentList
+  (left-delimiter [this] "(")
+  (right-delimiter [this] ")")
+  (delimiter [this] "()")
+
+  clojure.lang.PersistentVector
+  (left-delimiter [this] "[")
+  (right-delimiter [this] "]")
+  (delimiter [this] "[]")
+
+  clojure.lang.APersistentSet
+  (left-delimiter [this] "#{")
+  (right-delimiter [this] "}")
+  (delimiter [this] "#{}")
+
+  clojure.lang.APersistentMap
+  (left-delimiter [this] "{")
+  (right-delimiter [this] "}")
+  (delimiter [this] "{}"))
+
+
+(defn trim-coll? [coll coll-limit]
+  (and coll-limit (pos? coll-limit) (< coll-limit (count coll))))
+
+(defn visit-coll [this coll coll-limit order? sort-keys]
+  (if (seq coll)
+    (let [[values trimmed?] (if (trim-coll? coll coll-limit) 
+                              [(take coll-limit coll) true]
+                              [coll false])
+          values (if order?
+                   (order-collection sort-keys values (partial sort order/rank))
+                   values)
+          elements
+          (cond-> (if (symbol? (first values))
+                    (cons (color/document this :function-symbol (str (first values)))
+                          (map (partial format-doc this) (rest values)))
+                    (map (partial format-doc this) values))
+            trimmed? (concat [(color/document this :nil "...")]))]
+      [:group
+       (color/document this :delimiter (left-delimiter coll))
+       [:align (interpose :line elements)]
+       (color/document this :delimiter (right-delimiter coll))])
+    (color/document this :delimiter (delimiter coll))))
+
 (defrecord PrettyPrinter
   [width
    print-meta
@@ -487,7 +544,8 @@
    color-markup
    color-scheme
    print-handlers
-   print-fallback]
+   print-fallback
+   coll-limit]
 
   fv/IVisitor
 
@@ -527,65 +585,66 @@
   (visit-seq
     [this value]
     (if (seq value)
-      (let [[values trimmed?]
-            (if (and seq-limit (pos? seq-limit))
-              (let [head (take seq-limit value)]
-                [head (<= seq-limit (count head))])
-              [(seq value) false])
-            elements
-            (cond-> (if (symbol? (first values))
-                      (cons (color/document this :function-symbol (str (first values)))
-                            (map (partial format-doc this) (rest values)))
-                      (map (partial format-doc this) values))
-              trimmed? (concat [(color/document this :nil "...")]))]
-        [:group
-         (color/document this :delimiter "(")
-         [:align (interpose :line elements)]
-         (color/document this :delimiter ")")])
+      (if (instance? clojure.lang.PersistentList value)
+        (visit-coll this value coll-limit false sort-keys)
+        (let [[values trimmed?]
+              (if (and seq-limit (pos? seq-limit))
+                (let [head (take seq-limit value)]
+                  [head (<= seq-limit (count head))])
+                [(seq value) false])
+              elements
+              (cond-> (if (symbol? (first values))
+                        (cons (color/document this :function-symbol (str (first values)))
+                              (map (partial format-doc this) (rest values)))
+                        (map (partial format-doc this) values))
+                trimmed? (concat [(color/document this :nil "...")]))]
+          [:group
+           (color/document this :delimiter "(")
+           [:align (interpose :line elements)]
+           (color/document this :delimiter ")")]))
       (color/document this :delimiter "()")))
 
   (visit-vector
     [this value]
-    (if (seq value)
-      [:group
-       (color/document this :delimiter "[")
-       [:align (interpose :line (map (partial format-doc this) value))]
-       (color/document this :delimiter "]")]
-      (color/document this :delimiter "[]")))
+    (visit-coll this value coll-limit false sort-keys))
 
   (visit-set
     [this value]
-    (if (seq value)
-      (let [entries (order-collection sort-keys value (partial sort order/rank))]
-        [:group
-         (color/document this :delimiter "#{")
-         [:align (interpose :line (map (partial format-doc this) entries))]
-         (color/document this :delimiter "}")])
-      (color/document this :delimiter "#{}")))
+    (visit-coll this value coll-limit true sort-keys))
 
   (visit-map
     [this value]
     (if (seq value)
-      (let [[common-ns stripped] (when namespace-maps (common-key-ns value))
-            kvs (order-collection sort-keys
-                                  (or stripped value)
-                                  (partial sort-by first order/rank))
-            entries (map (fn [[k v]]
-                           [:span
-                            (format-doc this k)
-                            (if (coll? v)
-                              map-coll-separator
-                              " ")
-                            (format-doc this v)])
-                         kvs)
+      (let [
+            [values trimmed?]
+            (if (trim-coll? value coll-limit)
+              [(take coll-limit value) true]
+              [(order-collection sort-keys value (partial sort order/rank)) false])
+
+            [common-ns stripped] (when namespace-maps (common-key-ns values))
+            kvs (if trimmed?
+                  values 
+                  (order-collection sort-keys
+                                    (or stripped values)
+                                    (partial sort-by first order/rank)))
+            entries (cond-> (map (fn [[k v]]
+                                   [:span
+                                    (format-doc this k)
+                                    (if (coll? v)
+                                      map-coll-separator
+                                      " ")
+                                    (format-doc this v)])
+                                 kvs)
+                      trimmed? (concat [(color/document this :nil "...")]))
+
             map-doc [:group
-                     (color/document this :delimiter "{")
+                     (color/document this :delimiter (left-delimiter value))
                      [:align (interpose [:span map-delimiter :line] entries)]
-                     (color/document this :delimiter "}")]]
+                     (color/document this :delimiter (right-delimiter value))]]
         (if common-ns
           [:group (color/document this :tag (str "#:" common-ns)) :line map-doc]
           map-doc))
-      (color/document this :delimiter "{}")))
+      (color/document this :delimiter (delimiter value))))
 
 
   ; Clojure Types
