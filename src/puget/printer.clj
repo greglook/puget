@@ -526,7 +526,7 @@
                    (order-collection sort-keys values (partial sort order/rank))
                    values)
           elements
-          (cond-> (if (symbol? (first values))
+          (cond-> (if (and (list? coll) (symbol? (first values)))
                     (cons (color/document this :function-symbol (str (first values)))
                           (map (partial format-doc this) (rest values)))
                     (map (partial format-doc this) values))
