@@ -141,7 +141,8 @@
     {:foo 8 :bar 'baz}     "{:bar baz, :foo 8}"     ; gets sorted
     #{}                    "#{}"
     #{:omega :alpha :beta} "#{:alpha :beta :omega}" ; also sorted
-    (lazy-seq [:x])        "(:x)"))
+    (lazy-seq [:x])        "(:x)"
+    (first {:a 1})         "[:a 1]"))
 
 
 (deftest pretty-java-types
