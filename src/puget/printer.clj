@@ -482,34 +482,20 @@
 
 ;; ## Pretty Printer Implementation
 
-(defprotocol Delimiters
-  "A protocol for string representation of delimiters"
-  (left-delimiter [this] "The string representation of the left delimiter")
-  (right-delimiter [this] "The string representation of the right delimiter")
-  (delimiter [this] "The string representation of the full delimiter"))
+(defn delimiter [coll]
+  (cond 
+    (vector? coll) "[]"
+    (set? coll) "#{}"
+    (map? coll) "{}"
+    :else "()"))
 
+(defn left-delimiter [coll]
+  (let [del (delimiter coll)]
+    (subs del 0 (dec (count del)))))
 
-(extend-protocol Delimiters
-  clojure.lang.PersistentList
-  (left-delimiter [this] "(")
-  (right-delimiter [this] ")")
-  (delimiter [this] "()")
-
-  clojure.lang.PersistentVector
-  (left-delimiter [this] "[")
-  (right-delimiter [this] "]")
-  (delimiter [this] "[]")
-
-  clojure.lang.APersistentSet
-  (left-delimiter [this] "#{")
-  (right-delimiter [this] "}")
-  (delimiter [this] "#{}")
-
-  clojure.lang.APersistentMap
-  (left-delimiter [this] "{")
-  (right-delimiter [this] "}")
-  (delimiter [this] "{}"))
-
+(defn right-delimiter [coll]
+  (let [del (delimiter coll)]
+    (subs del (dec (count del)))))
 
 (defn trim-coll? 
   [coll coll-limit]
