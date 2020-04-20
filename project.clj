@@ -11,6 +11,6 @@
   [[lein-cloverage "1.1.2"]]
 
   :dependencies
-  [[org.clojure/clojure "1.10.0"]
+  [[org.clojure/clojure "1.10.1"]
    [mvxcvi/arrangement "1.2.0"]
-   [fipp "0.6.21"]])
+   [fipp "0.6.22"]])
