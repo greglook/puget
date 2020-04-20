@@ -17,7 +17,7 @@ jobs:
       - run:
           name: Install cljstyle
           environment:
-            CLJSTYLE_VERSION: 0.10.1
+            CLJSTYLE_VERSION: 0.12.1
           command: |
             wget https://github.com/greglook/cljstyle/releases/download/${CLJSTYLE_VERSION}/cljstyle_${CLJSTYLE_VERSION}_linux.tar.gz
             tar -xzf cljstyle_${CLJSTYLE_VERSION}_linux.tar.gz
