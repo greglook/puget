@@ -364,25 +364,31 @@
     [this]
     "nil")
 
+
   (visit-boolean
     [this value]
     (str value))
+
 
   (visit-number
     [this value]
     (pr-str value))
 
+
   (visit-character
     [this value]
     (pr-str value))
+
 
   (visit-string
     [this value]
     (pr-str value))
 
+
   (visit-keyword
     [this value]
     (str value))
+
 
   (visit-symbol
     [this value]
@@ -398,12 +404,14 @@
         [:group "(" [:align (interpose " " entries)] ")"])
       "()"))
 
+
   (visit-vector
     [this value]
     (if (seq value)
       (let [entries (map (partial format-doc this) value)]
         [:group "[" [:align (interpose " " entries)] "]"])
       "[]"))
+
 
   (visit-set
     [this value]
@@ -412,6 +420,7 @@
                          (sort order/rank value))]
         [:group "#{" [:align (interpose " " entries)] "}"])
       "#{}"))
+
 
   (visit-map
     [this value]
@@ -430,15 +439,18 @@
     ; Metadata is not printed for canonical rendering.
     (format-doc* this value))
 
+
   (visit-var
     [this value]
     ; Defer to unknown, cover with handler.
     (fv/visit-unknown this value))
 
+
   (visit-pattern
     [this value]
     ; Defer to unknown, cover with handler.
     (fv/visit-unknown this value))
+
 
   (visit-record
     [this value]
@@ -451,6 +463,7 @@
   (visit-tagged
     [this value]
     [:span (str "#" (:tag value)) " " (format-doc this (:form value))])
+
 
   (visit-unknown
     [this value]
@@ -497,25 +510,31 @@
     [this]
     (color/document this :nil "nil"))
 
+
   (visit-boolean
     [this value]
     (color/document this :boolean (str value)))
+
 
   (visit-number
     [this value]
     (color/document this :number (pr-str value)))
 
+
   (visit-character
     [this value]
     (color/document this :character (pr-str value)))
+
 
   (visit-string
     [this value]
     (color/document this :string (pr-str value)))
 
+
   (visit-keyword
     [this value]
     (color/document this :keyword (str value)))
+
 
   (visit-symbol
     [this value]
@@ -544,6 +563,7 @@
          (color/document this :delimiter ")")])
       (color/document this :delimiter "()")))
 
+
   (visit-vector
     [this value]
     (if (seq value)
@@ -552,6 +572,7 @@
        [:align (interpose :line (map (partial format-doc this) value))]
        (color/document this :delimiter "]")]
       (color/document this :delimiter "[]")))
+
 
   (visit-set
     [this value]
@@ -562,6 +583,7 @@
          [:align (interpose :line (map (partial format-doc this) entries))]
          (color/document this :delimiter "}")])
       (color/document this :delimiter "#{}")))
+
 
   (visit-map
     [this value]
@@ -598,17 +620,20 @@
        :line (format-doc* this value)]
       (format-doc* this value)))
 
+
   (visit-var
     [this value]
     [:span
      (color/document this :delimiter "#'")
      (color/document this :symbol (subs (str value) 2))])
 
+
   (visit-pattern
     [this value]
     [:span
      (color/document this :delimiter "#")
      (color/document this :string (str \" value \"))])
+
 
   (visit-record
     [this value]
@@ -627,6 +652,7 @@
        (color/document this :tag (str "#" (:tag value)))
        (if (coll? form) :line " ")
        (format-doc this (:form value))]))
+
 
   (visit-unknown
     [this value]
