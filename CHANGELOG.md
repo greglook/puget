@@ -5,9 +5,17 @@ All notable changes to this project will be documented in this file, which
 follows the conventions of [keepachangelog.com](http://keepachangelog.com/).
 This project adheres to [Semantic Versioning](http://semver.org/).
 
-## [1.0.1] - 2016-08-23
+
+## [Unreleased]
 
 ...
+
+
+## [1.2.1] - 2020-04-19
+
+### Changed
+- Minor version upgrades
+
 
 ## [1.2.0] - 2019-10-11
 
@@ -20,6 +28,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Update CI configuration to support style checks and separate coverage check.
 - Switch to cljdoc for documentation.
 
+
 ## [1.1.2] - 2019-04-04
 
 ### Fixed
@@ -28,12 +37,14 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - The `:html-inline` color markup now defaults to assuming a style value is a
   color, allowing use of any CSS color name.
 
+
 ## [1.1.1] - 2019-03-17
 
 ### Changed
 - Upgrade to clojure 1.10.0.
 - Upgrade to clj-arrangement 1.2.0 for a ~3x speedup when sorting complex
   collections for canonical printing.
+
 
 ## [1.1.0] - 2018-12-16
 
@@ -49,17 +60,20 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Empty collections now omit child document nodes, so they are slightly more
   efficient to render.
 
+
 ## [1.0.3] - 2018-10-30
 
 ### Changed
 - Upgrade to fipp 0.6.13 for Java 11 compatibility.
   [#38](//github.com/greglook/puget/pull/38)
 
+
 ## [1.0.2] - 2017-11-04
 
 ### Changed
 - Upgrade to CircleCI 2.0
 - Upgrade various minor dependency versions
+
 
 ## [1.0.1] - 2016-08-23
 
@@ -70,6 +84,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 - Upgraded fipp to 0.6.6
   [#33](//github.com/greglook/puget/pull/33)
+
 
 ## [1.0.0] - 2015-10-29
 
@@ -83,6 +98,7 @@ Finally decided it was time to recognize that this is a stable library!
 - Move pattern and var printing back into `PrettyPrinter` visitor protocol.
 - Improve class name parsing of inner function names.
 
+
 ## [0.9.2] - 2015-10-20
 
 ### Added
@@ -91,6 +107,7 @@ Finally decided it was time to recognize that this is a stable library!
 
 ### Changed
 - Line-break tagged literals when the form is a collection.
+
 
 ## [0.9.1] - 2015-10-17
 
@@ -106,6 +123,7 @@ Finally decided it was time to recognize that this is a stable library!
 ### Fixed
 - Fix rendering of lazy sequences.
   [#26](//github.com/greglook/puget/issues/26)
+
 
 ## [0.9.0] - 2015-10-13
 
@@ -128,11 +146,13 @@ to fipp and Clojure 1.7.
 ### Removed
 - Remove `:escape-types` functionality in favor of `:print-handlers`.
 
+
 ## [0.8.1] - 2015-04-25
 
 ### Removed
 - Remove `tagged-literal` code which conflicts with the built-in `clojure.core`
   functions in 1.7. [#20](//github.com/greglook/puget/issues/20)
+
 
 ## [0.8.0] - 2015-03-10
 
@@ -143,6 +163,7 @@ to fipp and Clojure 1.7.
 ### Removed
 - Remove byte array and URI extension to Whidbey.
   [#16](//github.com/greglook/puget/issue/16)
+
 
 ## [0.7.1] - 2015-02-28
 
@@ -162,11 +183,13 @@ to fipp and Clojure 1.7.
 ### Fixed
 - Update documentation and clean up docstrings.
 
+
 ## [0.6.6] - 2014-12-28
 
 ### Added
 - Add `:sort-keys` option to allow bounded canonicalization.
   [#12](//github.com/greglook/puget/pull/12)
+
 
 ## [0.6.4] - 2014-09-23
 
@@ -181,7 +204,9 @@ to fipp and Clojure 1.7.
 - Maps default to using commas between entries.
 - Gave characters a separate syntax element than strings.
 
-[Unreleased]: https://github.com/greglook/puget/compare/1.2.0...HEAD
+
+[Unreleased]: https://github.com/greglook/puget/compare/1.2.1...HEAD
+[1.2.1]: https://github.com/greglook/puget/compare/1.2.0...1.2.1
 [1.2.0]: https://github.com/greglook/puget/compare/1.1.2...1.2.0
 [1.1.2]: https://github.com/greglook/puget/compare/1.1.1...1.1.2
 [1.1.1]: https://github.com/greglook/puget/compare/1.1.0...1.1.1
