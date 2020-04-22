@@ -482,30 +482,20 @@
 
 ;; ## Pretty Printer Implementation
 
-(defn delimiter [coll]
-  (cond 
-    (vector? coll) "[]"
-    (set? coll) "#{}"
-    (map? coll) "{}"
-    :else "()"))
-
-(defn left-delimiter [coll]
-  (let [del (delimiter coll)]
-    (subs del 0 (dec (count del)))))
-
-(defn right-delimiter [coll]
-  (let [del (delimiter coll)]
-    (subs del (dec (count del)))))
-
-(defn trim-coll? 
+(defn trim-coll?
+  "Returns true if a collection should be trimmed according to the 
+  :coll-limit config."
   [coll coll-limit]
   (and coll-limit (pos? coll-limit) (< coll-limit (count coll))))
 
-
-(defn visit-coll 
-  [this coll coll-limit order? sort-keys]
+(defn visit-coll
+  "Helper function that supports the other visit functions.
+  order? should be false for ordered collection types like vector where any
+  rearrangement would mess up the data, but true for unordered collections like set,
+  that can safely be reordered for nicer output."
+  [this coll coll-limit order? sort-keys delimiter left-delimiter right-delimiter]
   (if (seq coll)
-    (let [[values trimmed?] (if (trim-coll? coll coll-limit) 
+    (let [[values trimmed?] (if (trim-coll? coll coll-limit)
                               [(take coll-limit coll) true]
                               [coll false])
           values (if order?
@@ -518,10 +508,10 @@
                     (map (partial format-doc this) values))
             trimmed? (concat [(color/document this :nil "...")]))]
       [:group
-       (color/document this :delimiter (left-delimiter coll))
+       (color/document this :delimiter left-delimiter)
        [:align (interpose :line elements)]
-       (color/document this :delimiter (right-delimiter coll))])
-    (color/document this :delimiter (delimiter coll))))
+       (color/document this :delimiter right-delimiter)])
+    (color/document this :delimiter delimiter)))
 
 
 (defrecord PrettyPrinter
@@ -532,12 +522,12 @@
    map-coll-separator
    namespace-maps
    seq-limit
+   coll-limit
    print-color
    color-markup
    color-scheme
    print-handlers
-   print-fallback
-   coll-limit]
+   print-fallback]
 
   fv/IVisitor
 
@@ -577,8 +567,8 @@
   (visit-seq
     [this value]
     (if (seq value)
-      (if (instance? clojure.lang.PersistentList value)
-        (visit-coll this value coll-limit false sort-keys)
+      (if (list? value)
+        (visit-coll this value coll-limit false sort-keys "()" "(" ")")
         (let [limit (cond
                       (pos-int? seq-limit) seq-limit
                       (pos-int? coll-limit) coll-limit)
@@ -601,11 +591,11 @@
 
   (visit-vector
     [this value]
-    (visit-coll this value coll-limit false sort-keys))
+    (visit-coll this value coll-limit false sort-keys "[]" "[" "]"))
 
   (visit-set
     [this value]
-    (visit-coll this value coll-limit true sort-keys))
+    (visit-coll this value coll-limit true sort-keys "#{}" "#{" "}"))
 
   (visit-map
     [this value]
@@ -617,7 +607,7 @@
 
             [common-ns stripped] (when namespace-maps (common-key-ns values))
             kvs (if trimmed?
-                  values 
+                  values
                   (order-collection sort-keys
                                     (or stripped values)
                                     (partial sort-by first order/rank)))
@@ -632,13 +622,13 @@
                       trimmed? (concat [(color/document this :nil "...")]))
 
             map-doc [:group
-                     (color/document this :delimiter (left-delimiter value))
+                     (color/document this :delimiter "{")
                      [:align (interpose [:span map-delimiter :line] entries)]
-                     (color/document this :delimiter (right-delimiter value))]]
+                     (color/document this :delimiter "}")]]
         (if common-ns
           [:group (color/document this :tag (str "#:" common-ns)) :line map-doc]
           map-doc))
-      (color/document this :delimiter (delimiter value))))
+      (color/document this :delimiter "{}")))
 
 
   ; Clojure Types
