@@ -579,8 +579,9 @@
     (if (seq value)
       (if (instance? clojure.lang.PersistentList value)
         (visit-coll this value coll-limit false sort-keys)
-        (let [pos-int (fn [x] (if (and (integer? x) (pos? x)) x))
-              limit (or (pos-int seq-limit) (pos-int coll-limit))
+        (let [limit (cond
+                      (pos-int? seq-limit) seq-limit
+                      (pos-int? coll-limit) coll-limit)
               [values trimmed?]
               (if limit
                 (let [head (take limit value)]
