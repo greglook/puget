@@ -488,6 +488,7 @@
   [coll coll-limit]
   (and coll-limit (pos? coll-limit) (< coll-limit (count coll))))
 
+
 (defn visit-coll
   "Helper function that supports the other visit functions.
   order? should be false for ordered collection types like vector where any
