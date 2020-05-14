@@ -115,11 +115,11 @@
    :print-color false
    :color-markup :ansi
    :color-scheme
-   {; syntax elements
+   {;; syntax elements
     :delimiter [:bold :red]
     :tag       [:red]
 
-    ; primitive values
+    ;; primitive values
     :nil       [:bold :black]
     :boolean   [:green]
     :number    [:cyan]
@@ -128,7 +128,7 @@
     :keyword   [:bold :yellow]
     :symbol    nil
 
-    ; special types
+    ;; special types
     :function-symbol [:bold :blue]
     :class-delimiter [:blue]
     :class-name      [:bold :blue]}})
@@ -365,7 +365,7 @@
 
   fv/IVisitor
 
-  ; Primitive Types
+  ;; Primitive Types
 
   (visit-nil
     [this]
@@ -402,7 +402,7 @@
     (str value))
 
 
-  ; Collection Types
+  ;; Collection Types
 
   (visit-seq
     [this value]
@@ -439,33 +439,33 @@
       "{}"))
 
 
-  ; Clojure Types
+  ;; Clojure Types
 
   (visit-meta
     [this metadata value]
-    ; Metadata is not printed for canonical rendering.
+    ;; Metadata is not printed for canonical rendering.
     (format-doc* this value))
 
 
   (visit-var
     [this value]
-    ; Defer to unknown, cover with handler.
+    ;; Defer to unknown, cover with handler.
     (fv/visit-unknown this value))
 
 
   (visit-pattern
     [this value]
-    ; Defer to unknown, cover with handler.
+    ;; Defer to unknown, cover with handler.
     (fv/visit-unknown this value))
 
 
   (visit-record
     [this value]
-    ; Defer to unknown, cover with handler.
+    ;; Defer to unknown, cover with handler.
     (fv/visit-unknown this value))
 
 
-  ; Special Types
+  ;; Special Types
 
   (visit-tagged
     [this value]
@@ -545,7 +545,7 @@
 
   fv/IVisitor
 
-  ; Primitive Types
+  ;; Primitive Types
 
   (visit-nil
     [this]
@@ -582,7 +582,7 @@
     (color/document this :symbol (str value)))
 
 
-  ; Collection Types
+  ;; Collection Types
 
   (visit-seq
     [this value]
@@ -654,7 +654,7 @@
       (color/document this :delimiter "{}")))
 
 
-  ; Clojure Types
+  ;; Clojure Types
 
   (visit-meta
     [this metadata value]
@@ -687,7 +687,7 @@
                       (into {} value))))
 
 
-  ; Special Types
+  ;; Special Types
 
   (visit-tagged
     [this value]
