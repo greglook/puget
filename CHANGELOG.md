@@ -8,7 +8,11 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
-...
+### Added
+- New configuration `:coll-limit` adds support for truncating all collections
+  after a certain size. This applies to sequences as well, though `:seq-limit`
+  still takes precedence if set.
+  [#52](//github.com/greglook/puget/pull/52)
 
 
 ## [1.2.1] - 2020-04-19

@@ -45,8 +45,8 @@
 
   `:coll-limit`
 
-  If set to a positive number, then collections will only render at most the 
-  first n elements. This can help prevent unintentional printing of large 
+  If set to a positive number, then collections will only render at most the
+  first n elements. This can help prevent unintentional printing of large
   collections. Note: `:seq-limit` has higher precendence than `:coll-limit`
   if both are set.
 
