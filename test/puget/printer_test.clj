@@ -257,6 +257,7 @@
   (testing "lazy - seq-limit only"
     (with-options {:seq-limit 4 :coll-limit nil}
       (is (= "(1 2 3)" (pprint-str (map inc [0 1 2]))))
+      (is (= "(6 7 8 9)" (pprint-str (range 6 10))))
       (is (= "(0 1 2 3 ...)" (pprint-str (range 100))))))
   (testing "lazy - coll-limit only"
     (with-options {:seq-limit nil :coll-limit 4}
