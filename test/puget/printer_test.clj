@@ -141,7 +141,8 @@
     {:foo 8 :bar 'baz}     "{:bar baz, :foo 8}"     ; gets sorted
     #{}                    "#{}"
     #{:omega :alpha :beta} "#{:alpha :beta :omega}" ; also sorted
-    (lazy-seq [:x])        "(:x)"))
+    (lazy-seq [:x])        "(:x)"
+    (first {:a 1})         "[:a 1]"))
 
 
 (deftest pretty-java-types
@@ -253,10 +254,36 @@
           "common ns should be qualified even with other ns keys")
       (is (= "{\"a/x\" 1, :a/y 2}" (pprint-str {"a/x" 1, :a/y 2}))
           "any non-ident keys should prevent namespacing")))
-  (testing "lazy seq limits"
-    (with-options {:seq-limit 4}
+  (testing "lazy - seq-limit only"
+    (with-options {:seq-limit 4 :coll-limit nil}
       (is (= "(1 2 3)" (pprint-str (map inc [0 1 2]))))
-      (is (= "(0 1 2 3 ...)" (pprint-str (range 100)))))))
+      (is (= "(0 1 2 3 ...)" (pprint-str (range 100))))))
+  (testing "lazy - coll-limit only"
+    (with-options {:seq-limit nil :coll-limit 4}
+      (is (= "(1 2 3)" (pprint-str (map inc [0 1 2]))))
+      (is (= "(0 1 2 3 ...)" (pprint-str (range 100))))))
+  (testing "lazy - seq-limit has higher precesence than coll-limit"
+    (with-options {:seq-limit 5 :coll-limit 4}
+      (is (= "(1 2 3)" (pprint-str (map inc [0 1 2]))))
+      (is (= "(0 1 2 3 4 ...)" (pprint-str (range 100))))))
+  (testing "coll-limit on lists"
+    (with-options {:coll-limit 4}
+      (is (= "(0 1 2)" (pprint-str '(0 1 2))))
+      (is (= "(0 1 2 3 ...)" (pprint-str '(0 1 2 3 4 5))))))
+  (testing "coll-limit on vectors"
+    (with-options {:coll-limit 4}
+      (is (= "[0 1 2]" (pprint-str [0 1 2])))
+      (is (= "[5 4 3 2 ...]" (pprint-str [5 4 3 2 1])))))
+  (testing "coll-limit on sets"
+    (with-options {:coll-limit 4}
+      (is (= "#{1 2 3}" (pprint-str #{3 2 1})))
+      (is (= "#{1 4 3 2 ...}" (pprint-str #{5 4 3 2 1})))))
+  (testing "coll-limit on maps"
+    (with-options {:coll-limit 3}
+      (is (= "{:a 1, :b 2, :c 3}" (pprint-str {:a 1 :b 2 :c 3})))
+      (is (= "{:a 1, :b 2, :c 3}" (pprint-str {:c 3 :b 2 :a 1})))
+      (is (= "{:a 1, :b 2, :c 3, ...}" (pprint-str {:a 1 :b 2 :c 3 :d 4})))
+      (is (= "{:d 4, :c 3, :b 2, ...}" (pprint-str {:d 4 :c 3 :b 2 :a 1}))))))
 
 
 (deftest pretty-color-options
