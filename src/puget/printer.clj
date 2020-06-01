@@ -294,6 +294,9 @@
                  (color/document printer :nil "pending"))]
        (format-unknown printer value "Future" doc)))
 
+   java.util.UUID
+   (tagged-handler 'uuid str)
+
    java.util.Date
    (tagged-handler
      'inst
@@ -302,8 +305,8 @@
           (doto (.setTimeZone (java.util.TimeZone/getTimeZone "GMT")))
           (.format ^java.util.Date %)))
 
-   java.util.UUID
-   (tagged-handler 'uuid str)})
+   java.time.Instant
+   (tagged-handler 'inst str)})
 
 
 (def clojure-handlers
