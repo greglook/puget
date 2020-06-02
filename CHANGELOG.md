@@ -8,6 +8,11 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+...
+
+
+## [1.3.1] - 2020-06-01
+
 ### Added
 - `java.time.Instant` is automatically rendered as an `#inst` tagged literal.
 
@@ -216,7 +221,8 @@ to fipp and Clojure 1.7.
 - Gave characters a separate syntax element than strings.
 
 
-[Unreleased]: https://github.com/greglook/puget/compare/1.3.0...HEAD
+[Unreleased]: https://github.com/greglook/puget/compare/1.3.1...HEAD
+[1.3.1]: https://github.com/greglook/puget/compare/1.3.0...1.3.1
 [1.3.0]: https://github.com/greglook/puget/compare/1.2.1...1.3.0
 [1.2.1]: https://github.com/greglook/puget/compare/1.2.0...1.2.1
 [1.2.0]: https://github.com/greglook/puget/compare/1.1.2...1.2.0
