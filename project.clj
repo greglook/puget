@@ -13,4 +13,4 @@
   :dependencies
   [[org.clojure/clojure "1.10.1"]
    [mvxcvi/arrangement "1.2.0"]
-   [fipp "0.6.23"]])
+   [fipp "0.6.24"]])
