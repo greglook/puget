@@ -1,6 +1,6 @@
 (ns puget.color.html-test
   (:require
-    [clojure.test :refer :all]
+    [clojure.test :refer [deftest testing is]]
     [puget.color.html :as html]
     [puget.printer :as printer]))
 

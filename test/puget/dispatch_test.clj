@@ -1,6 +1,6 @@
 (ns puget.dispatch-test
   (:require
-    [clojure.test :refer :all]
+    [clojure.test :refer [deftest testing is]]
     [puget.dispatch :as dispatch]))
 
 

@@ -7,6 +7,7 @@
   - `:html-classes` adds semantic `class` attributes to the tags."
   (:require
     [clojure.string :as str]
+    [clojure.walk :as walk]
     [puget.color :as color]))
 
 
@@ -82,7 +83,7 @@
 (defn escape-html-document
   "Escapes special characters into fipp :span/:escaped nodes"
   [document]
-  (clojure.walk/postwalk escape-html-node document))
+  (walk/postwalk escape-html-node document))
 
 
 (defmethod color/document :html-inline
@@ -102,12 +103,12 @@
 
 
 (defmethod color/document :html-classes
-  [options element document]
+  [_ element document]
   [:span [:pass "<span class=\"" (name element) "\">"]
    (escape-html-document document)
    [:pass "</span>"]])
 
 
 (defmethod color/text :html-classes
-  [options element text]
+  [_ element text]
   (str "<span class=\"" (name element) "\">" (escape-html-text text) "</span>"))

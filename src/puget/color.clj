@@ -24,7 +24,7 @@
 (defn dispatch
   "Dispatches to coloring multimethods. Element should be a key from
   the color-scheme map."
-  [options element text]
+  [options _element _text]
   (when (:print-color options)
     (:color-markup options)))
 
@@ -49,10 +49,10 @@
 ;; text unaltered.
 
 (defmethod document nil
-  [options element text]
+  [_ _ text]
   text)
 
 
 (defmethod text nil
-  [options element text]
+  [_ _ text]
   text)

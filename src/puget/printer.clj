@@ -249,7 +249,7 @@
 
 (defn pr-handler
   "Print handler which renders the value with `pr-str`."
-  [printer value]
+  [_printer value]
   (pr-str value))
 
 
@@ -375,37 +375,37 @@
   ;; Primitive Types
 
   (visit-nil
-    [this]
+    [_]
     "nil")
 
 
   (visit-boolean
-    [this value]
+    [_ value]
     (str value))
 
 
   (visit-number
-    [this value]
+    [_ value]
     (pr-str value))
 
 
   (visit-character
-    [this value]
+    [_ value]
     (pr-str value))
 
 
   (visit-string
-    [this value]
+    [_ value]
     (pr-str value))
 
 
   (visit-keyword
-    [this value]
+    [_ value]
     (str value))
 
 
   (visit-symbol
-    [this value]
+    [_ value]
     (str value))
 
 
@@ -449,7 +449,7 @@
   ;; Clojure Types
 
   (visit-meta
-    [this metadata value]
+    [this _ value]
     ;; Metadata is not printed for canonical rendering.
     (format-doc* this value))
 
@@ -480,7 +480,7 @@
 
 
   (visit-unknown
-    [this value]
+    [_ value]
     (throw (IllegalArgumentException.
              (str "No defined representation for " (class value) ": "
                   (pr-str value))))))
@@ -708,11 +708,11 @@
 
   (visit-tagged
     [this value]
-    (let [{:keys [tag form]} value]
+    (let [form (:form value)]
       [:group
        (color/document this :tag (str "#" (:tag value)))
        (if (coll? form) :line " ")
-       (format-doc this (:form value))]))
+       (format-doc this form)]))
 
 
   (visit-unknown
