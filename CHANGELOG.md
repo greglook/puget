@@ -11,6 +11,12 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 ...
 
 
+## [1.3.2] - 2021-12-11
+
+This is a maintenance release which updates several dependency versions,
+renames `master` to `main`, and modernizes the CI and build tooling.
+
+
 ## [1.3.1] - 2020-06-01
 
 ### Added
@@ -221,7 +227,8 @@ to fipp and Clojure 1.7.
 - Gave characters a separate syntax element than strings.
 
 
-[Unreleased]: https://github.com/greglook/puget/compare/1.3.1...HEAD
+[Unreleased]: https://github.com/greglook/puget/compare/1.3.2...HEAD
+[1.3.2]: https://github.com/greglook/puget/compare/1.3.1...1.3.2
 [1.3.1]: https://github.com/greglook/puget/compare/1.3.0...1.3.1
 [1.3.0]: https://github.com/greglook/puget/compare/1.2.1...1.3.0
 [1.2.1]: https://github.com/greglook/puget/compare/1.2.0...1.2.1
