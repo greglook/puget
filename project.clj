@@ -4,13 +4,13 @@
   :license {:name "Public Domain"
             :url "http://unlicense.org/"}
 
-  :deploy-branches ["master"]
+  :deploy-branches ["main"]
   :pedantic? :abort
 
   :plugins
-  [[lein-cloverage "1.1.2"]]
+  [[lein-cloverage "1.2.2"]]
 
   :dependencies
-  [[org.clojure/clojure "1.10.1"]
-   [mvxcvi/arrangement "1.2.0"]
+  [[org.clojure/clojure "1.10.3"]
+   [mvxcvi/arrangement "2.0.0"]
    [fipp "0.6.24"]])

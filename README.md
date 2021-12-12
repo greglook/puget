@@ -2,7 +2,7 @@ Puget
 =====
 
 [![Build Status](https://circleci.com/gh/greglook/puget.svg?style=shield&circle-token=cce98d9ba9811c55b454e22db02c338f81d6b093)](https://circleci.com/gh/greglook/puget)
-[![Coverage Status](https://codecov.io/gh/greglook/puget/branch/master/graph/badge.svg)](https://codecov.io/gh/greglook/puget/branch/master)
+[![Coverage Status](https://codecov.io/gh/greglook/puget/branch/main/graph/badge.svg)](https://codecov.io/gh/greglook/puget/branch/main)
 [![cljdoc](https://cljdoc.org/badge/mvxcvi/puget)](https://cljdoc.org/d/mvxcvi/puget/CURRENT)
 
 Puget is a Clojure library for printing Clojure and
