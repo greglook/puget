@@ -18,6 +18,7 @@
   Map of syntax element keywords to color codes.
   ")
 
+
 ;; ## Coloring Multimethods
 
 (defn dispatch

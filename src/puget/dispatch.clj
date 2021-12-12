@@ -93,10 +93,10 @@
   (fn lookup
     [t]
     (or
-      ; Look up base class and ancestors up to the base class.
+      ;; Look up base class and ancestors up to the base class.
       (some dispatch (lineage t))
 
-      ; Look up interfaces and collect candidates.
+      ;; Look up interfaces and collect candidates.
       (let [candidates (remove (comp nil? first)
                                (map (juxt dispatch identity)
                                     (find-interfaces t)))]
@@ -107,5 +107,5 @@
                    (format "%d candidates found for interfaces on dispatch type %s: %s"
                            (count candidates) t (str/join ", " (map second candidates)))))))
 
-      ; Look up Object base class.
+      ;; Look up Object base class.
       (dispatch Object))))

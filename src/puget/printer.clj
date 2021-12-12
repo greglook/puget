@@ -168,7 +168,6 @@
    (color/text options element text)))
 
 
-
 ;; ## Formatting Methods
 
 (defn- trim-coll?
@@ -244,7 +243,6 @@
   (if-let [metadata (meta value)]
     (fv/visit-meta printer metadata value)
     (format-doc* printer value)))
-
 
 
 ;; ## Type Handlers
@@ -365,7 +363,6 @@
     (dispatch/inheritance-lookup java-handlers)
     (dispatch/inheritance-lookup clojure-handlers)
     (dispatch/inheritance-lookup clojure-interface-handlers)))
-
 
 
 ;; ## Canonical Printer Implementation
@@ -498,9 +495,8 @@
           :width 0)))
 
 
-; Remove automatic constructor function.
+;; Remove automatic constructor function.
 (ns-unmap *ns* '->CanonicalPrinter)
-
 
 
 ;; ## Pretty Printer Implementation
@@ -751,9 +747,8 @@
        (map->PrettyPrinter)))
 
 
-; Remove automatic constructor function.
+;; Remove automatic constructor function.
 (ns-unmap *ns* '->PrettyPrinter)
-
 
 
 ;; ## Printing Functions

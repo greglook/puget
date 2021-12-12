@@ -37,7 +37,6 @@
   (.write w "{{ complex value print }}"))
 
 
-
 ;; ## Canonical Printing
 
 (deftest canonical-primitives
@@ -106,7 +105,6 @@
       (atom :foo)
       (->TestRecord :x \y)
       (java.util.Currency/getInstance "USD"))))
-
 
 
 ;; ## Pretty Printing
