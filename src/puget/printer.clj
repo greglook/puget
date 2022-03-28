@@ -91,6 +91,7 @@
     unknown value and is expected to return a formatting document representing
     it.
   "
+  (:refer-clojure :exclude [pos-int?])
   (:require
     [arrangement.core :as order]
     [clojure.string :as str]
@@ -169,6 +170,17 @@
 
 
 ;; ## Formatting Methods
+
+(defn- pos-int?
+  [x]
+  (if-let [core-pos-int? (resolve 'clojure.core/pos-int?)]
+    (core-pos-int? x)
+    (and (or (instance? Long x)
+             (instance? Integer x)
+             (instance? Short x)
+             (instance? Byte x))
+         (pos? x))))
+
 
 (defn- trim-coll?
   "Returns true if a collection should be trimmed according to the

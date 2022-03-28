@@ -8,7 +8,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
-...
+### Fixed
+
+- Add support for Clojure 1.7 and 1.8
 
 
 ## [1.3.2] - 2021-12-11
