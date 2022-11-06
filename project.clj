@@ -12,5 +12,5 @@
 
   :dependencies
   [[org.clojure/clojure "1.10.3"]
-   [mvxcvi/arrangement "2.0.0"]
-   [fipp "0.6.24"]])
+   [mvxcvi/arrangement "2.1.0"]
+   [fipp "0.6.26"]])
