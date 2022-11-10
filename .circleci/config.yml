@@ -52,12 +52,16 @@ jobs:
             - v1-test-{{ checksum "project.clj" }}
             - v1-test-
       - run: lein deps
+      - run: lein check
+      - run: lein test
+      - run: lein with-profile +clj-1.10 test
+      - run: lein with-profile +clj-1.9 test
+      - run: lein with-profile +clj-1.8 test
+      - run: lein with-profile +clj-1.7 test
       - save_cache:
           key: v1-test-{{ checksum "project.clj" }}
           paths:
             - ~/.m2
-      - run: lein check
-      - run: lein test
 
   coverage:
     executor: clojure
