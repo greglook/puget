@@ -8,9 +8,13 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
-### Fixed
+...
 
-- Add support for Clojure 1.7 and 1.8
+
+## [1.3.4] - 2022-11-09
+
+### Fixed
+- Add backwards-compatibility support for Clojure 1.7 and 1.8.
 
 
 ## [1.3.3] - 2022-11-07
@@ -237,7 +241,8 @@ to fipp and Clojure 1.7.
 - Gave characters a separate syntax element than strings.
 
 
-[Unreleased]: https://github.com/greglook/puget/compare/1.3.3...HEAD
+[Unreleased]: https://github.com/greglook/puget/compare/1.3.4...HEAD
+[1.3.4]: https://github.com/greglook/puget/compare/1.3.4...1.3.4
 [1.3.3]: https://github.com/greglook/puget/compare/1.3.2...1.3.3
 [1.3.2]: https://github.com/greglook/puget/compare/1.3.1...1.3.2
 [1.3.1]: https://github.com/greglook/puget/compare/1.3.0...1.3.1
