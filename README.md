@@ -33,7 +33,7 @@ Puget's printing is controlled by a map of options which configure things like
 print width, sorting mode, color scheme and style, whether to print metadata,
 and so on. The default options are held in the dynamic var
 `puget.printer/*options*`, which can be bound using `with-options`. See the
-[`puget.printer`](https://greglook.github.io/puget/api/puget.printer.html)
+[`puget.printer`](https://cljdoc.org/d/mvxcvi/puget/CURRENT/api/puget.printer)
 namespace documentation for the full set of options.
 
 These options are used to construct a _printer_ to render values with. `pprint`
@@ -111,7 +111,7 @@ If available, it is called with the type of the value to be printed. If the
 lookup returns a handler, that function is called with the value and the result
 is used as the rendered format of the value.
 
-The [`puget.dispatch`](https://greglook.github.io/puget/api/puget.dispatch.html)
+The [`puget.dispatch`](https://cljdoc.org/d/mvxcvi/puget/CURRENT/api/puget.dispatch)
 namespace has functions to help build handler lookup functions. The
 `inheritance-lookup` constructor provides semantics similar to Clojure's
 multimethod dispatch.
